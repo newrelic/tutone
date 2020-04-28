@@ -1,0 +1,82 @@
+project_name: developer-toolkit-template-go
+
+env:
+  - GO111MODULE=on
+
+before:
+  hooks:
+    - go mod download
+
+# Libraries with no bins, enable this
+# otherwise remove build and use a 'builds' section
+build:
+  skip: true
+
+#builds:
+#  -
+#    id: "default"
+#    goos:
+#      - linux
+#    goarch:
+#      - amd64
+#    ignore:
+#      - goos: linux
+#        goarch: amd64
+#  -
+#    id: newrelic
+#    dir: cmd/newrelic
+#    binary: newrelic
+#    env:
+#      - CGO_ENABLED=0
+#    goos:
+#      - linux
+#      - darwin
+#      - windows
+#    goarch:
+#      - amd64
+#    ldflags:
+#      - -s -w -X main.version={{.Version}} -X main.AppName={{.Binary}}
+#        -X github.com/newrelic/developer-toolkit-template-go/internal/version.Version={{.Version}}
+
+release:
+  # Mark as a pre-release for now
+  prerelease: true
+  name_template: "{{.ProjectName}} v{{.Version}}"
+
+#archives:
+#  -
+#    id: "default"
+#    builds:
+#      - newrelic
+#    replacements:
+#      darwin: Darwin
+#      linux: Linux
+#      windows: Windows
+#      386: i386
+#      amd64: x86_64
+#    format_overrides:
+#      - goos: windows
+#        format: zip
+#    files:
+#      - CHANGELOG.md
+#      - LICENSE
+#      - README.md
+#
+#dockers:
+#  -
+#    dockerfile: build/package/Dockerfile
+#    image_templates:
+#      - 'newrelic/developer-toolkit-template-go:{{ .Tag }}'
+#      - 'newrelic/developer-toolkit-template-go:v{{ .Major }}.{{ .Minor }}'
+#      - 'newrelic/developer-toolkit-template-go:latest'
+#    binaries:
+#      - newrelic
+#    build_flag_templates:
+#      - "--pull"
+#      - "--label=repository=http://github.com/newrelic/developer-toolkit-template-go"
+#      - "--label=homepage=https://developer.newrelic.com/"
+#      - "--label=maintainer=Developer Toolkit <opensource@newrelic.com>"
+
+# Already using git-chglog
+changelog:
+  skip: true
