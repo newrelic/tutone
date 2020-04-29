@@ -1,19 +1,17 @@
-package main
+package schema
 
-const (
-	// https://github.com/graphql/graphql-js/blob/master/src/utilities/getIntrospectionQuery.js#L35
-	//   Modified from the following as we only care about the Types
-	//   query IntrospectionQuery {
-	//     __schema {
-	//       directives { name description locations args { ...InputValue } }
-	//       mutationType { name }
-	//       queryType { name }
-	//       subscriptionType { name }
-	//       types { ...FullType }
-	//     }
-	//   }
-	allTypes = `
-query IntrospectionQuery {
+// https://github.com/graphql/graphql-js/blob/master/src/utilities/getIntrospectionQuery.js#L35
+//   Modified from the following as we only care about the Types
+//   query IntrospectionQuery {
+//     __schema {
+//       directives { name description locations args { ...InputValue } }
+//       mutationType { name }
+//       queryType { name }
+//       subscriptionType { name }
+//       types { ...FullType }
+//     }
+//   }
+const Query = `query IntrospectionQuery {
   __schema {
     types { ...FullType }
   }
@@ -31,9 +29,9 @@ fragment FullType on __Type {
 fragment InputValue on __InputValue { name description type { ...TypeRef } defaultValue }
 fragment TypeRef on __Type { kind name ofType { kind name ofType { kind name ofType { kind name ofType { kind name ofType { kind name ofType { kind name ofType { kind name } } } } } } } }
 `
-)
 
-// allTypesResponse - Util struct for decoding the response
-type allTypesResponse struct {
-	Schema Schema `json:"__schema"`
+type QueryResponse struct {
+	Data struct {
+		Schema Schema `json:"__schema"`
+	} `json:"data"`
 }

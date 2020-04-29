@@ -1,0 +1,30 @@
+---
+# Log level for running tutone
+# Default: info
+log_level: debug
+
+# GraphQL endpoint to query for schema
+# Required
+endpoint: https://api.newrelic.com/graphql
+
+# How to authenticate to the API
+auth:
+  # Header set with the API key for authentication
+  # Default: Api-Key
+  header: Api-Key
+
+  # Environment variable to get the API key from
+  # Default: TUTONE_API_KEY
+  api-key-env: NEW_RELIC_API_KEY
+
+# Since we're hitting the API constantly, we an also not do that and use a cached copy
+# of the schema.
+caching:
+  # If we will use / create a cache of the server response or request every time
+  # Default: false
+  enable: true
+
+  # File to store a copy of the schema
+  # Default: schema.json
+  schema_file: schema.json
+

@@ -3,5 +3,6 @@
 bin/*
 coverage/*
 dist/*
+schema.json
 tmp/*
 vendor/*

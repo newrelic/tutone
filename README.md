@@ -13,8 +13,16 @@ Code generation tool
 Generate Golang types from GraphQL schema introspection
 
 ## Getting Started
+1. Create a project configuration file, see `configs/tutone.yaml` for an example.
+1. Generate a `schema.json` using the following command:
 
-1. Include `typegen` in your project as a tool / install in some fashion.
+   ```bash
+   $ tutone fetch \
+     --config path/to/tutone.yaml \
+     --cache \
+     --output path/to/schema.json
+   ```
+   
 1. Add a `./path/to/package/typegen.yaml` configuration with the type you want generated:
 
    ```yaml
@@ -28,7 +36,7 @@ Generate Golang types from GraphQL schema introspection
 
    ```go
    // Package CoolPackage provides cool stuff, based on generated types
-   //go:generate ./path/to/typegen -p $GOPACKAGE
+   //go:generate tutone generate -p $GOPACKAGE
    package CoolPackage
    // ... implementation ...
    ```
