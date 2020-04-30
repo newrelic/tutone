@@ -1,7 +1,12 @@
 package schema
 
 import (
+	"encoding/json"
+	"errors"
+	"io/ioutil"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // Type defines a specific type within the schema
@@ -15,6 +20,24 @@ type Type struct {
 	InputFields   []Field     `json:"inputFields,omitempty"`
 	Interfaces    []TypeRef   `json:"interfaces,omitempty"`
 	PossibleTypes []TypeRef   `json:"possibleTypes,omitempty"`
+}
+
+// Save writes the schema out to a file
+func (t *Type) Save(file string) error {
+	if file == "" {
+		return errors.New("unable to save schema, no file specified")
+	}
+
+	log.WithFields(log.Fields{
+		"schema_file": file,
+	}).Debug("saving schema")
+
+	schemaFile, err := json.MarshalIndent(t, "", " ")
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(file, schemaFile, 0644)
 }
 
 // GetDescription looks for anything in the description before \n\n---\n

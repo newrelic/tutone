@@ -1,8 +1,6 @@
 package fetch
 
 import (
-	"encoding/json"
-	"io/ioutil"
 	"os"
 
 	log "github.com/sirupsen/logrus"
@@ -34,19 +32,15 @@ Query the GraphQL server for schema and write it to a file.
 		schema, err := e.Fetch()
 		util.LogIfError(log.FatalLevel, err)
 
-		if viper.GetBool("caching.enabled") {
-			file := viper.GetString("caching.schema_file")
-			log.WithFields(log.Fields{
-				"schema_file": file,
-			}).Debug("caching enabled")
-			if file != "" {
-				// Write out the schema we got
-				schemaFile, _ := json.MarshalIndent(schema, "", " ")
-				_ = ioutil.WriteFile(file, schemaFile, 0644)
-			}
+		file := viper.GetString("schema_file")
+		if file != "" {
+			util.LogIfError(log.ErrorLevel, schema.Save(file))
 		}
 
-		log.Info("success")
+		log.WithFields(log.Fields{
+			"endpoint":    viper.GetString("endpoint"),
+			"schema_file": viper.GetString("schema_file"),
+		}).Info("successfully fetched schema")
 	},
 }
 
@@ -60,9 +54,6 @@ func init() {
 	Command.Flags().String("api-key-env", DefaultAPIKeyEnv, "Environment variable to read API key from")
 	util.LogIfError(log.ErrorLevel, viper.BindPFlag("auth.api-key-env", Command.Flags().Lookup("api-key-env")))
 
-	Command.Flags().Bool("cache", false, "Enable caching of the schema")
-	util.LogIfError(log.ErrorLevel, viper.BindPFlag("caching.enabled", Command.Flags().Lookup("cache")))
-
-	Command.Flags().String("output", DefaultSchemaCacheFile, "Output file for the schema")
-	util.LogIfError(log.ErrorLevel, viper.BindPFlag("caching.schema_file", Command.Flags().Lookup("output")))
+	Command.Flags().StringP("schema", "s", DefaultSchemaCacheFile, "Output file for the schema")
+	util.LogIfError(log.ErrorLevel, viper.BindPFlag("schema_file", Command.Flags().Lookup("schema")))
 }
