@@ -15,9 +15,20 @@ import (
 var types = make(map[string]string)
 
 // TODO: Need to refactor this
-type TypeConfig struct {
+type TypeInfo struct {
 	Name     string `yaml:"name"`
 	CreateAs string `yaml:"createAs,omitempty"` // CreateAs is the Golang type to override whatever the default detected type would be
+}
+type MutationInfo struct {
+	Name string `yaml:"name"`
+}
+
+type SubscriptionInfo struct {
+	Name string `yaml:"name"`
+}
+
+type QueryInfo struct {
+	Name string `yaml:"name"`
 }
 
 // Schema contains data about the GraphQL schema as returned by the server
@@ -73,6 +84,20 @@ func Load(file string) (*Schema, error) {
 		return nil, err
 	}
 
+	// Stats for logging
+	var countTypes, countMutations, countQueries, countSubscriptions int
+	countTypes = len(schema.Types)
+	if schema.MutationType != nil {
+		countMutations = len(schema.MutationType.Fields)
+	}
+
+	log.WithFields(log.Fields{
+		"count_query":        countQueries,
+		"count_subscription": countSubscriptions,
+		"count_type":         countTypes,
+		"count_mutation":     countMutations,
+	}).Info("schema loaded")
+
 	return &schema, nil
 }
 
@@ -94,8 +119,19 @@ func (s *Schema) Save(file string) error {
 	return ioutil.WriteFile(file, schemaFile, 0644)
 }
 
+func ResolveSchemaTypes(schema Schema, typeInfo []TypeInfo) error {
+	for _, info := range typeInfo {
+		err := schema.TypeGen(info)
+		if err != nil {
+			log.Errorf("error while generating type %s: %s", info.Name, err)
+		}
+	}
+
+	return nil
+}
+
 // TypeGen is the mother type generator.
-func (s *Schema) TypeGen(typeInfo TypeConfig) error {
+func (s *Schema) TypeGen(typeInfo TypeInfo) error {
 	log.Infof("starting on: %+v", typeInfo)
 
 	// Only add the new types
@@ -129,7 +165,7 @@ func (s *Schema) lineForField(f Field) string {
 		subTName := f.Type.GetTypeName()
 		log.Tracef("subTName %s", subTName)
 
-		err := s.TypeGen(TypeConfig{Name: subTName})
+		err := s.TypeGen(TypeInfo{Name: subTName})
 		if err != nil {
 			log.Errorf("ERROR while resolving sub type %s: %s\n", subTName, err)
 		}
@@ -151,7 +187,7 @@ func (s *Schema) lineForField(f Field) string {
 }
 
 // Definition generates the Golang definition of the type
-func (s *Schema) Definition(typeInfo TypeConfig) (string, error) {
+func (s *Schema) Definition(typeInfo TypeInfo) (string, error) {
 	t, err := s.LookupTypeByName(typeInfo.Name)
 	if err != nil {
 		return "", err

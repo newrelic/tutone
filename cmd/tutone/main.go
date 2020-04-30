@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/newrelic/tutone/internal/fetch"
+	"github.com/newrelic/tutone/internal/generate"
 	"github.com/newrelic/tutone/internal/util"
 )
 
@@ -47,11 +48,12 @@ func init() {
 
 	// Log level flag
 	Command.PersistentFlags().StringP("loglevel", "l", "info", "Log level")
-	viper.SetDefault("loglevel", "info")
-	util.LogIfError(log.ErrorLevel, viper.BindPFlag("loglevel", Command.PersistentFlags().Lookup("loglevel")))
+	viper.SetDefault("log_level", "info")
+	util.LogIfError(log.ErrorLevel, viper.BindPFlag("log_level", Command.PersistentFlags().Lookup("loglevel")))
 
 	// Add sub commands
 	Command.AddCommand(fetch.Command)
+	Command.AddCommand(generate.Command)
 }
 
 func initConfig() {
@@ -66,19 +68,20 @@ func initConfig() {
 		viper.SetConfigName("tutone")
 		viper.SetConfigType("yaml")
 		viper.AddConfigPath(".")
+		viper.AddConfigPath(".tutone")
 	}
 
 	err := viper.ReadInConfig()
 	// nolint
 	if err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			log.Info("no config file found, using defaults")
+			log.Debug("no config file found, using defaults")
 		} else if e, ok := err.(viper.ConfigParseError); ok {
 			log.Errorf("error parsing config file: %v", e)
 		}
 	}
 
-	logLevel, err := log.ParseLevel(viper.GetString("loglevel"))
+	logLevel, err := log.ParseLevel(viper.GetString("log_level"))
 	if err != nil {
 		log.Fatal(err)
 	}

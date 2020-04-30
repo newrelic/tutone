@@ -6,3 +6,6 @@ dist/*
 schema.json
 tmp/*
 vendor/*
+*.json
+*.yaml
+*.yml
