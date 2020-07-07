@@ -2,12 +2,20 @@ package generate
 
 import (
 	"errors"
+	"fmt"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
+	"github.com/newrelic/tutone/internal/provider"
 	"github.com/newrelic/tutone/internal/schema"
+	"github.com/newrelic/tutone/providers/clientgo"
 )
+
+var providers = []provider.Provider{
+	// &terraform.Generator{},
+	&clientgo.Generator{},
+}
 
 // The big show
 func Generate() error {
@@ -20,7 +28,8 @@ func Generate() error {
 		"definition_file": defFile,
 		"schema_file":     schemaFile,
 		"types_file":      typesFile,
-	}).Info("Loading generation config")
+		"package_name":    packageName,
+	}).Info("loading generation config")
 
 	// load the config
 	cfg, err := LoadConfig(defFile)
@@ -43,6 +52,7 @@ func Generate() error {
 	if err != nil {
 		return err
 	}
+
 	log.WithFields(log.Fields{
 		"schema": s,
 	}).Trace("loaded schema")
@@ -53,7 +63,17 @@ func Generate() error {
 		"count_subscription": len(cfg.Subscriptions),
 		"count_type":         len(cfg.Types),
 		"package":            cfg.Package,
-	}).Info("Starting code Generation")
+	}).Info("starting code generation")
 
-	return errors.New("not implemented")
+	for _, p := range providers {
+		// p.LoadConfig()
+
+		log.Debugf("generating for %T", p)
+		err = p.Generate(s)
+		if err != nil {
+			return fmt.Errorf("unable to generate for provider %T: %s", p, err)
+		}
+	}
+
+	return nil
 }
