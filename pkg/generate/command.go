@@ -5,8 +5,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/newrelic/tutone/internal/fetch"
 	"github.com/newrelic/tutone/internal/util"
+	"github.com/newrelic/tutone/pkg/fetch"
 )
 
 const (
