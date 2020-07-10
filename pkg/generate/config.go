@@ -4,19 +4,26 @@ import (
 	"errors"
 	"io/ioutil"
 
+	"github.com/newrelic/tutone/internal/schema"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
-
-	"github.com/newrelic/tutone/internal/schema"
 )
 
 // Config is the package specific configuration file
 type Config struct {
-	Package       string                    `yaml:"package,omitempty"`
-	Types         []schema.TypeInfo         `yaml:"types,omitempty"`
-	Mutations     []schema.MutationInfo     `yaml:"mutations,omitempty"`
-	Subscriptions []schema.SubscriptionInfo `yaml:"subscriptions,omitempty"`
-	Queries       []schema.QueryInfo        `yaml:"queries,omitempty"`
+	// Package       string                    `yaml:"package,omitempty"`
+	// Types         []schema.TypeInfo         `yaml:"types,omitempty"`
+	// Mutations     []schema.MutationInfo     `yaml:"mutations,omitempty"`
+	// Subscriptions []schema.SubscriptionInfo `yaml:"subscriptions,omitempty"`
+	// Queries       []schema.QueryInfo        `yaml:"queries,omitempty"`
+
+	Packages []Package `yaml:"packages,omitempty"`
+}
+
+type Package struct {
+	Name  string            `yaml:"name,omitempty"`
+	Path  string            `yaml:"path,omitempty"`
+	Types []schema.TypeInfo `yaml:"types,omitempty"`
 }
 
 func LoadConfig(file string) (*Config, error) {

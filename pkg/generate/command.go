@@ -11,7 +11,7 @@ import (
 
 const (
 	DefaultGenerateOutputFile     = "types.go"
-	DefaultGenerateDefinitionFile = "generate.yml"
+	DefaultGenerateDefinitionFile = ".generate.yml"
 )
 
 var packageName string
