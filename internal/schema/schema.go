@@ -247,7 +247,7 @@ func (s *Schema) Definition(typeInfo TypeInfo) (string, error) {
 
 // Global type list lookup function
 func (s *Schema) LookupTypeByName(typeName string) (*Type, error) {
-	log.Debugf("looking for typeName: %s", typeName)
+	log.Tracef("looking for typeName: %s", typeName)
 
 	for _, t := range s.Types {
 		if t.Name == typeName {
