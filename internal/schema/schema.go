@@ -11,14 +11,15 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// TODO: Remove this
-var types = make(map[string]string)
+// Types TODO: Remove this
+var Types = make(map[string]string)
 
 // TODO: Need to refactor this
 type TypeInfo struct {
 	Name     string `yaml:"name"`
 	CreateAs string `yaml:"createAs,omitempty"` // CreateAs is the Golang type to override whatever the default detected type would be
 }
+
 type MutationInfo struct {
 	Name string `yaml:"name"`
 }
@@ -119,32 +120,38 @@ func (s *Schema) Save(file string) error {
 	return ioutil.WriteFile(file, schemaFile, 0644)
 }
 
+// TODO: Return the resolved types to allow other functions to use it
+//       and we can avoid the global var `Types`
 func ResolveSchemaTypes(schema Schema, typeInfo []TypeInfo) error {
 	for _, info := range typeInfo {
-		err := schema.TypeGen(info)
+		typesOutput, err := schema.TypeGen(info)
 		if err != nil {
 			log.Errorf("error while generating type %s: %s", info.Name, err)
 		}
+
+		fmt.Printf("\nTypes Output: %+v \n", typesOutput)
 	}
 
 	return nil
 }
 
 // TypeGen is the mother type generator.
-func (s *Schema) TypeGen(typeInfo TypeInfo) error {
+func (s *Schema) TypeGen(typeInfo TypeInfo) (map[string]string, error) {
 	log.Infof("starting on: %+v", typeInfo)
 
 	// Only add the new types
-	if _, ok := types[typeInfo.Name]; !ok {
+	if _, ok := Types[typeInfo.Name]; !ok {
 		output, err := s.Definition(typeInfo)
 		if err != nil {
-			return err
+			return Types, err
 		}
 
-		types[typeInfo.Name] = output
+		Types[typeInfo.Name] = output
 	}
 
-	return nil
+	fmt.Print("\n TypeGen Done....\n\n")
+
+	return Types, nil
 }
 
 func (s *Schema) lineForField(f Field) string {
@@ -165,7 +172,7 @@ func (s *Schema) lineForField(f Field) string {
 		subTName := f.Type.GetTypeName()
 		log.Tracef("subTName %s", subTName)
 
-		err := s.TypeGen(TypeInfo{Name: subTName})
+		_, err := s.TypeGen(TypeInfo{Name: subTName})
 		if err != nil {
 			log.Errorf("ERROR while resolving sub type %s: %s\n", subTName, err)
 		}
