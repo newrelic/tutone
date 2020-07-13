@@ -12,7 +12,15 @@
 
 Code generation tool
 
-Generate Golang types from GraphQL schema introspection
+Generate code from GraphQL schema introspection.
+
+## Summary
+
+At a high level, the following workflow is used.
+
+* `tutone fetch` calls the nerdgraph api to introspect the schema.
+* The schema is cached in `schema.json`.  This is information about the graphql schema
+* `tutone generate` uses the `schema.json` + the configuration + the templates to output generated text.
 
 ## Getting Started
 1. Create a project configuration file, see `configs/tutone.yaml` for an example.
@@ -183,7 +191,6 @@ This refers to what part of the code is the focus of the work.  For example:
 ```
 $ make docs
 ```
-
 
 ## Support
 
