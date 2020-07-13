@@ -1,11 +1,13 @@
 package typegen
 
 import (
+	"fmt"
 	"os"
 	"text/template"
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/newrelic/tutone/internal/config"
 	"github.com/newrelic/tutone/internal/schema"
 )
 
@@ -39,11 +41,30 @@ type goEnumValue struct {
 	Description string
 }
 
-func (g *Generator) Generate(s *schema.Schema, tt *[]*schema.Type) error {
+func (g *Generator) Generate(s *schema.Schema, config *config.Config) error {
+	for _, pkg := range config.Packages {
+		expandedTypes, err := schema.ExpandTypes(s, pkg.Types)
+		if err != nil {
+			log.Error(err)
+		}
+
+		// TODO: Update return pattern to be tuple? - e.g. (result, err)
+		if err := g.generateTypesForPackage(pkg, s, expandedTypes); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (g *Generator) generateTypesForPackage(pkg config.Package, schemaInput *schema.Schema, expandedTypes *[]*schema.Type) error {
+	// TODO: Putting the types in the specified path should be optional
+	//       Should we use a flag or allow the user to omit that field in the config? ¿Por que no lost dos?
+
 	var structsForGen []goStruct
 	var enumsForGen []goEnum
 
-	for _, t := range *tt {
+	for _, t := range *expandedTypes {
 		switch t.Kind {
 		case schema.KindInputObject, schema.KindObject:
 
@@ -102,22 +123,39 @@ func (g *Generator) Generate(s *schema.Schema, tt *[]*schema.Type) error {
 
 	g.Types = structsForGen
 	g.Enums = enumsForGen
+	g.PackageName = pkg.Name
 
-	// log.Infof("structsForGen: %+v", structsForGen)
+	// Default to project root for types
+	destinationPath := "./"
+	if pkg.Path != "" {
+		destinationPath = pkg.Path
+	}
 
-	g.PackageName = "tmp"
+	if _, err := os.Stat(destinationPath); os.IsNotExist(err) {
+		if err := os.Mkdir(destinationPath, 0755); err != nil {
+			log.Error(err)
+		}
+	}
 
-	return fff(g, "templates/clientgo/types.go.tmpl", "tmp/types.go")
-}
+	// Default file name is 'types.go'
+	fileName := "types.go"
+	if pkg.FileName != "" {
+		fileName = pkg.FileName
+	}
 
-func fff(g *Generator, templatePath string, destination string) error {
-	f, err := os.Create(destination)
+	filePath := fmt.Sprintf("%s/%s", destinationPath, fileName)
+	f, err := os.Create(filePath)
 	if err != nil {
-		return err
+		log.Error(err)
 	}
 	defer f.Close()
 
-	tmpl, err := template.ParseFiles(templatePath)
+	templateName := "types.go.tmpl"
+	if pkg.TemplateName != "" {
+		templateName = pkg.TemplateName
+	}
+
+	tmpl, err := template.ParseFiles(templateName)
 	if err != nil {
 		return err
 	}
@@ -126,6 +164,21 @@ func fff(g *Generator, templatePath string, destination string) error {
 	if err != nil {
 		return err
 	}
+
+	// TODO: Imports?? Check old implementation
+
+	// keys := make([]string, 0, len(schema.Types))
+	// for k := range schema.Types {
+	// 	keys = append(keys, k)
+	// }
+	// sort.Strings(keys)
+	//
+	// for _, k := range keys {
+	// 	_, err := f.WriteString(schema.Types[k])
+	// 	if err != nil {
+	// 		log.Error(err)
+	// 	}
+	// }
 
 	return nil
 }
