@@ -11,7 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// TODO: Remove this
+// Types TODO: Remove this
 var Types = make(map[string]string)
 
 // TODO: Need to refactor this
@@ -19,6 +19,7 @@ type TypeInfo struct {
 	Name     string `yaml:"name"`
 	CreateAs string `yaml:"createAs,omitempty"` // CreateAs is the Golang type to override whatever the default detected type would be
 }
+
 type MutationInfo struct {
 	Name string `yaml:"name"`
 }

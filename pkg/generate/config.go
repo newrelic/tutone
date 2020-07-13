@@ -4,9 +4,10 @@ import (
 	"errors"
 	"io/ioutil"
 
-	"github.com/newrelic/tutone/internal/schema"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
+
+	"github.com/newrelic/tutone/internal/schema"
 )
 
 // Config is the package specific configuration file
@@ -21,9 +22,10 @@ type Config struct {
 }
 
 type Package struct {
-	Name  string            `yaml:"name,omitempty"`
-	Path  string            `yaml:"path,omitempty"`
-	Types []schema.TypeInfo `yaml:"types,omitempty"`
+	Name     string            `yaml:"name,omitempty"`
+	Path     string            `yaml:"path,omitempty"`
+	FileName string            `yaml:"fileName,omitempty"`
+	Types    []schema.TypeInfo `yaml:"types,omitempty"`
 }
 
 func LoadConfig(file string) (*Config, error) {
