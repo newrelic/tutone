@@ -4,9 +4,10 @@ import (
 	"errors"
 	"io/ioutil"
 
-	"github.com/newrelic/tutone/internal/schema"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
+
+	"github.com/newrelic/tutone/internal/schema"
 )
 
 // Config is the information keeper for generating go structs from type names.
