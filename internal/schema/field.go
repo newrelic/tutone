@@ -14,14 +14,13 @@ type Field struct {
 	DefaultValue interface{} `json:"defaultValue,omitempty"`
 }
 
-// GetDescription looks for anything in the description before \n\n---\n
-// and filters off anything after that (internal messaging that is not useful here)
+// GetDescription formats the description into a GoDoc comment.
 func (f *Field) GetDescription() string {
 	if strings.TrimSpace(f.Description) == "" {
 		return ""
 	}
 
-	return "\t /* " + f.GetName() + " - " + filterDescription(f.Description) + " */\n"
+	return formatDescription("", f.Description)
 }
 
 // GetName returns a recusive lookup of the type name

@@ -1,7 +1,13 @@
 package config
 
 import (
+	"errors"
+	"io/ioutil"
+
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
+
+	"github.com/newrelic/tutone/internal/schema"
 )
 
 // Config is the information keeper for generating go structs from type names.
@@ -16,6 +22,7 @@ type Config struct {
 	//Types   []TypeConfig `yaml:"types"`
 	//Verbose bool
 	//client  *newrelic.NewRelic
+	Packages []Package `yaml:"packages,omitempty"`
 }
 
 type AuthConfig struct {
@@ -33,6 +40,20 @@ type CacheConfig struct {
 //	CreateAs string `yaml:"createAs,omitempty"` // CreateAs is the Golang type to override whatever the default detected type would be
 //}
 
+type Package struct {
+	Name         string            `yaml:"name,omitempty"`
+	Path         string            `yaml:"path,omitempty"`
+	FileName     string            `yaml:"fileName,omitempty"`
+	TemplateName string            `yaml:"templateName,omitempty"`
+	Types        []schema.TypeInfo `yaml:"types,omitempty"`
+	Generators   []GeneratorConfig `yaml:"generators,omitempty"`
+}
+
+type GeneratorConfig struct {
+	Name            string `yaml:"name,omitempty"`
+	DestinationFile string `yaml:"destination_file,omitempty"`
+}
+
 const (
 	DefaultCacheEnable     = false
 	DefaultCacheSchemaFile = "schema.json"
@@ -40,6 +61,29 @@ const (
 	DefaultAuthHeader      = "Api-Key"
 	DefaultAuthEnvVar      = "TUTONE_API_KEY"
 )
+
+func LoadConfig(file string) (*Config, error) {
+	if file == "" {
+		return nil, errors.New("config file name required")
+	}
+	log.WithFields(log.Fields{
+		"file": file,
+	}).Debug("loading package definition")
+
+	yamlFile, err := ioutil.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+
+	var config Config
+	err = yaml.Unmarshal(yamlFile, &config)
+	if err != nil {
+		return nil, err
+	}
+	log.Tracef("definition: %+v", config)
+
+	return &config, nil
+}
 
 func New() *Config {
 	cfg := Config{

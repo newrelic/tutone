@@ -27,6 +27,27 @@ func filterDescription(description string) string {
 	return strings.TrimSpace(ret)
 }
 
+func formatDescription(name string, description string) string {
+	if strings.TrimSpace(description) == "" {
+		return ""
+	}
+
+	filtered := filterDescription(description)
+	lines := strings.Split(filtered, "\n")
+
+	var resultLines []string
+
+	for i, l := range lines {
+		if i == 0 && name != "" {
+			resultLines = append(resultLines, fmt.Sprintf("// %s - %s", name, l))
+		} else {
+			resultLines = append(resultLines, fmt.Sprintf("// %s", l))
+		}
+	}
+
+	return strings.Join(resultLines, "\n")
+}
+
 // typeNameInTypes determines if a name is already present in a set of TypeInfo.
 func typeNameInTypes(s string, types []TypeInfo) bool {
 	for _, t := range types {
