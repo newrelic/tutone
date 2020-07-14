@@ -18,9 +18,9 @@ type Generator struct {
 }
 
 type goStruct struct {
-	Name   string
-	Doc    string
-	Fields []goStructField
+	Name        string
+	Description string
+	Fields      []goStructField
 }
 
 type goStructField struct {
@@ -69,8 +69,8 @@ func (g *Generator) generateTypesForPackage(pkg config.Package, schemaInput *sch
 		case schema.KindInputObject, schema.KindObject:
 
 			xxx := goStruct{
-				Name: t.Name,
-				Doc:  t.Description,
+				Name:        t.Name,
+				Description: t.GetDescription(),
 			}
 
 			var fields []schema.Field
@@ -103,13 +103,13 @@ func (g *Generator) generateTypesForPackage(pkg config.Package, schemaInput *sch
 		case schema.KindENUM:
 			xxx := goEnum{
 				Name:        t.Name,
-				Description: t.Description,
+				Description: t.GetDescription(),
 			}
 
 			for _, v := range t.EnumValues {
 				value := goEnumValue{
 					Name:        v.Name,
-					Description: v.Description,
+					Description: v.GetDescription(),
 				}
 
 				xxx.Values = append(xxx.Values, value)

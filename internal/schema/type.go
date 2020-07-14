@@ -40,14 +40,13 @@ func (t *Type) Save(file string) error {
 	return ioutil.WriteFile(file, schemaFile, 0644)
 }
 
-// GetDescription looks for anything in the description before \n\n---\n
-// and filters off anything after that (internal messaging that is not useful here)
+// GetDescription formats the description into a GoDoc comment.
 func (t *Type) GetDescription() string {
 	if strings.TrimSpace(t.Description) == "" {
 		return ""
 	}
 
-	return "\t /* " + t.GetName() + " - " + filterDescription(t.Description) + " */\n"
+	return formatDescription(t.GetName(), t.Description)
 }
 
 // GetName returns a recusive lookup of the type name
