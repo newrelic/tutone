@@ -22,7 +22,8 @@ type Config struct {
 	//Types   []TypeConfig `yaml:"types"`
 	//Verbose bool
 	//client  *newrelic.NewRelic
-	Packages []Package `yaml:"packages,omitempty"`
+	Packages    []Package `yaml:"packages,omitempty"`
+	TemplateDir string    `yaml:"template_dir,omitempty"`
 }
 
 type AuthConfig struct {
@@ -41,17 +42,17 @@ type CacheConfig struct {
 //}
 
 type Package struct {
-	Name         string            `yaml:"name,omitempty"`
-	Path         string            `yaml:"path,omitempty"`
-	FileName     string            `yaml:"fileName,omitempty"`
-	TemplateName string            `yaml:"templateName,omitempty"`
-	Types        []schema.TypeInfo `yaml:"types,omitempty"`
-	Generators   []GeneratorConfig `yaml:"generators,omitempty"`
+	Name       string            `yaml:"name,omitempty"`
+	Path       string            `yaml:"path,omitempty"`
+	Types      []schema.TypeInfo `yaml:"types,omitempty"`
+	Generators []GeneratorConfig `yaml:"generators,omitempty"`
 }
 
 type GeneratorConfig struct {
 	Name            string `yaml:"name,omitempty"`
 	DestinationFile string `yaml:"destination_file,omitempty"`
+	FileName        string `yaml:"fileName,omitempty"`
+	TemplateName    string `yaml:"templateName,omitempty"`
 }
 
 const (

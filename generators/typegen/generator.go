@@ -48,16 +48,21 @@ func (g *Generator) Generate(s *schema.Schema, config *config.Config) error {
 			log.Error(err)
 		}
 
-		// TODO: Update return pattern to be tuple? - e.g. (result, err)
-		if err := g.generateTypesForPackage(pkg, s, expandedTypes); err != nil {
-			return err
+		for _, genConfig := range pkg.Generators {
+			if genConfig.Name == "typegen" {
+				if err := g.generateTypesForPackage(pkg, s, expandedTypes, genConfig); err != nil {
+					return err
+				}
+			}
 		}
+
 	}
 
 	return nil
 }
 
-func (g *Generator) generateTypesForPackage(pkg config.Package, schemaInput *schema.Schema, expandedTypes *[]*schema.Type) error {
+// generateTypesForPackage assumes usage with the "typegen" generator.
+func (g *Generator) generateTypesForPackage(pkg config.Package, schemaInput *schema.Schema, expandedTypes *[]*schema.Type, genConfig config.GeneratorConfig) error {
 	// TODO: Putting the types in the specified path should be optional
 	//       Should we use a flag or allow the user to omit that field in the config? ¿Por que no lost dos?
 
@@ -117,7 +122,7 @@ func (g *Generator) generateTypesForPackage(pkg config.Package, schemaInput *sch
 
 			enumsForGen = append(enumsForGen, xxx)
 		default:
-			log.Infof("default reached")
+			log.Debugf("default reached for: %s of kind: %+v", t.Name, t.Kind)
 		}
 	}
 
@@ -139,8 +144,8 @@ func (g *Generator) generateTypesForPackage(pkg config.Package, schemaInput *sch
 
 	// Default file name is 'types.go'
 	fileName := "types.go"
-	if pkg.FileName != "" {
-		fileName = pkg.FileName
+	if genConfig.FileName != "" {
+		fileName = genConfig.FileName
 	}
 
 	filePath := fmt.Sprintf("%s/%s", destinationPath, fileName)
@@ -151,8 +156,8 @@ func (g *Generator) generateTypesForPackage(pkg config.Package, schemaInput *sch
 	defer f.Close()
 
 	templateName := "types.go.tmpl"
-	if pkg.TemplateName != "" {
-		templateName = pkg.TemplateName
+	if genConfig.TemplateName != "" {
+		templateName = genConfig.TemplateName
 	}
 
 	tmpl, err := template.ParseFiles(templateName)
