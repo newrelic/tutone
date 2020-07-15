@@ -81,32 +81,41 @@ func ExpandType(s *Schema, t *Type) (*[]*Type, error) {
 		return nil, fmt.Errorf("unable to expand nil type")
 	}
 
+	log.Debugf("expanding type %s", t.GetName())
+
 	var f []*Type
 
-	// Collect the nested types from InputFields
-	for _, i := range t.InputFields {
+	// InputFields and Fields are handled the same way, so combine them to loop over.
+	var fields []Field
+	fields = append(fields, t.Fields...)
+	fields = append(fields, t.InputFields...)
+
+	// Collect the nested types from InputFields and Fields.
+	for _, i := range fields {
 		if i.Type.OfType != nil {
+			log.Tracef("field %s of type %s", i.GetName(), i.Type.OfType.GetName())
+
 			result, err := s.LookupTypeByName(i.Type.OfType.GetTypeName())
 			if err != nil {
 				log.Error(err)
+				continue
 			}
 
 			if result != nil {
+				// Append the nested type to the result set.
 				f = append(f, result)
-			}
-		}
-	}
 
-	// Same as above, but for Fields
-	for _, i := range t.Fields {
-		if i.Type.OfType != nil {
-			result, err := s.LookupTypeByName(i.Type.OfType.GetTypeName())
-			if err != nil {
-				log.Error(err)
-			}
+				// Recursively expand any fields of the nested type
+				subExpanded, err := ExpandType(s, result)
+				if err != nil {
+					log.Error(err)
+					continue
+				}
 
-			if result != nil {
-				f = append(f, result)
+				// Append the nested sub-types into the result set.
+				if subExpanded != nil {
+					f = append(f, *subExpanded...)
+				}
 			}
 		}
 	}
