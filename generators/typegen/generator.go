@@ -117,7 +117,7 @@ func (g *Generator) generateTypesForPackage(pkg config.Package, schemaInput *sch
 
 			enumsForGen = append(enumsForGen, xxx)
 		default:
-			log.Infof("default reached")
+			log.Debugf("default reached for kind %s, ignoring", t.Name)
 		}
 	}
 
