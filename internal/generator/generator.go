@@ -8,6 +8,5 @@ import (
 // Generator aspires to implement the interface between a NerdGraph schema and
 // generated code for another project.
 type Generator interface {
-	// Generate is expected to
-	Generate(*schema.Schema, *config.Config) error
+	Generate(*schema.Schema, *config.GeneratorConfig, *config.PackageConfig) error
 }

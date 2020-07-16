@@ -3,6 +3,7 @@ package typegen
 import (
 	"fmt"
 	"os"
+	"path"
 	"text/template"
 
 	log "github.com/sirupsen/logrus"
@@ -41,23 +42,30 @@ type goEnumValue struct {
 	Description string
 }
 
-func (g *Generator) Generate(s *schema.Schema, config *config.Config) error {
-	for _, pkg := range config.Packages {
-		expandedTypes, err := schema.ExpandTypes(s, pkg.Types)
-		if err != nil {
-			log.Error(err)
-		}
+// Generate is the entry point for this Generator.
+func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig) error {
+	if genConfig == nil {
+		return fmt.Errorf("unable to Generate with nil genConfig")
+	}
 
-		// TODO: Update return pattern to be tuple? - e.g. (result, err)
-		if err := g.generateTypesForPackage(pkg, s, expandedTypes); err != nil {
-			return err
-		}
+	if pkgConfig == nil {
+		return fmt.Errorf("unable to Generate with nil pkgConfig")
+	}
+
+	expandedTypes, err := schema.ExpandTypes(s, pkgConfig.Types)
+	if err != nil {
+		log.Error(err)
+	}
+
+	// TODO: Update return pattern to be tuple? - e.g. (result, err)
+	if err := g.generateTypesForPackage(s, genConfig, pkgConfig, expandedTypes); err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func (g *Generator) generateTypesForPackage(pkg config.Package, schemaInput *schema.Schema, expandedTypes *[]*schema.Type) error {
+func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig, expandedTypes *[]*schema.Type) error {
 	// TODO: Putting the types in the specified path should be optional
 	//       Should we use a flag or allow the user to omit that field in the config? ¿Por que no lost dos?
 
@@ -123,12 +131,12 @@ func (g *Generator) generateTypesForPackage(pkg config.Package, schemaInput *sch
 
 	g.Types = structsForGen
 	g.Enums = enumsForGen
-	g.PackageName = pkg.Name
+	g.PackageName = pkgConfig.Name
 
 	// Default to project root for types
 	destinationPath := "./"
-	if pkg.Path != "" {
-		destinationPath = pkg.Path
+	if pkgConfig.Path != "" {
+		destinationPath = pkgConfig.Path
 	}
 
 	if _, err := os.Stat(destinationPath); os.IsNotExist(err) {
@@ -139,8 +147,8 @@ func (g *Generator) generateTypesForPackage(pkg config.Package, schemaInput *sch
 
 	// Default file name is 'types.go'
 	fileName := "types.go"
-	if pkg.FileName != "" {
-		fileName = pkg.FileName
+	if genConfig.FileName != "" {
+		fileName = genConfig.FileName
 	}
 
 	filePath := fmt.Sprintf("%s/%s", destinationPath, fileName)
@@ -151,11 +159,18 @@ func (g *Generator) generateTypesForPackage(pkg config.Package, schemaInput *sch
 	defer f.Close()
 
 	templateName := "types.go.tmpl"
-	if pkg.TemplateName != "" {
-		templateName = pkg.TemplateName
+	if genConfig.TemplateName != "" {
+		templateName = genConfig.TemplateName
 	}
 
-	tmpl, err := template.ParseFiles(templateName)
+	templateDir := "templates/typegen"
+	if genConfig.TemplateDir != "" {
+		templateDir = genConfig.TemplateDir
+	}
+
+	templatePath := path.Join(templateDir, templateName)
+
+	tmpl, err := template.ParseFiles(templatePath)
 	if err != nil {
 		return err
 	}

@@ -12,12 +12,7 @@ import (
 	"github.com/newrelic/tutone/internal/schema"
 )
 
-var generators = map[string]generator.Generator{
-	// &terraform.Generator{},
-	"typegen": &typegen.Generator{},
-}
-
-// The big show
+// Generate reads the configuration file and executes generators relevant to a particular package.
 func Generate() error {
 	fmt.Print("\n GENERATE..... \n")
 
@@ -55,7 +50,8 @@ func Generate() error {
 	}).Trace("loaded schema")
 
 	log.WithFields(log.Fields{
-		"packages": cfg.Packages,
+		"count_packages":   len(cfg.Packages),
+		"count_generators": len(cfg.Generators),
 		// "count_mutation":     len(cfg.Mutations),
 		// "count_query":        len(cfg.Queries),
 		// "count_subscription": len(cfg.Subscriptions),
@@ -63,22 +59,58 @@ func Generate() error {
 		// "package":            cfg.Package,
 	}).Info("starting code generation")
 
-	for _, pkg := range cfg.Packages {
-		for _, pkgGenerator := range pkg.Generators {
+	allGenerators := map[string]generator.Generator{
+		// &terraform.Generator{},
+		"typegen": &typegen.Generator{},
+	}
 
-			for generatorName, generator := range generators {
-				if pkgGenerator.Name == generatorName {
-					err = generator.Generate(s, cfg)
-					if err != nil {
-						return fmt.Errorf("unable to generate for provider %T: %s", generatorName, err)
-					}
-					//
-				}
-
+	for _, pkgConfig := range cfg.Packages {
+		for _, generatorName := range pkgConfig.Generators {
+			ggg, err := getGeneratorByName(generatorName, allGenerators)
+			if err != nil {
+				log.Error(err)
+				continue
 			}
 
+			genConfig, err := getGeneratorConfigByName(generatorName, cfg.Generators)
+			if err != nil {
+				log.Error(err)
+				continue
+			}
+
+			if ggg != nil && genConfig != nil {
+
+				g := *ggg
+
+				err = g.Generate(s, genConfig, &pkgConfig)
+				if err != nil {
+					return fmt.Errorf("unable to generate for provider %T: %s", generatorName, err)
+				}
+			}
 		}
 	}
 
 	return nil
+}
+
+// getGeneratorConfigByName retrieve the *config.GeneratorConfig from the given set or errros.
+func getGeneratorConfigByName(name string, matchSet []config.GeneratorConfig) (*config.GeneratorConfig, error) {
+	for _, g := range matchSet {
+		if g.Name == name {
+			return &g, nil
+		}
+	}
+
+	return nil, fmt.Errorf("no generatorConfig with name %s found", name)
+}
+
+// getGeneratorByName retrieve the *generator.Generator from the given set or errros.
+func getGeneratorByName(name string, matchSet map[string]generator.Generator) (*generator.Generator, error) {
+	for n, g := range matchSet {
+		if n == name {
+			return &g, nil
+		}
+	}
+
+	return nil, fmt.Errorf("no generator named %s found", name)
 }
