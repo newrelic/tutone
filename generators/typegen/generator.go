@@ -17,6 +17,7 @@ type Generator struct {
 	PackageName string
 	Enums       []goEnum
 	Imports     []string
+	Scalars     []goScalar
 }
 
 type goStruct struct {
@@ -41,6 +42,12 @@ type goEnum struct {
 type goEnumValue struct {
 	Name        string
 	Description string
+}
+
+type goScalar struct {
+	Name        string
+	Description string
+	Type        string
 }
 
 // Generate is the entry point for this Generator.
@@ -72,6 +79,8 @@ func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.
 
 	var structsForGen []goStruct
 	var enumsForGen []goEnum
+	var scalarsForGen []goScalar
+
 	var err error
 
 	for _, t := range *expandedTypes {
@@ -126,13 +135,26 @@ func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.
 			}
 
 			enumsForGen = append(enumsForGen, xxx)
+		case schema.KindScalar:
+			log.Warnf("scalar type: %+v", t)
+
+			if !t.GoType() {
+				xxx := goScalar{
+					Description: t.GetDescription(),
+					Name:        t.GetName(),
+					Type:        "int",
+				}
+
+				scalarsForGen = append(scalarsForGen, xxx)
+			}
 		default:
-			log.Debugf("default reached for kind %s, ignoring", t.Name)
+			log.Debugf("default reached for kind %s, ignoring: %s", t.Name, t.Kind)
 		}
 	}
 
 	g.Types = structsForGen
 	g.Enums = enumsForGen
+	g.Scalars = scalarsForGen
 	g.PackageName = pkgConfig.Name
 	g.Imports = pkgConfig.Imports
 
