@@ -48,6 +48,7 @@ type PackageConfig struct {
 	Types []TypeConfig `yaml:"types,omitempty"`
 	// Generators is a list of names that reference a generator in the Config struct.
 	Generators []string `yaml:"generators,omitempty"`
+	Imports    []string `yaml:"imports,omitempty"`
 }
 
 // GeneratorConfig is the information necessary to execute a generator.

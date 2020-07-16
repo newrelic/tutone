@@ -16,6 +16,7 @@ type Generator struct {
 	Types       []goStruct
 	PackageName string
 	Enums       []goEnum
+	Imports     []string
 }
 
 type goStruct struct {
@@ -133,6 +134,7 @@ func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.
 	g.Types = structsForGen
 	g.Enums = enumsForGen
 	g.PackageName = pkgConfig.Name
+	g.Imports = pkgConfig.Imports
 
 	// Default to project root for types
 	destinationPath := "./"
