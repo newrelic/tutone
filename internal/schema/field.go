@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/newrelic/tutone/internal/config"
@@ -48,6 +49,10 @@ func (f *Field) GetTypeNameWithOverride(pkgConfig *config.PackageConfig) (string
 		if err != nil {
 			return "", err
 		}
+	}
+
+	if f.Type.IsList() {
+		return fmt.Sprintf("[]%s", typeName), nil
 	}
 
 	return typeName, nil
