@@ -71,6 +71,7 @@ func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.
 
 	var structsForGen []goStruct
 	var enumsForGen []goEnum
+	var err error
 
 	for _, t := range *expandedTypes {
 		switch t.Kind {
@@ -87,9 +88,9 @@ func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.
 
 			fieldErrs := []error{}
 			for _, f := range fields {
-				typeName, _, err := f.Type.GetType()
+				var typeName string
+				typeName, err = f.GetTypeNameWithOverride(pkgConfig)
 				if err != nil {
-					log.Error(err)
 					fieldErrs = append(fieldErrs, err)
 				}
 
@@ -139,8 +140,8 @@ func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.
 		destinationPath = pkgConfig.Path
 	}
 
-	if _, err := os.Stat(destinationPath); os.IsNotExist(err) {
-		if err := os.Mkdir(destinationPath, 0755); err != nil {
+	if _, err = os.Stat(destinationPath); os.IsNotExist(err) {
+		if err = os.Mkdir(destinationPath, 0755); err != nil {
 			log.Error(err)
 		}
 	}

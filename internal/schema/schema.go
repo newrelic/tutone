@@ -9,16 +9,12 @@ import (
 	"os"
 
 	log "github.com/sirupsen/logrus"
+
+	"github.com/newrelic/tutone/internal/config"
 )
 
 // Types TODO: Remove this
 var Types = make(map[string]string)
-
-// TODO: Need to refactor this
-type TypeInfo struct {
-	Name     string `yaml:"name"`
-	CreateAs string `yaml:"createAs,omitempty"` // CreateAs is the Golang type to override whatever the default detected type would be
-}
 
 type MutationInfo struct {
 	Name string `yaml:"name"`
@@ -122,7 +118,7 @@ func (s *Schema) Save(file string) error {
 
 // TODO: Return the resolved types to allow other functions to use it
 //       and we can avoid the global var `Types`
-func ResolveSchemaTypes(schema Schema, typeInfo []TypeInfo) error {
+func ResolveSchemaTypes(schema Schema, typeInfo []config.TypeConfig) error {
 	for _, info := range typeInfo {
 		typesOutput, err := schema.TypeGen(info)
 		if err != nil {
@@ -136,7 +132,7 @@ func ResolveSchemaTypes(schema Schema, typeInfo []TypeInfo) error {
 }
 
 // TypeGen is the mother type generator.
-func (s *Schema) TypeGen(typeInfo TypeInfo) (map[string]string, error) {
+func (s *Schema) TypeGen(typeInfo config.TypeConfig) (map[string]string, error) {
 	log.Infof("starting on: %+v", typeInfo)
 
 	// Only add the new types
@@ -172,7 +168,7 @@ func (s *Schema) lineForField(f Field) string {
 		subTName := f.Type.GetTypeName()
 		log.Tracef("subTName %s", subTName)
 
-		_, err := s.TypeGen(TypeInfo{Name: subTName})
+		_, err := s.TypeGen(config.TypeConfig{Name: subTName})
 		if err != nil {
 			log.Errorf("ERROR while resolving sub type %s: %s\n", subTName, err)
 		}
@@ -194,7 +190,7 @@ func (s *Schema) lineForField(f Field) string {
 }
 
 // Definition generates the Golang definition of the type
-func (s *Schema) Definition(typeInfo TypeInfo) (string, error) {
+func (s *Schema) Definition(typeInfo config.TypeConfig) (string, error) {
 	t, err := s.LookupTypeByName(typeInfo.Name)
 	if err != nil {
 		return "", err
@@ -230,8 +226,8 @@ func (s *Schema) Definition(typeInfo TypeInfo) (string, error) {
 	case KindScalar:
 		// Default to string for scalars, but warn this is might not be what they want.
 		createAs := "string"
-		if typeInfo.CreateAs != "" {
-			createAs = typeInfo.CreateAs
+		if typeInfo.TypeOverride != "" {
+			createAs = typeInfo.TypeOverride
 		} else {
 			log.Warnf("creating scalar %s as string", t.Name)
 		}
@@ -239,8 +235,8 @@ func (s *Schema) Definition(typeInfo TypeInfo) (string, error) {
 		output += "type " + t.Name + " " + createAs + "\n"
 	case KindInterface:
 		createAs := "interface{}"
-		if typeInfo.CreateAs != "" {
-			createAs = typeInfo.CreateAs
+		if typeInfo.TypeOverride != "" {
+			createAs = typeInfo.TypeOverride
 		}
 
 		output += "type " + t.Name + " " + createAs + "\n"
