@@ -6,8 +6,6 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
-
-	"github.com/newrelic/tutone/internal/schema"
 )
 
 // Config is the information keeper for generating go structs from type names.
@@ -45,9 +43,9 @@ type CacheConfig struct {
 
 // PackageConfig is the information about a single package, which types to include from the schema, and which generators to use for this package.
 type PackageConfig struct {
-	Name  string            `yaml:"name,omitempty"`
-	Path  string            `yaml:"path,omitempty"`
-	Types []schema.TypeInfo `yaml:"types,omitempty"`
+	Name  string       `yaml:"name,omitempty"`
+	Path  string       `yaml:"path,omitempty"`
+	Types []TypeConfig `yaml:"types,omitempty"`
 	// Generators is a list of names that reference a generator in the Config struct.
 	Generators []string `yaml:"generators,omitempty"`
 }
@@ -59,6 +57,13 @@ type GeneratorConfig struct {
 	TemplateDir     string `yaml:"template_dir,omitempty"`
 	FileName        string `yaml:"fileName,omitempty"`
 	TemplateName    string `yaml:"templateName,omitempty"`
+}
+
+// TypeConfig is the information about which types to render and any data specific to handling of the type.
+type TypeConfig struct {
+	Name string `yaml:"name"`
+	// TypeOverride is the Golang type to override whatever the default detected type would be.
+	TypeOverride string `yaml:"type_override,omitempty"`
 }
 
 const (
