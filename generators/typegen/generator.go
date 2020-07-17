@@ -122,16 +122,21 @@ func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.
 			fieldErrs := []error{}
 			for _, f := range fields {
 				var typeName string
+				var typeNamePrefix string
 				typeName, err = f.Type.GetTypeNameWithOverride(pkgConfig)
 				if err != nil {
 					fieldErrs = append(fieldErrs, err)
+				}
+
+				if f.Type.IsList() {
+					typeNamePrefix = "[]"
 				}
 
 				field := goStructField{
 					Doc:  f.GetDescription(),
 					Name: f.GetName(),
 					Tags: f.GetTags(),
-					Type: typeName,
+					Type: fmt.Sprintf("%s%s", typeNamePrefix, typeName),
 				}
 
 				xxx.Fields = append(xxx.Fields, field)
@@ -161,12 +166,13 @@ func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.
 		case schema.KindScalar:
 			log.Warnf("scalar type: %+v", t)
 
-			// Default scalars to int
-			createAs := "int"
+			// Default scalars to string
+			createAs := "string"
 			skipTypeCreate := false
+			nameToMatch := t.GetName()
 
 			for _, p := range pkgConfig.Types {
-				if p.Name == t.GetName() {
+				if p.Name == nameToMatch {
 					if p.CreateAs != "" {
 						createAs = p.CreateAs
 					}
@@ -187,7 +193,7 @@ func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.
 				scalarsForGen = append(scalarsForGen, xxx)
 			}
 		default:
-			log.Debugf("default reached for kind %s, ignoring: %s", t.Name, t.Kind)
+			log.Debugf("default reached for kind %s, ignoring: %s", t.Kind, t.Name)
 		}
 	}
 

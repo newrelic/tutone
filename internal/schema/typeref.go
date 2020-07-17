@@ -102,10 +102,6 @@ func (r *TypeRef) GetTypeNameWithOverride(pkgConfig *config.PackageConfig) (stri
 		}
 	}
 
-	if r.IsList() {
-		return fmt.Sprintf("[]%s", typeName), nil
-	}
-
 	return typeName, nil
 }
 
