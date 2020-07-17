@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/newrelic/tutone/internal/config"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -75,7 +76,39 @@ func (r *TypeRef) GetTags() string {
 	return jsonTag + "\"`"
 }
 
-// GetName returns a recusive lookup of the type name
+// GetTypeNameWithOverride returns the typeName, taking into consideration any TypeOverride specified in the PackageConfig.
+func (r *TypeRef) GetTypeNameWithOverride(pkgConfig *config.PackageConfig) (string, error) {
+	var typeName string
+	var overrideType string
+	var err error
+
+	// Discover any TypeOverride override for the current field.
+	for _, p := range pkgConfig.Types {
+		if p.Name == r.GetName() {
+			if p.FieldTypeOverride != "" {
+				overrideType = p.FieldTypeOverride
+			}
+		}
+	}
+
+	// Set the typeName to the override or use what is specified in the schema.
+	if overrideType != "" {
+		typeName = overrideType
+	} else {
+		typeName, _, err = r.GetType()
+		if err != nil {
+			return "", err
+		}
+	}
+
+	if r.IsList() {
+		return fmt.Sprintf("[]%s", typeName), nil
+	}
+
+	return typeName, nil
+}
+
+// GetTypeName returns a recusive lookup of the type name
 func (r *TypeRef) GetTypeName() string {
 	if r != nil {
 		if r.Name != "" {
@@ -92,7 +125,7 @@ func (r *TypeRef) GetTypeName() string {
 	return "UNKNOWN"
 }
 
-// FieldType resolves the given SchemaInputField into a field name to use on a go struct.
+// GetType resolves the given SchemaInputField into a field name to use on a go struct.
 //  type, recurse, error
 func (r *TypeRef) GetType() (string, bool, error) {
 	if r == nil {
