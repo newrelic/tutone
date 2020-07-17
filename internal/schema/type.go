@@ -83,8 +83,8 @@ func (t *Type) GetTags() string {
 	return jsonTag + "\"`"
 }
 
-// GoType is used to determine if a type in NerdGraph is already a native type of Golang.
-func (t *Type) GoType() bool {
+// IsGoType is used to determine if a type in NerdGraph is already a native type of Golang.
+func (t *Type) IsGoType() bool {
 	goTypes := []string{
 		"int",
 		"string",

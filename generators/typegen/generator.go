@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"sort"
 	"text/template"
 
 	log "github.com/sirupsen/logrus"
@@ -99,7 +100,7 @@ func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.
 			fieldErrs := []error{}
 			for _, f := range fields {
 				var typeName string
-				typeName, err = f.GetTypeNameWithOverride(pkgConfig)
+				typeName, err = f.Type.GetTypeNameWithOverride(pkgConfig)
 				if err != nil {
 					fieldErrs = append(fieldErrs, err)
 				}
@@ -138,11 +139,27 @@ func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.
 		case schema.KindScalar:
 			log.Warnf("scalar type: %+v", t)
 
-			if !t.GoType() {
+			// Default scalars to int
+			createAs := "int"
+			skipTypeCreate := false
+
+			for _, p := range pkgConfig.Types {
+				if p.Name == t.GetName() {
+					if p.CreateAs != "" {
+						createAs = p.CreateAs
+					}
+
+					if p.SkipTypeCreate {
+						skipTypeCreate = true
+					}
+				}
+			}
+
+			if !t.IsGoType() && !skipTypeCreate {
 				xxx := goScalar{
 					Description: t.GetDescription(),
 					Name:        t.GetName(),
-					Type:        "int",
+					Type:        createAs,
 				}
 
 				scalarsForGen = append(scalarsForGen, xxx)
@@ -157,6 +174,18 @@ func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.
 	g.Scalars = scalarsForGen
 	g.PackageName = pkgConfig.Name
 	g.Imports = pkgConfig.Imports
+
+	sort.SliceStable(g.Types, func(i, j int) bool {
+		return g.Types[i].Name < g.Types[j].Name
+	})
+
+	sort.SliceStable(g.Enums, func(i, j int) bool {
+		return g.Enums[i].Name < g.Enums[j].Name
+	})
+
+	sort.SliceStable(g.Scalars, func(i, j int) bool {
+		return g.Scalars[i].Name < g.Scalars[j].Name
+	})
 
 	// Default to project root for types
 	destinationPath := "./"
