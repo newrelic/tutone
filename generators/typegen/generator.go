@@ -66,15 +66,37 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 		log.Error(err)
 	}
 
-	// TODO: Update return pattern to be tuple? - e.g. (result, err)
-	if err := g.generateTypesForPackage(s, genConfig, pkgConfig, expandedTypes); err != nil {
+	structsForGen, enumsForGen, scalarsForGen, err := g.generateTypesForPackage(s, genConfig, pkgConfig, expandedTypes)
+	if err != nil {
+		return err
+	}
+
+	// The do() below expects to have Generator g populated for use in the template files.
+	g.PackageName = pkgConfig.Name
+	g.Imports = pkgConfig.Imports
+
+	if structsForGen != nil {
+		g.Types = *structsForGen
+	}
+
+	if enumsForGen != nil {
+		g.Enums = *enumsForGen
+	}
+
+	if scalarsForGen != nil {
+		g.Scalars = *scalarsForGen
+
+	}
+
+	err = g.do(genConfig, pkgConfig)
+	if err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig, expandedTypes *[]*schema.Type) error {
+func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig, expandedTypes *[]*schema.Type) (*[]goStruct, *[]goEnum, *[]goScalar, error) {
 	// TODO: Putting the types in the specified path should be optional
 	//       Should we use a flag or allow the user to omit that field in the config? ¿Por que no lost dos?
 
@@ -169,11 +191,12 @@ func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.
 		}
 	}
 
-	g.Types = structsForGen
-	g.Enums = enumsForGen
-	g.Scalars = scalarsForGen
-	g.PackageName = pkgConfig.Name
-	g.Imports = pkgConfig.Imports
+	return &structsForGen, &enumsForGen, &scalarsForGen, nil
+}
+
+// do performs the template render and file writement, according to the received configurations for the current Generator instance.
+func (g *Generator) do(genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig) error {
+	var err error
 
 	sort.SliceStable(g.Types, func(i, j int) bool {
 		return g.Types[i].Name < g.Types[j].Name
@@ -233,21 +256,6 @@ func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.
 	if err != nil {
 		return err
 	}
-
-	// TODO: Imports?? Check old implementation
-
-	// keys := make([]string, 0, len(schema.Types))
-	// for k := range schema.Types {
-	// 	keys = append(keys, k)
-	// }
-	// sort.Strings(keys)
-	//
-	// for _, k := range keys {
-	// 	_, err := f.WriteString(schema.Types[k])
-	// 	if err != nil {
-	// 		log.Error(err)
-	// 	}
-	// }
 
 	return nil
 }

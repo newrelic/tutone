@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/newrelic/tutone/internal/config"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/newrelic/tutone/internal/config"
 )
 
 type TypeRef struct {
