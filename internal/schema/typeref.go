@@ -5,8 +5,6 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
-
-	"github.com/newrelic/tutone/internal/config"
 )
 
 type TypeRef struct {
@@ -75,34 +73,6 @@ func (r *TypeRef) GetTags() string {
 	}
 
 	return jsonTag + "\"`"
-}
-
-// GetTypeNameWithOverride returns the typeName, taking into consideration any TypeOverride specified in the PackageConfig.
-func (r *TypeRef) GetTypeNameWithOverride(pkgConfig *config.PackageConfig) (string, error) {
-	var typeName string
-	var overrideType string
-	var err error
-
-	// Discover any TypeOverride override for the current field.
-	for _, p := range pkgConfig.Types {
-		if p.Name == r.GetName() {
-			if p.FieldTypeOverride != "" {
-				overrideType = p.FieldTypeOverride
-			}
-		}
-	}
-
-	// Set the typeName to the override or use what is specified in the schema.
-	if overrideType != "" {
-		typeName = overrideType
-	} else {
-		typeName, _, err = r.GetType()
-		if err != nil {
-			return "", err
-		}
-	}
-
-	return typeName, nil
 }
 
 // GetTypeName returns a recusive lookup of the type name

@@ -123,7 +123,7 @@ func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.
 			for _, f := range fields {
 				var typeName string
 				var typeNamePrefix string
-				typeName, err = f.Type.GetTypeNameWithOverride(pkgConfig)
+				typeName, err = f.GetTypeNameWithOverride(pkgConfig)
 				if err != nil {
 					fieldErrs = append(fieldErrs, err)
 				}
@@ -164,7 +164,7 @@ func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.
 
 			enumsForGen = append(enumsForGen, xxx)
 		case schema.KindScalar:
-			log.Warnf("scalar type: %+v", t)
+			log.Tracef("SCALAR type: %+v", t)
 
 			// Default scalars to string
 			createAs := "string"

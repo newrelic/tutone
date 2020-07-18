@@ -88,6 +88,8 @@ func (t *Type) IsGoType() bool {
 	goTypes := []string{
 		"int",
 		"string",
+		"bool",
+		"boolean",
 	}
 
 	name := strings.ToLower(t.GetName())

@@ -1,7 +1,11 @@
 package schema
 
 import (
+	"fmt"
 	"strings"
+
+	"github.com/newrelic/tutone/internal/config"
+	log "github.com/sirupsen/logrus"
 )
 
 type Field struct {
@@ -21,6 +25,40 @@ func (f *Field) GetDescription() string {
 	}
 
 	return formatDescription("", f.Description)
+}
+
+// GetTypeNameWithOverride returns the typeName, taking into consideration any FieldTypeOverride specified in the PackageConfig.
+func (f *Field) GetTypeNameWithOverride(pkgConfig *config.PackageConfig) (string, error) {
+	var typeName string
+	var overrideType string
+	var err error
+
+	// Discover any FieldTypeOverride override for the current field.
+	nameToMatch := f.GetName()
+	for _, p := range pkgConfig.Types {
+		if p.Name == nameToMatch {
+			if p.FieldTypeOverride != "" {
+				log.Debugf("overriding typeref for %s, using type %s", nameToMatch, p.FieldTypeOverride)
+				overrideType = p.FieldTypeOverride
+			}
+		}
+	}
+
+	// Set the typeName to the override or use what is specified in the schema.
+	if overrideType != "" {
+		typeName = overrideType
+	} else {
+		typeName, _, err = f.Type.GetType()
+		if err != nil {
+			return "", err
+		}
+	}
+
+	if f.Type.IsList() {
+		return fmt.Sprintf("[]%s", typeName), nil
+	}
+
+	return typeName, nil
 }
 
 // GetName returns a recusive lookup of the type name
