@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/newrelic/tutone/internal/config"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/newrelic/tutone/internal/config"
 )
 
 type Field struct {
@@ -88,9 +89,10 @@ func (f *Field) GetTags() string {
 	jsonTag := "`json:\"" + f.Name
 
 	// Overrides
-	if strings.EqualFold(f.Name, "id") {
-		jsonTag += ",string"
-	}
+	// if strings.EqualFold(f.Name, "id") {
+	// BUG for values that have been overridden in the config, this should not be assumed.
+	// 	jsonTag += ",string"
+	// }
 
 	return jsonTag + "\"`"
 }
