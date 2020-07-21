@@ -44,7 +44,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	// Config File
-	Command.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "Path to a configuration file")
+	Command.PersistentFlags().StringVarP(&cfgFile, "config", "c", ".tutone.yml", "Path to a configuration file")
 
 	// Log level flag
 	Command.PersistentFlags().StringP("loglevel", "l", "info", "Log level")
