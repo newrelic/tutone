@@ -171,7 +171,14 @@ func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.
 			skipTypeCreate := false
 			nameToMatch := t.GetName()
 
+			var seenNames []string
 			for _, p := range pkgConfig.Types {
+				if stringInStrings(p.Name, seenNames) {
+					log.Warnf("duplicate package config name detected: %s", p.Name)
+					continue
+				}
+				seenNames = append(seenNames, p.Name)
+
 				if p.Name == nameToMatch {
 					if p.CreateAs != "" {
 						createAs = p.CreateAs
@@ -264,4 +271,14 @@ func (g *Generator) do(genConfig *config.GeneratorConfig, pkgConfig *config.Pack
 	}
 
 	return nil
+}
+
+func stringInStrings(s string, ss []string) bool {
+	for _, sss := range ss {
+		if s == sss {
+			return true
+		}
+	}
+
+	return false
 }
