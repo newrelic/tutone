@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
+
+	"github.com/newrelic/tutone/internal/config"
 )
 
 // filterDescription uses a regex to parse certain data out of the
@@ -48,8 +50,8 @@ func formatDescription(name string, description string) string {
 	return strings.Join(resultLines, "\n")
 }
 
-// typeNameInTypes determines if a name is already present in a set of TypeInfo.
-func typeNameInTypes(s string, types []TypeInfo) bool {
+// typeNameInTypes determines if a name is already present in a set of config.TypeConfig.
+func typeNameInTypes(s string, types []config.TypeConfig) bool {
 	for _, t := range types {
 		if t.Name == s {
 			return true
@@ -123,9 +125,9 @@ func ExpandType(s *Schema, t *Type) (*[]*Type, error) {
 	return &f, nil
 }
 
-// ExpandTypes receives a set of TypeInfo, which is then expanded to include
+// ExpandTypes receives a set of config.TypeConfig, which is then expanded to include
 // all the nested types from the fields.
-func ExpandTypes(s *Schema, types []TypeInfo) (*[]*Type, error) {
+func ExpandTypes(s *Schema, types []config.TypeConfig) (*[]*Type, error) {
 	if s == nil {
 		return nil, fmt.Errorf("unable to expand types from nil schema")
 	}
