@@ -9,6 +9,7 @@ import (
 	"github.com/newrelic/tutone/internal/config"
 )
 
+// Field is an attribute of a schema Type object.
 type Field struct {
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
@@ -81,6 +82,7 @@ func (f *Field) GetName() string {
 	return fieldName
 }
 
+// GetTags is used to return the Go struct tags for a field.
 func (f *Field) GetTags() string {
 	if f == nil {
 		return ""
