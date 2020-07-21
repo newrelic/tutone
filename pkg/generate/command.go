@@ -13,7 +13,10 @@ const (
 	DefaultGenerateOutputFile = "types.go"
 )
 
-var packageName string
+var (
+	packageName string
+	refetch     bool
+)
 
 var Command = &cobra.Command{
 	Use:   "generate",
@@ -24,7 +27,7 @@ TODO: Write something intelligent here.
 `,
 	Example: "tutone generate --config .tutone.yml",
 	Run: func(cmd *cobra.Command, args []string) {
-		util.LogIfError(log.ErrorLevel, Generate())
+		util.LogIfError(log.ErrorLevel, Generate(refetch))
 	},
 }
 
@@ -36,5 +39,4 @@ func init() {
 
 	Command.Flags().String("types", DefaultGenerateOutputFile, "Output file for generated types")
 	util.LogIfError(log.ErrorLevel, viper.BindPFlag("generate.type_file", Command.Flags().Lookup("types")))
-
 }

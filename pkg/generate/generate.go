@@ -15,7 +15,7 @@ import (
 )
 
 // Generate reads the configuration file and executes generators relevant to a particular package.
-func Generate() error {
+func Generate(refetch bool) error {
 	fmt.Print("\n GENERATE..... \n")
 
 	defFile := viper.GetString("definition")
@@ -24,9 +24,8 @@ func Generate() error {
 
 	_, err := os.Stat(schemaFile)
 
-	// If schema file doesn't exist, fetch a new schema.
-	// TODO: Add flag to force refetch
-	if os.IsNotExist(err) {
+	// Fetch a new schema if it doesn't exist or if --refetch flag has been provided.
+	if os.IsNotExist(err) || refetch {
 		fetch.Fetch(
 			viper.GetString("endpoint"),
 			viper.GetString("auth.header"),
