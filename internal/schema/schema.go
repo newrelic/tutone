@@ -226,8 +226,8 @@ func (s *Schema) Definition(typeInfo config.TypeConfig) (string, error) {
 	case KindScalar:
 		// Default to string for scalars, but warn this is might not be what they want.
 		createAs := "string"
-		if typeInfo.TypeOverride != "" {
-			createAs = typeInfo.TypeOverride
+		if typeInfo.FieldTypeOverride != "" {
+			createAs = typeInfo.FieldTypeOverride
 		} else {
 			log.Warnf("creating scalar %s as string", t.Name)
 		}
@@ -235,8 +235,8 @@ func (s *Schema) Definition(typeInfo config.TypeConfig) (string, error) {
 		output += "type " + t.Name + " " + createAs + "\n"
 	case KindInterface:
 		createAs := "interface{}"
-		if typeInfo.TypeOverride != "" {
-			createAs = typeInfo.TypeOverride
+		if typeInfo.FieldTypeOverride != "" {
+			createAs = typeInfo.FieldTypeOverride
 		}
 
 		output += "type " + t.Name + " " + createAs + "\n"

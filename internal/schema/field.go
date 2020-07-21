@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/newrelic/tutone/internal/config"
 )
 
+// Field is an attribute of a schema Type object.
 type Field struct {
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
@@ -26,17 +29,19 @@ func (f *Field) GetDescription() string {
 	return formatDescription("", f.Description)
 }
 
-// GetTypeNameWithOverride returns the typeName, taking into consideration any TypeOverride specified in the PackageConfig.
+// GetTypeNameWithOverride returns the typeName, taking into consideration any FieldTypeOverride specified in the PackageConfig.
 func (f *Field) GetTypeNameWithOverride(pkgConfig *config.PackageConfig) (string, error) {
 	var typeName string
 	var overrideType string
 	var err error
 
-	// Discover any TypeOverride override for the current field.
+	// Discover any FieldTypeOverride override for the current field.
+	nameToMatch := f.GetName()
 	for _, p := range pkgConfig.Types {
-		if p.Name == f.GetName() {
-			if p.TypeOverride != "" {
-				overrideType = p.TypeOverride
+		if p.Name == nameToMatch {
+			if p.FieldTypeOverride != "" {
+				log.Debugf("overriding typeref for %s, using type %s", nameToMatch, p.FieldTypeOverride)
+				overrideType = p.FieldTypeOverride
 			}
 		}
 	}
@@ -77,6 +82,7 @@ func (f *Field) GetName() string {
 	return fieldName
 }
 
+// GetTags is used to return the Go struct tags for a field.
 func (f *Field) GetTags() string {
 	if f == nil {
 		return ""
@@ -85,9 +91,10 @@ func (f *Field) GetTags() string {
 	jsonTag := "`json:\"" + f.Name
 
 	// Overrides
-	if strings.EqualFold(f.Name, "id") {
-		jsonTag += ",string"
-	}
+	// if strings.EqualFold(f.Name, "id") {
+	// BUG for values that have been overridden in the config, this should not be assumed.
+	// 	jsonTag += ",string"
+	// }
 
 	return jsonTag + "\"`"
 }

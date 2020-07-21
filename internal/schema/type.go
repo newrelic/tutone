@@ -82,3 +82,23 @@ func (t *Type) GetTags() string {
 
 	return jsonTag + "\"`"
 }
+
+// IsGoType is used to determine if a type in NerdGraph is already a native type of Golang.
+func (t *Type) IsGoType() bool {
+	goTypes := []string{
+		"int",
+		"string",
+		"bool",
+		"boolean",
+	}
+
+	name := strings.ToLower(t.GetName())
+
+	for _, x := range goTypes {
+		if x == name {
+			return true
+		}
+	}
+
+	return false
+}

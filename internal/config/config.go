@@ -16,10 +16,6 @@ type Config struct {
 	Auth     AuthConfig
 	Caching  CacheConfig
 
-	//Package string       `yaml:"package"`
-	//Types   []TypeConfig `yaml:"types"`
-	//Verbose bool
-	//client  *newrelic.NewRelic
 	Packages   []PackageConfig   `yaml:"packages,omitempty"`
 	Generators []GeneratorConfig `yaml:"generators,omitempty"`
 }
@@ -35,11 +31,6 @@ type CacheConfig struct {
 	Enable     bool   `yaml:",omitempty"`
 	SchemaFile string `yaml:"schema_file,omitempty"`
 }
-
-//type TypeConfig struct {
-//	Name     string `yaml:"name"`
-//	CreateAs string `yaml:"createAs,omitempty"` // CreateAs is the Golang type to override whatever the default detected type would be
-//}
 
 // PackageConfig is the information about a single package, which types to include from the schema, and which generators to use for this package.
 type PackageConfig struct {
@@ -63,8 +54,12 @@ type GeneratorConfig struct {
 // TypeConfig is the information about which types to render and any data specific to handling of the type.
 type TypeConfig struct {
 	Name string `yaml:"name"`
-	// TypeOverride is the Golang type to override whatever the default detected type would be.
-	TypeOverride string `yaml:"type_override,omitempty"`
+	// FieldTypeOverride is the Golang type to override whatever the default detected type would be for a given field.
+	FieldTypeOverride string `yaml:"field_type_override,omitempty"`
+	// CreateAs is used when creating a new scalar type to determine which Go type to use.
+	CreateAs string `yaml:"create_as,omitempty"`
+	// SkipTypeCreate allows the user to skip creating a Scalar type.
+	SkipTypeCreate bool `yaml:"skip_type_create,omitempty"`
 }
 
 const (

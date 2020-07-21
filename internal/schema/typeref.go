@@ -75,7 +75,7 @@ func (r *TypeRef) GetTags() string {
 	return jsonTag + "\"`"
 }
 
-// GetName returns a recusive lookup of the type name
+// GetTypeName returns a recusive lookup of the type name
 func (r *TypeRef) GetTypeName() string {
 	if r != nil {
 		if r.Name != "" {
@@ -92,7 +92,7 @@ func (r *TypeRef) GetTypeName() string {
 	return "UNKNOWN"
 }
 
-// FieldType resolves the given SchemaInputField into a field name to use on a go struct.
+// GetType resolves the given SchemaInputField into a field name to use on a go struct.
 //  type, recurse, error
 func (r *TypeRef) GetType() (string, bool, error) {
 	if r == nil {
