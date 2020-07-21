@@ -20,12 +20,9 @@ var Command = &cobra.Command{
 	Short: "Generate code from GraphQL Schema",
 	Long: `Generate code from GraphQL Schema
 
-Using an existing schema file, load / parse / generate code to implement it.
-
-To use with go generate, add the following to a package file:
-//go:generate tutone generate -p $GOPACKAGE
+TODO: Write something intelligent here.
 `,
-	Example: "tutone generate --package $GOPACKAGE",
+	Example: "tutone generate --config .tutone.yml",
 	Run: func(cmd *cobra.Command, args []string) {
 		util.LogIfError(log.ErrorLevel, Generate())
 	},

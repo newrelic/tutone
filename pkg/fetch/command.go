@@ -24,24 +24,37 @@ Query the GraphQL server for schema and write it to a file.
 `,
 	Example: "tutone fetch --config configs/tutone.yaml",
 	Run: func(cmd *cobra.Command, args []string) {
-		e := NewEndpoint()
-		e.URL = viper.GetString("endpoint")
-		e.Auth.Header = viper.GetString("auth.header")
-		e.Auth.APIKey = os.Getenv(viper.GetString("auth.api-key-env"))
-
-		schema, err := e.Fetch()
-		util.LogIfError(log.FatalLevel, err)
-
-		file := viper.GetString("schema_file")
-		if file != "" {
-			util.LogIfError(log.ErrorLevel, schema.Save(file))
-		}
-
-		log.WithFields(log.Fields{
-			"endpoint":    viper.GetString("endpoint"),
-			"schema_file": viper.GetString("schema_file"),
-		}).Info("successfully fetched schema")
+		Fetch(
+			viper.GetString("endpoint"),
+			viper.GetString("auth.header"),
+			viper.GetString("auth.api-key-env"),
+			viper.GetString("schema_file"),
+		)
 	},
+}
+
+func Fetch(
+	endpoint string,
+	authHeader string,
+	authEnvVariableName string,
+	schemaFile string,
+) {
+	e := NewEndpoint()
+	e.URL = endpoint
+	e.Auth.Header = authHeader
+	e.Auth.APIKey = os.Getenv(authEnvVariableName)
+
+	schema, err := e.Fetch()
+	util.LogIfError(log.FatalLevel, err)
+
+	if schemaFile != "" {
+		util.LogIfError(log.ErrorLevel, schema.Save(schemaFile))
+	}
+
+	log.WithFields(log.Fields{
+		"endpoint":    endpoint,
+		"schema_file": schemaFile,
+	}).Info("successfully fetched schema")
 }
 
 func init() {
