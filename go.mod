@@ -6,10 +6,9 @@ require (
 	github.com/client9/misspell v0.3.4
 	github.com/git-chglog/git-chglog v0.0.0-20200414013904-db796966b373
 	github.com/golangci/golangci-lint v1.29.0
-	github.com/goreleaser/goreleaser v0.140.0
+	github.com/goreleaser/goreleaser v0.140.1
 	github.com/hashicorp/go-retryablehttp v0.6.6 // indirect
 	github.com/llorllale/go-gitlint v0.0.0-20190914155841-58c0b8cef0e5
-	github.com/mitchellh/mapstructure v1.2.2 // indirect
 	github.com/psampaz/go-mod-outdated v0.6.0
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/cobra v1.0.0
