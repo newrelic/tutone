@@ -1,7 +1,6 @@
 package schema
 
 import (
-	"fmt"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -54,10 +53,6 @@ func (f *Field) GetTypeNameWithOverride(pkgConfig *config.PackageConfig) (string
 		if err != nil {
 			return "", err
 		}
-	}
-
-	if f.Type.IsList() {
-		return fmt.Sprintf("[]%s", typeName), nil
 	}
 
 	return typeName, nil

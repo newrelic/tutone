@@ -2,6 +2,7 @@ package generate
 
 import (
 	"fmt"
+	"os"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -10,16 +11,28 @@ import (
 	"github.com/newrelic/tutone/internal/config"
 	"github.com/newrelic/tutone/internal/generator"
 	"github.com/newrelic/tutone/internal/schema"
+	"github.com/newrelic/tutone/pkg/fetch"
 )
 
 // Generate reads the configuration file and executes generators relevant to a particular package.
-func Generate() error {
+func Generate(refetch bool) error {
 	fmt.Print("\n GENERATE..... \n")
 
 	defFile := viper.GetString("definition")
 	schemaFile := viper.GetString("schema_file")
 	typesFile := viper.GetString("generate.types_file")
-	// packageName := viper.GetString("package")
+
+	_, err := os.Stat(schemaFile)
+
+	// Fetch a new schema if it doesn't exist or if --refetch flag has been provided.
+	if os.IsNotExist(err) || refetch {
+		fetch.Fetch(
+			viper.GetString("endpoint"),
+			viper.GetString("auth.header"),
+			viper.GetString("auth.api-key-env"),
+			schemaFile,
+		)
+	}
 
 	log.WithFields(log.Fields{
 		"definition_file": defFile,
