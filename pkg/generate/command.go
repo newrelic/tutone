@@ -13,21 +13,25 @@ const (
 	DefaultGenerateOutputFile = "types.go"
 )
 
-var packageName string
+var (
+	packageName string
+	refetch     bool
+)
 
 var Command = &cobra.Command{
 	Use:   "generate",
 	Short: "Generate code from GraphQL Schema",
 	Long: `Generate code from GraphQL Schema
 
-Using an existing schema file, load / parse / generate code to implement it.
-
-To use with go generate, add the following to a package file:
-//go:generate tutone generate -p $GOPACKAGE
+The generate command will generate code based on the
+configured types in your .tutone.yml configuration file.
+Use the --refetch flag when new types have been added to
+your upstream GraphQL schema to ensure your generated code
+is up to date with your configured GraphQL API.
 `,
-	Example: "tutone generate --package $GOPACKAGE",
+	Example: "tutone generate --config .tutone.yml",
 	Run: func(cmd *cobra.Command, args []string) {
-		util.LogIfError(log.ErrorLevel, Generate())
+		util.LogIfError(log.ErrorLevel, Generate(refetch))
 	},
 }
 
@@ -40,4 +44,5 @@ func init() {
 	Command.Flags().String("types", DefaultGenerateOutputFile, "Output file for generated types")
 	util.LogIfError(log.ErrorLevel, viper.BindPFlag("generate.type_file", Command.Flags().Lookup("types")))
 
+	Command.Flags().BoolVar(&refetch, "refetch", false, "Force a refetch of your GraphQL schema to ensure the generated types are up to date.")
 }
