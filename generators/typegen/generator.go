@@ -2,6 +2,8 @@ package typegen
 
 import (
 	"fmt"
+	"go/format"
+	"io/ioutil"
 	"os"
 	"path"
 	"sort"
@@ -242,11 +244,11 @@ func (g *Generator) do(genConfig *config.GeneratorConfig, pkgConfig *config.Pack
 	}
 
 	filePath := fmt.Sprintf("%s/%s", destinationPath, fileName)
-	f, err := os.Create(filePath)
+	file, err := os.Create(filePath)
 	if err != nil {
 		log.Error(err)
 	}
-	defer f.Close()
+	defer file.Close()
 
 	templateName := "types.go.tmpl"
 	if genConfig.TemplateName != "" {
@@ -265,7 +267,23 @@ func (g *Generator) do(genConfig *config.GeneratorConfig, pkgConfig *config.Pack
 		return err
 	}
 
-	err = tmpl.Execute(f, g)
+	err = tmpl.Execute(file, g)
+	if err != nil {
+		return err
+	}
+
+	fileBytes, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return err
+	}
+
+	formatted, err := format.Source(fileBytes)
+	if err != nil {
+		return err
+	}
+
+	// Rewrite the file with the formatted output
+	_, err = file.WriteAt(formatted, 0)
 	if err != nil {
 		return err
 	}
