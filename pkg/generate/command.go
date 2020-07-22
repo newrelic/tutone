@@ -10,8 +10,7 @@ import (
 )
 
 const (
-	DefaultGenerateOutputFile     = "types.go"
-	DefaultGenerateDefinitionFile = ".generate.yml"
+	DefaultGenerateOutputFile = "types.go"
 )
 
 var packageName string
@@ -41,6 +40,4 @@ func init() {
 	Command.Flags().String("types", DefaultGenerateOutputFile, "Output file for generated types")
 	util.LogIfError(log.ErrorLevel, viper.BindPFlag("generate.type_file", Command.Flags().Lookup("types")))
 
-	Command.Flags().StringP("definition", "d", DefaultGenerateDefinitionFile, "Package definition of what to generate")
-	viper.SetDefault("definition", DefaultGenerateDefinitionFile)
 }
