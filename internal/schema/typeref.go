@@ -112,5 +112,5 @@ func (r *TypeRef) GetDescription() string {
 		return ""
 	}
 
-	return "\t /* " + r.GetName() + " - " + filterDescription(r.Description) + " */\n"
+	return formatDescription("", r.Description)
 }
