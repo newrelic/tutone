@@ -68,21 +68,6 @@ func (t *Type) GetName() string {
 	return fieldName
 }
 
-func (t *Type) GetTags() string {
-	if t == nil {
-		return ""
-	}
-
-	jsonTag := "`json:\"" + t.Name
-
-	// Overrides
-	if strings.EqualFold(t.Name, "id") {
-		jsonTag += ",string"
-	}
-
-	return jsonTag + "\"`"
-}
-
 // IsGoType is used to determine if a type in NerdGraph is already a native type of Golang.
 func (t *Type) IsGoType() bool {
 	goTypes := []string{
