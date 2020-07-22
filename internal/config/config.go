@@ -12,9 +12,9 @@ import (
 type Config struct {
 	LogLevel string `yaml:"log_level,omitempty"` // LogLevel sets the logging level
 
-	Endpoint string
-	Auth     AuthConfig
-	Caching  CacheConfig
+	Endpoint string      `yaml:"endpoint"`
+	Auth     AuthConfig  `yaml:"auth"`
+	Cache    CacheConfig `yaml:"cache"`
 
 	Packages   []PackageConfig   `yaml:"packages,omitempty"`
 	Generators []GeneratorConfig `yaml:"generators,omitempty"`

@@ -28,7 +28,7 @@ Query the GraphQL server for schema and write it to a file.
 			viper.GetString("endpoint"),
 			viper.GetString("auth.header"),
 			viper.GetString("auth.api-key-env"),
-			viper.GetString("schema_file"),
+			viper.GetString("cache.schema_file"),
 		)
 	},
 }
