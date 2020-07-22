@@ -158,3 +158,22 @@ func ExpandTypes(s *Schema, types []config.TypeConfig) (*[]*Type, error) {
 
 	return &expandedTypes, nil
 }
+
+// formatGoName formats a name string using a few special cases for proper capitalization.
+func formatGoName(name string) string {
+	var fieldName string
+
+	switch strings.ToLower(name) {
+	case "ids":
+		// special case to avoid the struct field Ids, and prefer IDs instead
+		fieldName = "IDs"
+	case "id":
+		fieldName = "ID"
+	case "accountid":
+		fieldName = "AccountID"
+	default:
+		fieldName = strings.Title(name)
+	}
+
+	return fieldName
+}

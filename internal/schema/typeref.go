@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// TypeRef is a GraphQL reference to a Type.
 type TypeRef struct {
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
@@ -15,6 +16,7 @@ type TypeRef struct {
 	OfType *TypeRef `json:"ofType,omitempty"`
 }
 
+// IsList determines if a TypeRef is of a KIND LIST.
 func (r *TypeRef) IsList() bool {
 	kinds := r.GetKinds()
 
@@ -25,7 +27,7 @@ func (r *TypeRef) IsList() bool {
 	return false
 }
 
-// GetKind returns an array or the type kind
+// GetKinds returns an array or the type kind
 func (r *TypeRef) GetKinds() []Kind {
 	tree := []Kind{}
 
@@ -43,39 +45,10 @@ func (r *TypeRef) GetKinds() []Kind {
 
 // GetName returns a recusive lookup of the type name
 func (r *TypeRef) GetName() string {
-	var fieldName string
-
-	switch strings.ToLower(r.Name) {
-	case "ids":
-		// special case to avoid the struct field Ids, and prefer IDs instead
-		fieldName = "IDs"
-	case "id":
-		fieldName = "ID"
-	case "accountid":
-		fieldName = "AccountID"
-	default:
-		fieldName = strings.Title(r.Name)
-	}
-
-	return fieldName
+	return formatGoName(r.Name)
 }
 
-func (r *TypeRef) GetTags() string {
-	if r == nil {
-		return ""
-	}
-
-	jsonTag := "`json:\"" + r.Name
-
-	// Overrides
-	if strings.EqualFold(r.Name, "id") {
-		jsonTag += ",string"
-	}
-
-	return jsonTag + "\"`"
-}
-
-// GetTypeName returns a recusive lookup of the type name
+// GetTypeName returns the name of the current type, or performs a recursive lookup to determine the name of the nested OfType object's name.  In the case that neither are matched, the string "UNKNOWN" is returned.  In the GraphQL schema, a non-empty name seems to appear only once in a TypeRef tree, so we want to find the first non-empty.
 func (r *TypeRef) GetTypeName() string {
 	if r != nil {
 		if r.Name != "" {
@@ -125,5 +98,5 @@ func (r *TypeRef) GetDescription() string {
 		return ""
 	}
 
-	return "\t /* " + r.GetName() + " - " + filterDescription(r.Description) + " */\n"
+	return formatDescription("", r.Description)
 }

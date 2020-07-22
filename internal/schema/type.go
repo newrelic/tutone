@@ -49,38 +49,9 @@ func (t *Type) GetDescription() string {
 	return formatDescription(t.GetName(), t.Description)
 }
 
-// GetName returns a recusive lookup of the type name
+// GetName returns the name of a Type, formatted for Go title casing.
 func (t *Type) GetName() string {
-	var fieldName string
-
-	switch strings.ToLower(t.Name) {
-	case "ids":
-		// special case to avoid the struct field Ids, and prefer IDs instead
-		fieldName = "IDs"
-	case "id":
-		fieldName = "ID"
-	case "accountid":
-		fieldName = "AccountID"
-	default:
-		fieldName = strings.Title(t.Name)
-	}
-
-	return fieldName
-}
-
-func (t *Type) GetTags() string {
-	if t == nil {
-		return ""
-	}
-
-	jsonTag := "`json:\"" + t.Name
-
-	// Overrides
-	if strings.EqualFold(t.Name, "id") {
-		jsonTag += ",string"
-	}
-
-	return jsonTag + "\"`"
+	return formatGoName(t.Name)
 }
 
 // IsGoType is used to determine if a type in NerdGraph is already a native type of Golang.
