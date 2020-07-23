@@ -14,7 +14,8 @@ import (
 func TestExpandTypes(t *testing.T) {
 	t.Parallel()
 
-	s, err := Load("../../schema.json")
+	// schema cached by 'make test-prep'
+	s, err := Load("../../testdata/schema.json")
 	assert.NoError(t, err)
 
 	config := []config.TypeConfig{

@@ -22,7 +22,11 @@ GOTOOLS += github.com/stretchr/testify/assert
 test: test-only
 test-only: test-unit test-integration
 
-test-unit:
+test-prep: compile-only
+	@echo "=== $(PROJECT_NAME) === [ test-prep        ]: caching schema for tests..."
+	@$(BUILD_DIR)$(GOOS)/tutone fetch -s testdata/schema.json -c .tutone.yml
+
+test-unit: test-prep
 	@echo "=== $(PROJECT_NAME) === [ test-unit        ]: running unit tests..."
 	@mkdir -p $(COVERAGE_DIR)
 	@$(GO) test -v -ldflags=$(LDFLAGS_UNIT) -parallel 4 -tags unit -covermode=$(COVERMODE) -coverprofile $(COVERAGE_DIR)/unit.tmp $(GO_PKGS)

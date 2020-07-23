@@ -68,5 +68,5 @@ func init() {
 	util.LogIfError(log.ErrorLevel, viper.BindPFlag("auth.api_key_env_var", Command.Flags().Lookup("api-key-env")))
 
 	Command.Flags().StringP("schema", "s", DefaultSchemaCacheFile, "Output file for the schema")
-	util.LogIfError(log.ErrorLevel, viper.BindPFlag("schema_file", Command.Flags().Lookup("schema")))
+	util.LogIfError(log.ErrorLevel, viper.BindPFlag("cache.schema_file", Command.Flags().Lookup("schema")))
 }

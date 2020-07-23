@@ -5,7 +5,8 @@ log_level: debug
 
 # File to store a copy of the schema
 # Default: schema.json
-schema_file: schema.json
+cache:
+  schema_file: schema.json
 
 # GraphQL endpoint to query for schema
 # Required
