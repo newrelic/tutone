@@ -19,7 +19,7 @@ func Generate(refetch bool) error {
 	fmt.Print("\n GENERATE..... \n")
 
 	defFile := viper.GetString("definition")
-	schemaFile := viper.GetString("schema_file")
+	schemaFile := viper.GetString("cache.schema_file")
 	typesFile := viper.GetString("generate.types_file")
 
 	_, err := os.Stat(schemaFile)
@@ -29,7 +29,7 @@ func Generate(refetch bool) error {
 		fetch.Fetch(
 			viper.GetString("endpoint"),
 			viper.GetString("auth.header"),
-			viper.GetString("auth.api-key-env"),
+			viper.GetString("auth.api_key_env_var"),
 			schemaFile,
 		)
 	}

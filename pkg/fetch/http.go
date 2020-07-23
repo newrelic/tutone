@@ -81,7 +81,7 @@ func (e *Endpoint) Fetch() (*schema.Schema, error) {
 
 // FetchSchema returns basic info about the schema
 func (e *Endpoint) FetchSchema() (*schema.Schema, error) {
-	log.Info("fetching schema")
+	log.Infof("fetching schema from endpoint: %s", e.URL)
 	query := GraphqlQuery{
 		Query: schema.QuerySchema,
 	}

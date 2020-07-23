@@ -12,9 +12,9 @@ import (
 type Config struct {
 	LogLevel string `yaml:"log_level,omitempty"` // LogLevel sets the logging level
 
-	Endpoint string
-	Auth     AuthConfig
-	Caching  CacheConfig
+	Endpoint string      `yaml:"endpoint"`
+	Auth     AuthConfig  `yaml:"auth"`
+	Cache    CacheConfig `yaml:"cache"`
 
 	Packages   []PackageConfig   `yaml:"packages,omitempty"`
 	Generators []GeneratorConfig `yaml:"generators,omitempty"`
@@ -22,8 +22,8 @@ type Config struct {
 
 // AuthConfig is the information necessary to authenticate to the NerdGraph API.
 type AuthConfig struct {
-	Header string `yaml:",omitempty"`
-	EnvVar string `yaml:"env_var,omitempty"`
+	Header string `yaml:"header,omitempty"`
+	EnvVar string `yaml:"api_key_env_var,omitempty"`
 }
 
 // CacheConfig is the information necessary to store the NerdGraph schema in JSON.
@@ -92,44 +92,4 @@ func LoadConfig(file string) (*Config, error) {
 	log.Tracef("definition: %+v", config)
 
 	return &config, nil
-}
-
-// New creates a new Config.
-func New() *Config {
-	cfg := Config{
-		Auth: AuthConfig{
-			Header: DefaultAuthHeader,
-			EnvVar: DefaultAuthEnvVar,
-		},
-		Caching: CacheConfig{
-			Enable:     DefaultCacheEnable,
-			SchemaFile: DefaultCacheSchemaFile,
-		},
-		LogLevel: DefaultLogLevel,
-	}
-
-	return &cfg
-}
-
-func (c *Config) Load() error {
-	var err error
-
-	//verbose := flag.Bool("v", false, "increase verbosity")
-	//flag.StringVar(&c.Package, "p", "", "package name")
-
-	//flag.Parse()
-	logLvl, err := log.ParseLevel(c.LogLevel)
-	if err != nil {
-		log.SetLevel(logLvl)
-	} else {
-		log.SetLevel(log.InfoLevel)
-	}
-
-	//apiKey := os.Getenv(c.Auth.EnvVar)
-	//c.client, err = newrelic.New(newrelic.ConfigPersonalAPIKey(apiKey), newrelic.ConfigLogLevel(log.GetLevel().String()))
-	//if err != nil {
-	//	return nil
-	//}
-
-	return nil
 }

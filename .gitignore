@@ -9,3 +9,4 @@ vendor/*
 *.json
 *.yaml
 *.yml
+testdata/schema.json
