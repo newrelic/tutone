@@ -22,8 +22,8 @@ type Config struct {
 
 // AuthConfig is the information necessary to authenticate to the NerdGraph API.
 type AuthConfig struct {
-	Header string `yaml:",omitempty"`
-	EnvVar string `yaml:"env_var,omitempty"`
+	Header string `yaml:"header,omitempty"`
+	EnvVar string `yaml:"api_key_env_var,omitempty"`
 }
 
 // CacheConfig is the information necessary to store the NerdGraph schema in JSON.

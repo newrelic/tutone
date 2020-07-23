@@ -29,7 +29,7 @@ func Generate(refetch bool) error {
 		fetch.Fetch(
 			viper.GetString("endpoint"),
 			viper.GetString("auth.header"),
-			viper.GetString("auth.api-key-env"),
+			viper.GetString("auth.api_key_env_var"),
 			schemaFile,
 		)
 	}

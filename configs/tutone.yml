@@ -19,7 +19,7 @@ auth:
 
   # Environment variable to get the API key from
   # Default: TUTONE_API_KEY
-  api-key-env: NEW_RELIC_API_KEY
+  api_key_env_var: NEW_RELIC_API_KEY
 
 generate:
   # Name of the file within a package to write types

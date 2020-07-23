@@ -27,7 +27,7 @@ Query the GraphQL server for schema and write it to a file.
 		Fetch(
 			viper.GetString("endpoint"),
 			viper.GetString("auth.header"),
-			viper.GetString("auth.api-key-env"),
+			viper.GetString("auth.api_key_env_var"),
 			viper.GetString("cache.schema_file"),
 		)
 	},
@@ -65,7 +65,7 @@ func init() {
 	util.LogIfError(log.ErrorLevel, viper.BindPFlag("auth.header", Command.Flags().Lookup("header")))
 
 	Command.Flags().String("api-key-env", DefaultAPIKeyEnv, "Environment variable to read API key from")
-	util.LogIfError(log.ErrorLevel, viper.BindPFlag("auth.api-key-env", Command.Flags().Lookup("api-key-env")))
+	util.LogIfError(log.ErrorLevel, viper.BindPFlag("auth.api_key_env_var", Command.Flags().Lookup("api-key-env")))
 
 	Command.Flags().StringP("schema", "s", DefaultSchemaCacheFile, "Output file for the schema")
 	util.LogIfError(log.ErrorLevel, viper.BindPFlag("schema_file", Command.Flags().Lookup("schema")))
