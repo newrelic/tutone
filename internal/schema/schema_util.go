@@ -139,7 +139,9 @@ func ExpandTypes(s *Schema, types []config.TypeConfig) (*[]*Type, error) {
 
 			// Match the name of types we've resolve and append them to the list
 			if typeNameInTypes(schemaType.GetName(), types) {
-				expandedTypes = append(expandedTypes, schemaType)
+				if !hasType(schemaType, expandedTypes) {
+					expandedTypes = append(expandedTypes, schemaType)
+				}
 
 				fieldTypes, err := ExpandType(s, schemaType)
 				if err != nil {
