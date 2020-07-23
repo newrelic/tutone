@@ -19,14 +19,14 @@ func TestLoadConfig(t *testing.T) {
 
 	expected := &Config{
 		LogLevel: "trace",
-		Endpoint: "https://api-staging.newrelic.com/graphql",
+		Endpoint: "https://api222.newrelic.com/graphql",
 		Auth: AuthConfig{
 			Header: "Api-Key",
 			EnvVar: "NEW_RELIC_API_KEY",
 		},
 		Cache: CacheConfig{
 			Enable:     false,
-			SchemaFile: "testingtesting.schema.json",
+			SchemaFile: "testing.schema.json",
 		},
 		Packages: []PackageConfig{
 			{

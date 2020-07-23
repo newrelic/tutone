@@ -1,8 +1,8 @@
 ---
 log_level: trace
 cache:
-  schema_file: testingtesting.schema.json
-endpoint: https://api-staging.newrelic.com/graphql
+  schema_file: testing.schema.json
+endpoint: https://api222.newrelic.com/graphql
 auth:
   header: Api-Key
   api_key_env_var: NEW_RELIC_API_KEY

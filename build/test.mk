@@ -24,7 +24,7 @@ test-only: test-unit test-integration
 
 test-prep: compile-only
 	@echo "=== $(PROJECT_NAME) === [ test-prep        ]: caching schema for tests..."
-	@$(BUILD_DIR)$(GOOS)/tutone fetch -s testdata/schema.json -c .tutone.yml
+	@$(BUILD_DIR)$(GOOS)/tutone fetch -s testdata/schema.json -c configs/tutone.yml
 
 test-unit: test-prep
 	@echo "=== $(PROJECT_NAME) === [ test-unit        ]: running unit tests..."
