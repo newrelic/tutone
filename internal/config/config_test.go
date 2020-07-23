@@ -17,13 +17,44 @@ func TestLoadConfig(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, config)
 
-	assert.Equal(t, "trace", config.LogLevel, "trace")
+	expected := &Config{
+		LogLevel: "trace",
+		Endpoint: "https://api-staging.newrelic.com/graphql",
+		Auth: AuthConfig{
+			Header: "Api-Key",
+			EnvVar: "NEW_RELIC_API_KEY",
+		},
+		Cache: CacheConfig{
+			Enable:     false,
+			SchemaFile: "testingtesting.schema.json",
+		},
+		Packages: []PackageConfig{
+			{
+				Name: "alerts",
+				Path: "pkg/alerts",
+				Types: []TypeConfig{
+					{
+						Name: "AlertsMutingRuleConditionInput",
+					}, {
+						Name:              "ID",
+						FieldTypeOverride: "string",
+						SkipTypeCreate:    true,
+					},
+				},
+				Generators: []string{"typegen"},
+			},
+		},
+		Generators: []GeneratorConfig{
+			{
+				Name: "typegen",
+				// DestinationFile:
+				// TemplateDir:
+				FileName: "types.go",
+				// TemplateName:
+			},
+		},
+	}
 
-	assert.Equal(t, "testingtesting.schema.json", config.Cache.SchemaFile)
-	assert.False(t, config.Cache.Enable)
-
-	assert.Equal(t, "https://api-staging.newrelic.com/graphql", config.Endpoint)
-
-	assert.Equal(t, 1, len(config.Packages))
+	assert.Equal(t, config, expected)
 
 }

@@ -1,0 +1,21 @@
+---
+log_level: trace
+cache:
+  schema_file: testingtesting.schema.json
+endpoint: https://api-staging.newrelic.com/graphql
+auth:
+  header: Api-Key
+  api_key_env_var: NEW_RELIC_API_KEY
+packages:
+  - name: alerts
+    path: pkg/alerts
+    generators:
+      - typegen
+    types:
+      - name: AlertsMutingRuleConditionInput
+      - name: ID
+        field_type_override: string
+        skip_type_create: true
+generators:
+  - name: typegen
+    fileName: "types.go"
