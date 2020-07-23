@@ -45,7 +45,9 @@ func Fetch(
 	e.Auth.APIKey = os.Getenv(authEnvVariableName)
 
 	schema, err := e.Fetch()
-	util.LogIfError(log.FatalLevel, err)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	if schemaFile != "" {
 		util.LogIfError(log.ErrorLevel, schema.Save(schemaFile))
