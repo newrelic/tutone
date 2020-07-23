@@ -1,24 +1,25 @@
-<a name="v0.2.1"></a>
-## [v0.2.1] - 2020-04-09
+<a name="v0.1.0"></a>
+## v0.1.0 - 2020-07-23
 ### Bug Fixes
-- **release:** Update goreleaser for non-binary build
+- **fetch:** exit non-zero on fatal log message
+- **generate:** dont double prepend [] for list types - i.e. [][]type
+- **generate:** remove generate.yml and all instances of it's reference
+- **schema:** ensure proper handling of LIST types
+- **util:** ensure fields of nested types are also expanded
 
-<a name="v0.2.0"></a>
-## [v0.2.0] - 2020-04-09
-### Bug Fixes
-- **circleci:** Better cache busting
+### Documentation Updates
+- **tutone:** include a couple doc strings
+- **tutone:** include a what? section
 
 ### Features
-- **build:** Add goimports to the template
-- **goreleaser:** Update config for a library, not a binary
-- **release:** Auto release notes
+- **fetch:** Fetch root mutation type
+- **fetch:** Generic schema fetching and cache to file
+- **generate:** format the generated source code according Go standards
+- **generate:** WIP - first attempt at getting tutone to generate types
+- **generate:** Generate command reading configs
+- **generate:** implement --refetch flag
+- **generate:** fetch if schema not present
+- **generator:** introduce a generator concept
+- **tutone:** default path for tutone config file
 
-<a name="v0.1.0"></a>
-## v0.1.0 - 2020-03-05
-### Bug Fixes
-- **build/release:** Fix script reference for release.sh
-- **circleci:** Save default working dir instead
-
-[Unreleased]: https://github.com/newrelic/newrelic-client-go/compare/v0.2.1...HEAD
-[v0.2.1]: https://github.com/newrelic/newrelic-client-go/compare/v0.2.0...v0.2.1
-[v0.2.0]: https://github.com/newrelic/newrelic-client-go/compare/v0.1.0...v0.2.0
+[Unreleased]: https://github.com/newrelic/newrelic-client-go/compare/v0.1.0...HEAD
