@@ -30,10 +30,10 @@ type goStruct struct {
 }
 
 type goStructField struct {
-	Name string
-	Type string
-	Tags string
-	Doc  string
+	Name        string
+	Type        string
+	Tags        string
+	Description string
 }
 
 type goEnum struct {
@@ -135,10 +135,10 @@ func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.
 				}
 
 				field := goStructField{
-					Doc:  f.GetDescription(),
-					Name: f.GetName(),
-					Tags: f.GetTags(),
-					Type: fmt.Sprintf("%s%s", typeNamePrefix, typeName),
+					Description: f.GetDescription(),
+					Name:        f.GetName(),
+					Tags:        f.GetTags(),
+					Type:        fmt.Sprintf("%s%s", typeNamePrefix, typeName),
 				}
 
 				xxx.Fields = append(xxx.Fields, field)
