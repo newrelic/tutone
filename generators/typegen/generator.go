@@ -1,9 +1,9 @@
 package typegen
 
 import (
+	"bytes"
 	"fmt"
 	"go/format"
-	"io/ioutil"
 	"os"
 	"path"
 	"sort"
@@ -267,17 +267,14 @@ func (g *Generator) do(genConfig *config.GeneratorConfig, pkgConfig *config.Pack
 		return err
 	}
 
-	err = tmpl.Execute(file, g)
+	var resultBuf bytes.Buffer
+
+	err = tmpl.Execute(&resultBuf, g)
 	if err != nil {
 		return err
 	}
 
-	fileBytes, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		return err
-	}
-
-	formatted, err := format.Source(fileBytes)
+	formatted, err := format.Source(resultBuf.Bytes())
 	if err != nil {
 		return err
 	}
