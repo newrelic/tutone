@@ -13,44 +13,11 @@ import (
 
 	"github.com/newrelic/tutone/internal/config"
 	"github.com/newrelic/tutone/internal/schema"
+	"github.com/newrelic/tutone/pkg/lang"
 )
 
 type Generator struct {
-	Types       []goStruct
-	PackageName string
-	Enums       []goEnum
-	Imports     []string
-	Scalars     []goScalar
-}
-
-type goStruct struct {
-	Name        string
-	Description string
-	Fields      []goStructField
-}
-
-type goStructField struct {
-	Name        string
-	Type        string
-	Tags        string
-	Description string
-}
-
-type goEnum struct {
-	Name        string
-	Description string
-	Values      []goEnumValue
-}
-
-type goEnumValue struct {
-	Name        string
-	Description string
-}
-
-type goScalar struct {
-	Name        string
-	Description string
-	Type        string
+	lang.GolangGenerator
 }
 
 // Generate is the entry point for this Generator.
@@ -98,13 +65,13 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 	return nil
 }
 
-func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig, expandedTypes *[]*schema.Type) (*[]goStruct, *[]goEnum, *[]goScalar, error) {
+func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig, expandedTypes *[]*schema.Type) (*[]lang.GoStruct, *[]lang.GoEnum, *[]lang.GoScalar, error) {
 	// TODO: Putting the types in the specified path should be optional
 	//       Should we use a flag or allow the user to omit that field in the config? ¿Por que no lost dos?
 
-	var structsForGen []goStruct
-	var enumsForGen []goEnum
-	var scalarsForGen []goScalar
+	var structsForGen []lang.GoStruct
+	var enumsForGen []lang.GoEnum
+	var scalarsForGen []lang.GoScalar
 
 	var err error
 
@@ -112,7 +79,7 @@ func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.
 		switch t.Kind {
 		case schema.KindInputObject, schema.KindObject:
 
-			xxx := goStruct{
+			xxx := lang.GoStruct{
 				Name:        t.Name,
 				Description: t.GetDescription(),
 			}
@@ -134,7 +101,7 @@ func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.
 					typeNamePrefix = "[]"
 				}
 
-				field := goStructField{
+				field := lang.GoStructField{
 					Description: f.GetDescription(),
 					Name:        f.GetName(),
 					Tags:        f.GetTags(),
@@ -150,13 +117,13 @@ func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.
 
 			structsForGen = append(structsForGen, xxx)
 		case schema.KindENUM:
-			xxx := goEnum{
+			xxx := lang.GoEnum{
 				Name:        t.Name,
 				Description: t.GetDescription(),
 			}
 
 			for _, v := range t.EnumValues {
-				value := goEnumValue{
+				value := lang.GoEnumValue{
 					Name:        v.Name,
 					Description: v.GetDescription(),
 				}
@@ -193,7 +160,7 @@ func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.
 			}
 
 			if !t.IsGoType() && !skipTypeCreate {
-				xxx := goScalar{
+				xxx := lang.GoScalar{
 					Description: t.GetDescription(),
 					Name:        t.GetName(),
 					Type:        createAs,
