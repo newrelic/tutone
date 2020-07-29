@@ -35,7 +35,7 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 		log.Error(err)
 	}
 
-	structsForGen, enumsForGen, scalarsForGen, err := g.generateTypesForPackage(s, genConfig, pkgConfig, expandedTypes)
+	structsForGen, enumsForGen, scalarsForGen, interfacesForGen, err := g.generateTypesForPackage(s, genConfig, pkgConfig, expandedTypes)
 	if err != nil {
 		return err
 	}
@@ -54,7 +54,10 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 
 	if scalarsForGen != nil {
 		g.Scalars = *scalarsForGen
+	}
 
+	if interfacesForGen != nil {
+		g.Interfaces = *interfacesForGen
 	}
 
 	err = g.do(genConfig, pkgConfig)
@@ -65,20 +68,20 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 	return nil
 }
 
-func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig, expandedTypes *[]*schema.Type) (*[]lang.GoStruct, *[]lang.GoEnum, *[]lang.GoScalar, error) {
+func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig, expandedTypes *[]*schema.Type) (*[]lang.GoStruct, *[]lang.GoEnum, *[]lang.GoScalar, *[]lang.GoInterface, error) {
 	// TODO: Putting the types in the specified path should be optional
 	//       Should we use a flag or allow the user to omit that field in the config? ¿Por que no lost dos?
 
 	var structsForGen []lang.GoStruct
 	var enumsForGen []lang.GoEnum
 	var scalarsForGen []lang.GoScalar
+	var interfacesForGen []lang.GoInterface
 
 	var err error
 
 	for _, t := range *expandedTypes {
 		switch t.Kind {
-		case schema.KindInputObject, schema.KindObject:
-
+		case schema.KindInputObject, schema.KindObject, schema.KindInterface:
 			xxx := lang.GoStruct{
 				Name:        t.Name,
 				Description: t.GetDescription(),
@@ -92,6 +95,7 @@ func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.
 			for _, f := range fields {
 				var typeName string
 				var typeNamePrefix string
+
 				typeName, err = f.GetTypeNameWithOverride(pkgConfig)
 				if err != nil {
 					fieldErrs = append(fieldErrs, err)
@@ -115,6 +119,26 @@ func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.
 				log.Error(fieldErrs)
 			}
 
+			var implements []string
+			for _, x := range t.Interfaces {
+				implements = append(implements, x.Name)
+			}
+
+			xxx.Implements = implements
+
+			if t.Kind == schema.KindInterface {
+				// Modify the struct type to avoid conflict with the interface type by the same name.
+				xxx.Name += "Type"
+
+				// Handle the interface
+				yyy := lang.GoInterface{
+					Description: t.GetDescription(),
+					Name:        t.GetName(),
+				}
+
+				interfacesForGen = append(interfacesForGen, yyy)
+			}
+
 			structsForGen = append(structsForGen, xxx)
 		case schema.KindENUM:
 			xxx := lang.GoEnum{
@@ -133,8 +157,6 @@ func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.
 
 			enumsForGen = append(enumsForGen, xxx)
 		case schema.KindScalar:
-			log.Tracef("SCALAR type: %+v", t)
-
 			// Default scalars to string
 			createAs := "string"
 			skipTypeCreate := false
@@ -168,12 +190,22 @@ func (g *Generator) generateTypesForPackage(s *schema.Schema, genConfig *config.
 
 				scalarsForGen = append(scalarsForGen, xxx)
 			}
+		// case schema.KindInterface:
+		// 	xxx := lang.GoInterface{
+		// 		Description: t.GetDescription(),
+		// 		Name:        t.GetName(),
+		// 	}
+		//
+		// 	interfacesForGen = append(interfacesForGen, xxx)
 		default:
-			log.Debugf("default reached for kind %s, ignoring: %s", t.Kind, t.Name)
+			log.WithFields(log.Fields{
+				"name": t.Name,
+				"kind": t.Kind,
+			}).Warn("kind not implemented")
 		}
 	}
 
-	return &structsForGen, &enumsForGen, &scalarsForGen, nil
+	return &structsForGen, &enumsForGen, &scalarsForGen, &interfacesForGen, nil
 }
 
 // do performs the template render and file writement, according to the received configurations for the current Generator instance.

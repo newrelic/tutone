@@ -115,12 +115,12 @@ func ExpandType(s *Schema, t *Type) (*[]*Type, error) {
 				continue
 			}
 
-			log.WithFields(log.Fields{
-				"name": result.Name,
-				"kind": result.Kind,
-			}).Trace("type found for field")
-
 			if result != nil {
+				log.WithFields(log.Fields{
+					"name": result.Name,
+					"kind": result.Kind,
+				}).Trace("type found for field")
+
 				// Append the nested type to the result set.
 				f = append(f, result)
 

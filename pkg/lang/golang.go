@@ -14,6 +14,7 @@ type GoStruct struct {
 	Name        string
 	Description string
 	Fields      []GoStructField
+	Implements  []string
 }
 
 type GoStructField struct {
