@@ -11,9 +11,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// Types TODO: Remove this
-var Types = make(map[string]string)
-
 type MutationInfo struct {
 	Name string `yaml:"name"`
 }
