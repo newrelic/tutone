@@ -58,9 +58,6 @@ func Generate(refetch bool) error {
 	if err != nil {
 		return err
 	}
-	log.WithFields(log.Fields{
-		"schema": s,
-	}).Trace("loaded schema")
 
 	log.WithFields(log.Fields{
 		"count_packages":   len(cfg.Packages),
@@ -68,8 +65,6 @@ func Generate(refetch bool) error {
 		// "count_mutation":     len(cfg.Mutations),
 		// "count_query":        len(cfg.Queries),
 		// "count_subscription": len(cfg.Subscriptions),
-		// "count_type":         len(cfg.Types),
-		// "package":            cfg.Package,
 	}).Info("starting code generation")
 
 	allGenerators := map[string]generator.Generator{
@@ -78,7 +73,15 @@ func Generate(refetch bool) error {
 	}
 
 	for _, pkgConfig := range cfg.Packages {
+		log.WithFields(log.Fields{
+			"name":          pkgConfig.Name,
+			"generators":    pkgConfig.Generators,
+			"count_type":    len(pkgConfig.Types),
+			"count_imports": len(pkgConfig.Imports),
+		}).Info("generating package")
+
 		for _, generatorName := range pkgConfig.Generators {
+
 			ggg, err := getGeneratorByName(generatorName, allGenerators)
 			if err != nil {
 				log.Error(err)
@@ -92,7 +95,6 @@ func Generate(refetch bool) error {
 			}
 
 			if ggg != nil && genConfig != nil {
-
 				g := *ggg
 
 				err = g.Generate(s, genConfig, &pkgConfig)

@@ -3,6 +3,7 @@ package schema
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -17,8 +18,6 @@ func filterDescription(description string) string {
 
 	re := regexp.MustCompile(`(?s)(.*)\n---\n`)
 	desc := re.FindStringSubmatch(description)
-
-	log.Tracef("description: %#v", desc)
 
 	if len(desc) > 1 {
 		ret = desc[1]
@@ -83,8 +82,6 @@ func ExpandType(s *Schema, t *Type) (*[]*Type, error) {
 		return nil, fmt.Errorf("unable to expand nil type")
 	}
 
-	log.Debugf("expanding type %s", t.GetName())
-
 	var f []*Type
 
 	// InputFields and Fields are handled the same way, so combine them to loop over.
@@ -92,10 +89,25 @@ func ExpandType(s *Schema, t *Type) (*[]*Type, error) {
 	fields = append(fields, t.Fields...)
 	fields = append(fields, t.InputFields...)
 
+	log.WithFields(log.Fields{
+		"name":          t.GetName(),
+		"interfaces":    t.Interfaces,
+		"possibleTypes": t.PossibleTypes,
+		"kind":          t.Kind,
+	}).Trace("expanding type")
+
 	// Collect the nested types from InputFields and Fields.
 	for _, i := range fields {
+		log.WithFields(log.Fields{
+			"name": i.GetName(),
+			"kind": i.Type.Kind,
+		}).Trace("expanding field")
+
 		if i.Type.OfType != nil {
-			log.Tracef("field %s of type %s", i.GetName(), i.Type.OfType.GetName())
+			log.WithFields(log.Fields{
+				"ofType":     i.Type.OfType.GetName(),
+				"ofTypeName": i.Type.OfType.GetTypeName(),
+			}).Trace("field ofType")
 
 			result, err := s.LookupTypeByName(i.Type.OfType.GetTypeName())
 			if err != nil {
@@ -104,6 +116,11 @@ func ExpandType(s *Schema, t *Type) (*[]*Type, error) {
 			}
 
 			if result != nil {
+				log.WithFields(log.Fields{
+					"name": result.Name,
+					"kind": result.Kind,
+				}).Trace("type found for field")
+
 				// Append the nested type to the result set.
 				f = append(f, result)
 
@@ -119,6 +136,28 @@ func ExpandType(s *Schema, t *Type) (*[]*Type, error) {
 					f = append(f, *subExpanded...)
 				}
 			}
+		} else if i.Type.Kind == "OBJECT" {
+			log.WithFields(log.Fields{
+				"name":     i.GetName(),
+				"typeKind": i.Type.Kind,
+			}).Trace("expanding OBJECT field")
+
+			result, err := s.LookupTypeByName(i.Type.GetName())
+			if err != nil {
+				log.Error(err)
+				continue
+			}
+
+			if result != nil {
+				// Append the nested type to the result set.
+				f = append(f, result)
+			}
+		} else {
+			log.WithFields(log.Fields{
+				"name":     i.GetName(),
+				"typeKind": i.Type.Kind,
+				"ofType":   i.Type.OfType,
+			}).Debug("not expanding")
 		}
 	}
 
@@ -156,6 +195,17 @@ func ExpandTypes(s *Schema, types []config.TypeConfig) (*[]*Type, error) {
 				}
 			}
 		}
+	}
+
+	sort.SliceStable(expandedTypes, func(i, j int) bool {
+		return expandedTypes[i].Name < expandedTypes[j].Name
+	})
+
+	for _, expandedType := range expandedTypes {
+		log.WithFields(log.Fields{
+			"name": expandedType.Name,
+			"kind": expandedType.Kind,
+		}).Debug("type included")
 	}
 
 	return &expandedTypes, nil

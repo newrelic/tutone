@@ -11,9 +11,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// Types TODO: Remove this
-var Types = make(map[string]string)
-
 type MutationInfo struct {
 	Name string `yaml:"name"`
 }
@@ -116,8 +113,6 @@ func (s *Schema) Save(file string) error {
 
 // LookupTypeByName digs in the schema for a type that matches the given name.
 func (s *Schema) LookupTypeByName(typeName string) (*Type, error) {
-	log.Tracef("looking for typeName: %s", typeName)
-
 	for _, t := range s.Types {
 		if t.Name == typeName {
 			return t, nil
