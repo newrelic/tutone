@@ -1,4 +1,4 @@
-package generator
+package codegen
 
 import (
 	"github.com/newrelic/tutone/internal/config"
@@ -9,4 +9,5 @@ import (
 // generated code for another project.
 type Generator interface {
 	Generate(*schema.Schema, *config.GeneratorConfig, *config.PackageConfig) error
+	Execute(*config.GeneratorConfig, *config.PackageConfig) error
 }

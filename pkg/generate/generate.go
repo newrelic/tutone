@@ -7,9 +7,10 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
+	nerdgraphclient "github.com/newrelic/tutone/generators/nerdgraph_client"
 	"github.com/newrelic/tutone/generators/typegen"
+	"github.com/newrelic/tutone/internal/codegen"
 	"github.com/newrelic/tutone/internal/config"
-	"github.com/newrelic/tutone/internal/generator"
 	"github.com/newrelic/tutone/internal/schema"
 	"github.com/newrelic/tutone/pkg/fetch"
 )
@@ -67,9 +68,10 @@ func Generate(refetch bool) error {
 		// "count_subscription": len(cfg.Subscriptions),
 	}).Info("starting code generation")
 
-	allGenerators := map[string]generator.Generator{
+	allGenerators := map[string]codegen.Generator{
 		// &terraform.Generator{},
-		"typegen": &typegen.Generator{},
+		"typegen":          &typegen.Generator{},
+		"nerdgraph_client": &nerdgraphclient.Generator{},
 	}
 
 	for _, pkgConfig := range cfg.Packages {
@@ -97,9 +99,18 @@ func Generate(refetch bool) error {
 			if ggg != nil && genConfig != nil {
 				g := *ggg
 
+				log.WithFields(log.Fields{
+					"generator": generatorName,
+				}).Info("starting generator")
+
 				err = g.Generate(s, genConfig, &pkgConfig)
 				if err != nil {
-					return fmt.Errorf("unable to generate for provider %T: %s", generatorName, err)
+					return fmt.Errorf("failed to call Generaet() for provider %T: %s", generatorName, err)
+				}
+
+				err = g.Execute(genConfig, &pkgConfig)
+				if err != nil {
+					return fmt.Errorf("failed to call Execute() for provider %T: %s", generatorName, err)
 				}
 			}
 		}
@@ -120,7 +131,7 @@ func getGeneratorConfigByName(name string, matchSet []config.GeneratorConfig) (*
 }
 
 // getGeneratorByName retrieve the *generator.Generator from the given set or errros.
-func getGeneratorByName(name string, matchSet map[string]generator.Generator) (*generator.Generator, error) {
+func getGeneratorByName(name string, matchSet map[string]codegen.Generator) (*codegen.Generator, error) {
 	for n, g := range matchSet {
 		if n == name {
 			return &g, nil
