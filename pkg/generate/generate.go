@@ -7,7 +7,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
-	nerdgraphclient "github.com/newrelic/tutone/generators/nerdgraph_client"
 	"github.com/newrelic/tutone/generators/typegen"
 	"github.com/newrelic/tutone/internal/codegen"
 	"github.com/newrelic/tutone/internal/config"
@@ -70,8 +69,8 @@ func Generate(refetch bool) error {
 
 	allGenerators := map[string]codegen.Generator{
 		// &terraform.Generator{},
-		"typegen":          &typegen.Generator{},
-		"nerdgraph_client": &nerdgraphclient.Generator{},
+		"typegen": &typegen.Generator{},
+		// "nerdgraph_client": &nerdgraphclient.Generator{},
 	}
 
 	for _, pkgConfig := range cfg.Packages {
