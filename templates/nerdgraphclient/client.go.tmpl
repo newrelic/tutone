@@ -1,0 +1,35 @@
+package {{.PackageName}}
+
+{{range .Methods}}
+// TODO The name of the method here could use some love. Perhaps we allow an
+// override from the user at config time, so that we are able to replace what
+// exists?  Perhps too this is an opporunity for us to use the method prefix as
+// some kind of indicator for which package this method should belong to,
+// perhaps.
+{{ .Description }}
+func {{.Name}}(
+  {{- range .Signature.Input}}
+    {{.Name | untitle}} {{.Type}},
+  {{- end}}
+    ) ({{ .Signature.Return | join ", "}}) {
+
+  // TODO Do we have a "Response{}" object that we can refer to yet?
+	resp := nrqlConditionBaselineCreateResponse{}
+	vars := map[string]interface{}{
+  {{- range .QueryVars}}
+    "{{.Key}}": {{.Value | untitle}},
+  {{- end}}
+	}
+
+  // TODO Create the query string to pass here
+	if err := a.client.NerdGraphQuery(createNrqlConditionBaselineMutation, vars, &resp); err != nil {
+		return nil, err
+	}
+
+  // TODO Ensure we return the appropriate object
+	return &resp.AlertsNrqlConditionBaselineCreate, nil
+
+        // TODO
+  return nil, nil
+}
+{{ end}}
