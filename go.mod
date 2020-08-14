@@ -8,7 +8,7 @@ require (
 	github.com/golangci/golangci-lint v1.30.0
 	github.com/goreleaser/goreleaser v0.141.0
 	github.com/hashicorp/go-retryablehttp v0.6.6 // indirect
-	github.com/llorllale/go-gitlint v0.0.0-20190914155841-58c0b8cef0e5
+	github.com/llorllale/go-gitlint v0.0.0-20200802191503-5984945d4b80
 	github.com/psampaz/go-mod-outdated v0.6.0
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/cobra v1.0.0
