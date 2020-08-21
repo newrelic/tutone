@@ -117,14 +117,17 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 
 			if t.Kind == schema.KindInterface {
 				// Modify the struct type to avoid conflict with the interface type by the same name.
-				xxx.Name += "Type"
+				// xxx.Name += "Type"
+
 				// Ensure that the struct for the graphql interface implements the go interface
 				xxx.Implements = append(xxx.Implements, t.Name)
 
 				// Handle the interface
 				yyy := GoInterface{
 					Description: t.GetDescription(),
-					Name:        t.GetName(),
+					// Append "Interface" to Go interface names
+					// to avoid name conflicts with types/structs
+					Name: t.GetName() + "Interface",
 				}
 
 				interfacesForGen = append(interfacesForGen, yyy)

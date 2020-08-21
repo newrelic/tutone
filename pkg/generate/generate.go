@@ -14,10 +14,13 @@ import (
 	"github.com/newrelic/tutone/pkg/fetch"
 )
 
-// Generate reads the configuration file and executes generators relevant to a particular package.
-func Generate(refetch bool) error {
-	fmt.Print("\n GENERATE..... \n")
+type GeneratorOptions struct {
+	PackageName string
+	Refetch     bool
+}
 
+// Generate reads the configuration file and executes generators relevant to a particular package.
+func Generate(options GeneratorOptions) error {
 	defFile := viper.GetString("definition")
 	schemaFile := viper.GetString("cache.schema_file")
 	typesFile := viper.GetString("generate.types_file")
@@ -25,7 +28,7 @@ func Generate(refetch bool) error {
 	_, err := os.Stat(schemaFile)
 
 	// Fetch a new schema if it doesn't exist or if --refetch flag has been provided.
-	if os.IsNotExist(err) || refetch {
+	if os.IsNotExist(err) || options.Refetch {
 		fetch.Fetch(
 			viper.GetString("endpoint"),
 			viper.GetString("auth.header"),
@@ -67,55 +70,88 @@ func Generate(refetch bool) error {
 		// "count_subscription": len(cfg.Subscriptions),
 	}).Info("starting code generation")
 
+	// Generate for a specific package
+	if options.PackageName != "" {
+		return generateForPackage(options.PackageName, cfg, s)
+	}
+
+	// Generate for all configured packages
+	for _, pkgConfig := range cfg.Packages {
+		if err := generateForPackage(pkgConfig.Name, cfg, s); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func findPackageConfigByName(name string, packages []config.PackageConfig) *config.PackageConfig {
+	for _, p := range packages {
+		if p.Name == name {
+			return &p
+		}
+	}
+
+	return nil
+}
+
+func generatePkgTypes(pkgConfig *config.PackageConfig, cfg *config.Config, s *schema.Schema) error {
 	allGenerators := map[string]codegen.Generator{
 		// &terraform.Generator{},
 		"typegen": &typegen.Generator{},
 		// "nerdgraph_client": &nerdgraphclient.Generator{},
 	}
 
-	for _, pkgConfig := range cfg.Packages {
-		log.WithFields(log.Fields{
-			"name":          pkgConfig.Name,
-			"generators":    pkgConfig.Generators,
-			"count_type":    len(pkgConfig.Types),
-			"count_imports": len(pkgConfig.Imports),
-		}).Info("generating package")
+	log.WithFields(log.Fields{
+		"name":          pkgConfig.Name,
+		"generators":    pkgConfig.Generators,
+		"count_type":    len(pkgConfig.Types),
+		"count_imports": len(pkgConfig.Imports),
+	}).Info("generating package")
 
-		for _, generatorName := range pkgConfig.Generators {
+	for _, generatorName := range pkgConfig.Generators {
+		ggg, err := getGeneratorByName(generatorName, allGenerators)
+		if err != nil {
+			log.Error(err)
+			continue
+		}
 
-			ggg, err := getGeneratorByName(generatorName, allGenerators)
+		genConfig, err := getGeneratorConfigByName(generatorName, cfg.Generators)
+		if err != nil {
+			log.Error(err)
+			continue
+		}
+
+		if ggg != nil && genConfig != nil {
+			g := *ggg
+
+			log.WithFields(log.Fields{
+				"generator": generatorName,
+			}).Info("starting generator")
+
+			err = g.Generate(s, genConfig, pkgConfig)
 			if err != nil {
-				log.Error(err)
-				continue
+				return fmt.Errorf("failed to call Generaet() for provider %T: %s", generatorName, err)
 			}
 
-			genConfig, err := getGeneratorConfigByName(generatorName, cfg.Generators)
+			err = g.Execute(genConfig, pkgConfig)
 			if err != nil {
-				log.Error(err)
-				continue
-			}
-
-			if ggg != nil && genConfig != nil {
-				g := *ggg
-
-				log.WithFields(log.Fields{
-					"generator": generatorName,
-				}).Info("starting generator")
-
-				err = g.Generate(s, genConfig, &pkgConfig)
-				if err != nil {
-					return fmt.Errorf("failed to call Generaet() for provider %T: %s", generatorName, err)
-				}
-
-				err = g.Execute(genConfig, &pkgConfig)
-				if err != nil {
-					return fmt.Errorf("failed to call Execute() for provider %T: %s", generatorName, err)
-				}
+				return fmt.Errorf("failed to call Execute() for provider %T: %s", generatorName, err)
 			}
 		}
 	}
 
 	return nil
+}
+
+func generateForPackage(packageName string, cfg *config.Config, schema *schema.Schema) error {
+	pkg := findPackageConfigByName(packageName, cfg.Packages)
+
+	if pkg == nil {
+		return fmt.Errorf("[Error] package %v not found", packageName)
+	}
+
+	return generatePkgTypes(pkg, cfg, schema)
 }
 
 // getGeneratorConfigByName retrieve the *config.GeneratorConfig from the given set or errros.

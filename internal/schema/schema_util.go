@@ -223,6 +223,18 @@ func formatGoName(name string) string {
 		fieldName = "ID"
 	case "accountid":
 		fieldName = "AccountID"
+	case "accountids":
+		fieldName = "AccountIDs"
+	case "userid":
+		fieldName = "UserID"
+	case "userids":
+		fieldName = "UserIDs"
+	case "ingestkeyids":
+		fieldName = "IngestKeyIDs"
+	case "userkeyids":
+		fieldName = "UserKeyIDs"
+	case "keyid":
+		fieldName = "KeyID"
 	default:
 		fieldName = strings.Title(name)
 	}
