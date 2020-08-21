@@ -60,21 +60,7 @@ func (f *Field) GetTypeNameWithOverride(pkgConfig *config.PackageConfig) (string
 
 // GetName returns a recusive lookup of the type name
 func (f *Field) GetName() string {
-	var fieldName string
-
-	switch strings.ToLower(f.Name) {
-	case "ids":
-		// special case to avoid the struct field Ids, and prefer IDs instead
-		fieldName = "IDs"
-	case "id":
-		fieldName = "ID"
-	case "accountid":
-		fieldName = "AccountID"
-	default:
-		fieldName = strings.Title(f.Name)
-	}
-
-	return fieldName
+	return formatGoName(f.Name)
 }
 
 // GetTags is used to return the Go struct tags for a field.
