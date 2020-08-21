@@ -31,7 +31,10 @@ is up to date with your configured GraphQL API.
 `,
 	Example: "tutone generate --config .tutone.yml",
 	Run: func(cmd *cobra.Command, args []string) {
-		util.LogIfError(log.ErrorLevel, Generate(refetch))
+		util.LogIfError(log.ErrorLevel, Generate(GeneratorOptions{
+			PackageName: packageName,
+			Refetch:     refetch,
+		}))
 	},
 }
 
