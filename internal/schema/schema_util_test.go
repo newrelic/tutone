@@ -26,7 +26,7 @@ func TestExpandTypes(t *testing.T) {
 		ExpectReason  string
 		ExpectedNames []string
 	}{
-		"simple": {
+		"single type": {
 			Types: []config.TypeConfig{{
 				Name: "AlertsPolicy",
 			}},
@@ -39,6 +39,13 @@ func TestExpandTypes(t *testing.T) {
 				"String",
 			},
 		},
+		"single method": {
+			Types: []config.TypeConfig{},
+			Methods: []config.MethodConfig{{
+				Name: "alertsNrqlConditionBaselineCreate",
+			}},
+			ExpectedNames: []string{"AlertsFillOption", "AlertsNrqlBaselineDirection", "AlertsNrqlConditionBaselineInput", "AlertsNrqlConditionExpirationInput", "AlertsNrqlConditionPriority", "AlertsNrqlConditionQueryInput", "AlertsNrqlConditionSignalInput", "AlertsNrqlConditionThresholdOccurrences", "AlertsNrqlDynamicConditionTermsInput", "AlertsNrqlDynamicConditionTermsOperator", "AlertsViolationTimeLimit", "Boolean", "Float", "ID", "Int", "String"},
+		},
 	}
 
 	for _, tc := range cases {
@@ -49,8 +56,6 @@ func TestExpandTypes(t *testing.T) {
 		} else {
 			require.Nil(t, err)
 		}
-
-		assert.Equal(t, len(*results), len(tc.ExpectedNames))
 
 		names := []string{}
 		for _, r := range *results {
