@@ -135,13 +135,13 @@ func ExpandType(s *Schema, t *Type) (*[]*Type, error) {
 				if subExpanded != nil {
 					f = append(f, *subExpanded...)
 				}
-			}
-		} else if i.Type.Kind == "OBJECT" {
-			log.WithFields(log.Fields{
-				"name":     i.GetName(),
-				"typeKind": i.Type.Kind,
-			}).Trace("expanding OBJECT field")
+			} else {
+				log.WithFields(log.Fields{
+					"name": i.Name,
+				}).Error("result is nil")
 
+			}
+		} else if i.Type.Kind == KindObject || i.Type.Kind == KindInputObject || i.Type.Kind == KindENUM {
 			result, err := s.LookupTypeByName(i.Type.GetName())
 			if err != nil {
 				log.Error(err)
@@ -152,12 +152,23 @@ func ExpandType(s *Schema, t *Type) (*[]*Type, error) {
 				// Append the nested type to the result set.
 				f = append(f, result)
 			}
+
+			// Recursively expand any fields of the nested type
+			subExpanded, err := ExpandType(s, result)
+			if err != nil {
+				log.Error(err)
+				continue
+			}
+
+			// Append the nested sub-types into the result set.
+			if subExpanded != nil {
+				f = append(f, *subExpanded...)
+			}
 		} else {
 			log.WithFields(log.Fields{
-				"name":     i.GetName(),
-				"typeKind": i.Type.Kind,
-				"ofType":   i.Type.OfType,
-			}).Debug("not expanding")
+				"name": i.GetName(),
+				"type": i.Type,
+			}).Debugf("not expanding %s", i.Name)
 		}
 	}
 
