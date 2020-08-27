@@ -60,6 +60,17 @@ func typeNameInTypes(s string, types []config.TypeConfig) bool {
 	return false
 }
 
+// methodNameInMethods determines if a name is already present in a set of config.MethodConfig.
+func methodNameInMethods(s string, methods []config.MethodConfig) bool {
+	for _, t := range methods {
+		if t.Name == s {
+			return true
+		}
+	}
+
+	return false
+}
+
 // hasType determines if a Type is already present in a slice of Type objects.
 func hasType(t *Type, types []*Type) bool {
 	for _, tt := range types {
@@ -90,24 +101,28 @@ func ExpandType(s *Schema, t *Type) (*[]*Type, error) {
 	fields = append(fields, t.InputFields...)
 
 	log.WithFields(log.Fields{
-		"name":          t.GetName(),
-		"interfaces":    t.Interfaces,
-		"possibleTypes": t.PossibleTypes,
-		"kind":          t.Kind,
-	}).Trace("expanding type")
+		"name":              t.GetName(),
+		"interfaces":        t.Interfaces,
+		"possibleTypes":     t.PossibleTypes,
+		"kind":              t.Kind,
+		"fields_count":      len(t.Fields),
+		"inputFields_count": len(t.InputFields),
+	}).Debugf("expanding type %s", t.Name)
 
 	// Collect the nested types from InputFields and Fields.
 	for _, i := range fields {
 		log.WithFields(log.Fields{
 			"name": i.GetName(),
-			"kind": i.Type.Kind,
-		}).Trace("expanding field")
+			"type": i.Type,
+			"args": i.Args,
+		}).Debugf("expanding field %s", i.Name)
 
 		if i.Type.OfType != nil {
 			log.WithFields(log.Fields{
 				"ofType":     i.Type.OfType.GetName(),
 				"ofTypeName": i.Type.OfType.GetTypeName(),
-			}).Trace("field ofType")
+				"ofTypeKind": i.Type.OfType.GetKinds(),
+			}).Debug("field ofType")
 
 			result, err := s.LookupTypeByName(i.Type.OfType.GetTypeName())
 			if err != nil {
@@ -115,11 +130,18 @@ func ExpandType(s *Schema, t *Type) (*[]*Type, error) {
 				continue
 			}
 
+			// TODO clean this up. The first two blocks here are nearly identical,
+			// except that in the first case we inspect the OfTYpe to determine if
+			// this type is representing another, and in the second block we just
+			// inspect the Type.  In both cases though, we want to determine if the
+			// OfType or Type is found in the schema, and if so, continue to
+			// interrogate it by calling recursively.
+
 			if result != nil {
 				log.WithFields(log.Fields{
 					"name": result.Name,
 					"kind": result.Kind,
-				}).Trace("type found for field")
+				}).Debug("type found for field")
 
 				// Append the nested type to the result set.
 				f = append(f, result)
@@ -177,7 +199,7 @@ func ExpandType(s *Schema, t *Type) (*[]*Type, error) {
 
 // ExpandTypes receives a set of config.TypeConfig, which is then expanded to include
 // all the nested types from the fields.
-func ExpandTypes(s *Schema, types []config.TypeConfig) (*[]*Type, error) {
+func ExpandTypes(s *Schema, types []config.TypeConfig, methods []config.MethodConfig) (*[]*Type, error) {
 	if s == nil {
 		return nil, fmt.Errorf("unable to expand types from nil schema")
 	}
@@ -187,8 +209,11 @@ func ExpandTypes(s *Schema, types []config.TypeConfig) (*[]*Type, error) {
 	for _, schemaType := range s.Types {
 		if schemaType != nil {
 
-			// Match the name of types we've resolve and append them to the list
+			// Constrain our handling to include only the type names which are mentioned in the configuration.
 			if typeNameInTypes(schemaType.GetName(), types) {
+				log.WithFields(log.Fields{
+					"name": schemaType.GetName(),
+				}).Debugf("config type: %s", schemaType.Name)
 				if !hasType(schemaType, expandedTypes) {
 					expandedTypes = append(expandedTypes, schemaType)
 				}
@@ -203,6 +228,75 @@ func ExpandTypes(s *Schema, types []config.TypeConfig) (*[]*Type, error) {
 					if !hasType(f, expandedTypes) {
 						expandedTypes = append(expandedTypes, f)
 					}
+				}
+			}
+		}
+	}
+
+	var methodFields []Field
+	methodFields = append(methodFields, s.MutationType.Fields...)
+	methodFields = append(methodFields, s.MutationType.InputFields...)
+
+	for _, field := range methodFields {
+
+		// Constrain our handling to include only the method names which are mentioned in the configuration.
+		if methodNameInMethods(field.Name, methods) {
+			log.WithFields(log.Fields{
+				"name": field.GetName(),
+			}).Warnf("config method: %s", field.Name)
+
+			for _, methodArg := range field.Args {
+
+				log.WithFields(log.Fields{
+					"method": field.Name,
+					"name":   methodArg.Name,
+				}).Debug("argument for method")
+
+				if methodArg.Type.OfType != nil {
+					result, err := s.LookupTypeByName(methodArg.Type.OfType.GetTypeName())
+					if err != nil {
+						log.WithFields(log.Fields{
+							"name": methodArg.Name,
+							"type": methodArg.Type,
+						}).Errorf("failed lookup methodArg lookup: %s", err)
+						continue
+					}
+
+					if result != nil {
+						log.WithFields(log.Fields{
+							"method": field.Name,
+							"name":   methodArg.Name,
+							"type":   result.Name,
+						}).Debugf("argument type for method found")
+
+						// Append the nested type to the result set.
+						if !hasType(result, expandedTypes) {
+							expandedTypes = append(expandedTypes, result)
+						}
+
+						// Recursively expand any fields of the nested type
+						subExpanded, err := ExpandType(s, result)
+						if err != nil {
+							log.WithFields(log.Fields{
+								"name": result.Name,
+							}).Errorf("failed to ExpandType for method: %s", err)
+							continue
+						}
+
+						// Append the nested sub-types into the result set.
+						if subExpanded != nil {
+							for _, f := range *subExpanded {
+								if !hasType(f, expandedTypes) {
+									expandedTypes = append(expandedTypes, f)
+								}
+							}
+						}
+					}
+				} else {
+					log.WithFields(log.Fields{
+						"name": methodArg.Name,
+					}).Warn("mutation methodArg thing not handled")
+
 				}
 			}
 		}
@@ -246,6 +340,8 @@ func formatGoName(name string) string {
 		fieldName = "UserKeyIDs"
 	case "keyid":
 		fieldName = "KeyID"
+	case "policyid":
+		fieldName = "PolicyID"
 	default:
 		fieldName = strings.Title(name)
 	}
