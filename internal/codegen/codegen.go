@@ -47,7 +47,6 @@ func (c *CodeGen) WriteFile(g Generator) error {
 	templateName := path.Base(templatePath)
 
 	tmpl, err := template.New(templateName).Funcs(sprig.FuncMap()).ParseFiles(templatePath)
-	// tmpl, err := template.ParseFiles(templatePath)
 	if err != nil {
 		return err
 	}

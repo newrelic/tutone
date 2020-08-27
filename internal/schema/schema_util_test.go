@@ -18,13 +18,15 @@ func TestExpandTypes(t *testing.T) {
 	s, err := Load("../../testdata/schema.json")
 	assert.NoError(t, err)
 
-	config := []config.TypeConfig{
+	typeConfig := []config.TypeConfig{
 		{
 			Name: "AlertsPolicy",
 		},
 	}
 
-	results, err := ExpandTypes(s, config)
+	methodConfig := []config.MethodConfig{}
+
+	results, err := ExpandTypes(s, typeConfig, methodConfig)
 	assert.NoError(t, err)
 	require.NotNil(t, results)
 	assert.Equal(t, len(*results), 5)
