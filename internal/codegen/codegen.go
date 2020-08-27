@@ -6,6 +6,8 @@ import (
 	"html/template"
 	"os"
 	"path"
+
+	"github.com/Masterminds/sprig"
 )
 
 type CodeGen struct {
@@ -42,8 +44,10 @@ func (c *CodeGen) WriteFile(g Generator) error {
 	defer file.Close()
 
 	templatePath := path.Join(c.TemplateDir, c.TemplateName)
+	templateName := path.Base(templatePath)
 
-	tmpl, err := template.ParseFiles(templatePath)
+	tmpl, err := template.New(templateName).Funcs(sprig.FuncMap()).ParseFiles(templatePath)
+	// tmpl, err := template.ParseFiles(templatePath)
 	if err != nil {
 		return err
 	}

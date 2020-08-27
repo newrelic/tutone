@@ -3,11 +3,13 @@ package codegen
 import (
 	"bytes"
 	"html/template"
+
+	"github.com/Masterminds/sprig"
 )
 
 // RenderStringFromGenerator receives a Generator that is used to render the received template string.
 func RenderStringFromGenerator(s string, g Generator) (string, error) {
-	tmpl, err := template.New("string").Parse(s)
+	tmpl, err := template.New("string").Funcs(sprig.FuncMap()).Parse(s)
 	if err != nil {
 		return "", err
 	}
