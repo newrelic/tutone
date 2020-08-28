@@ -126,5 +126,18 @@ func (g *Generator) Execute(genConfig *config.GeneratorConfig, pkgConfig *config
 		DestinationDir:  destinationPath,
 	}
 
+	printSuccessMessage(pkgConfig, filePath)
+
 	return c.WriteFile(g)
+}
+
+// printSuccessMessage prints a message to the terminal letting the user know
+// that code generation was a success and outputs the package and file path for reference.
+//
+// Emoji unicode reference: http://www.unicode.org/emoji/charts/emoji-list.html
+func printSuccessMessage(pkgConfig *config.PackageConfig, filePath string) {
+	fmt.Print("\n\u2705 Code generation complete: \n\n")
+	fmt.Printf("   Package:   %v \n", pkgConfig.Path)
+	fmt.Printf("   File:      %v \n", filePath)
+	fmt.Println("")
 }
