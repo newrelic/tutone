@@ -78,6 +78,7 @@ type GoMethodInputType struct {
 type QueryVar struct {
 	Key   string
 	Value string
+	Type  string
 }
 
 func GenerateGoMethodsForPackage(s *schema.Schema, genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig) (*[]GoMethod, error) {
@@ -93,6 +94,16 @@ func GenerateGoMethodsForPackage(s *schema.Schema, genConfig *config.GeneratorCo
 					Name:        field.Name,
 					Description: field.GetDescription(),
 				}
+
+				// TODO It seem like we should never include the error here, and
+				// instead assume an error is used in the method.
+				// if field.Type.Name != "" {
+				// 	pointerReturn := fmt.Sprintf("*%s", field.Type.Name)
+				// 	method.Signature.Return = pointerReturn, "error"
+				// }
+				// Also, if we're trying to operate a field.Type without a name, what
+				// is even happening?  Maybe that should be a log at the top of the
+				// block with a continue.
 
 				if field.Type.Name != "" {
 					// pointerReturn := fmt.Sprintf("*%s", field.Type.Name)
@@ -123,6 +134,7 @@ func GenerateGoMethodsForPackage(s *schema.Schema, genConfig *config.GeneratorCo
 						queryVar := QueryVar{
 							Key:   methodArg.Name,
 							Value: inputType.Name,
+							Type:  methodArg.Type.OfType.Name,
 						}
 
 						method.QueryVars = append(method.QueryVars, queryVar)

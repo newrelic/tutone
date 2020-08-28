@@ -23,10 +23,9 @@ func {{.Name | title}}(
   {{- end}}
 	}
 
-  // TODO Create the query string to pass here
-	// if err := a.client.NerdGraphQuery(createNrqlConditionBaselineMutation, vars, &resp); err != nil {
-	// 	return nil, err
-	// }
+	if err := a.client.NerdGraphQuery({{.Name}}Mutation, vars, &resp); err != nil {
+		return nil, err
+	}
 
 	return &resp.{{first .Signature.Return}}, nil
 }
@@ -36,7 +35,19 @@ type {{.Name}}Response struct {
   {{.Name | title}} {{first .Signature.Return}} `json:"{{.Name}}"`
 }
 
+const {{.Name}}Mutation = `
+	mutation {{.Name|title}}(
+  {{- range .QueryVars}}
+      ${{.Key}}: {{.Type}}!
+  {{- end}}
+  ){
+		{{.Name}}(
+  {{- range .QueryVars}}
+      {{.Key}}: ${{.Value | untitle}},
+  {{- end}}
+    ) { ` + {{.Name}}Fields + ` } }
+`
+
 {{   end}}
 {{ end}}
-
 
