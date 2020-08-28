@@ -46,6 +46,13 @@ func TestExpandTypes(t *testing.T) {
 			}},
 			ExpectedNames: []string{"AlertsFillOption", "AlertsNrqlBaselineCondition", "AlertsNrqlBaselineDirection", "AlertsNrqlConditionBaselineInput", "AlertsNrqlConditionExpiration", "AlertsNrqlConditionExpirationInput", "AlertsNrqlConditionPriority", "AlertsNrqlConditionQuery", "AlertsNrqlConditionQueryInput", "AlertsNrqlConditionSignal", "AlertsNrqlConditionSignalInput", "AlertsNrqlConditionTerms", "AlertsNrqlConditionTermsOperator", "AlertsNrqlConditionThresholdOccurrences", "AlertsNrqlConditionType", "AlertsNrqlDynamicConditionTermsInput", "AlertsNrqlDynamicConditionTermsOperator", "AlertsViolationTimeLimit", "Boolean", "Float", "ID", "Int", "String"},
 		},
+		"sample interface type": {
+			Types: []config.TypeConfig{{
+				Name: "CloudProvider",
+			}},
+			Methods:       []config.MethodConfig{},
+			ExpectedNames: []string{"Boolean", "CloudProvider", "CloudService", "EpochSeconds", "Int", "String"},
+		},
 	}
 
 	for _, tc := range cases {
