@@ -44,7 +44,7 @@ func TestExpandTypes(t *testing.T) {
 			Methods: []config.MethodConfig{{
 				Name: "alertsNrqlConditionBaselineCreate",
 			}},
-			ExpectedNames: []string{"AlertsFillOption", "AlertsNrqlBaselineDirection", "AlertsNrqlConditionBaselineInput", "AlertsNrqlConditionExpirationInput", "AlertsNrqlConditionPriority", "AlertsNrqlConditionQueryInput", "AlertsNrqlConditionSignalInput", "AlertsNrqlConditionThresholdOccurrences", "AlertsNrqlDynamicConditionTermsInput", "AlertsNrqlDynamicConditionTermsOperator", "AlertsViolationTimeLimit", "Boolean", "Float", "ID", "Int", "String"},
+			ExpectedNames: []string{"AlertsFillOption", "AlertsNrqlBaselineCondition", "AlertsNrqlBaselineDirection", "AlertsNrqlConditionBaselineInput", "AlertsNrqlConditionExpiration", "AlertsNrqlConditionExpirationInput", "AlertsNrqlConditionPriority", "AlertsNrqlConditionQuery", "AlertsNrqlConditionQueryInput", "AlertsNrqlConditionSignal", "AlertsNrqlConditionSignalInput", "AlertsNrqlConditionTerms", "AlertsNrqlConditionTermsOperator", "AlertsNrqlConditionThresholdOccurrences", "AlertsNrqlConditionType", "AlertsNrqlDynamicConditionTermsInput", "AlertsNrqlDynamicConditionTermsOperator", "AlertsViolationTimeLimit", "Boolean", "Float", "ID", "Int", "String"},
 		},
 	}
 
