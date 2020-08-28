@@ -182,6 +182,7 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 			for _, f := range fields {
 				var typeName string
 				var typeNamePrefix string
+				var typeNameSuffix string
 
 				typeName, err = f.GetTypeNameWithOverride(pkgConfig)
 				if err != nil {
@@ -192,11 +193,20 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 					typeNamePrefix = "[]"
 				}
 
+				// In the case a field type is of type Interface, we need to ensure we
+				// append the term "Interface" to it, as is done in the "Implements"
+				// below.
+				if f.Type.OfType != nil {
+					if f.Type.OfType.Kind == schema.KindInterface {
+						typeNameSuffix = "Interface"
+					}
+				}
+
 				field := GoStructField{
 					Description: f.GetDescription(),
 					Name:        f.GetName(),
 					Tags:        f.GetTags(),
-					Type:        fmt.Sprintf("%s%s", typeNamePrefix, typeName),
+					Type:        fmt.Sprintf("%s%s%s", typeNamePrefix, typeName, typeNameSuffix),
 				}
 
 				xxx.Fields = append(xxx.Fields, field)

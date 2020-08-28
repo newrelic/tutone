@@ -149,34 +149,34 @@ func ExpandType(s *Schema, t *Type) (*[]*Type, error) {
 			}).Debugf("not expanding %s", i.Name)
 		}
 
-		// TODO clean this up. The first two blocks here are nearly identical,
-		// except that in the first case we inspect the OfTYpe to determine if
-		// this type is representing another, and in the second block we just
-		// inspect the Type.  In both cases though, we want to determine if the
-		// OfType or Type is found in the schema, and if so, continue to
-		// interrogate it by calling recursively.
-
 		if result != nil {
 			log.WithFields(log.Fields{
 				"name": result.Name,
 				"kind": result.Kind,
 			}).Debug("type found for field")
 
-			processed, err := expandLookupResults(s, result)
-			if err != nil {
-				log.WithFields(log.Fields{
-					// "name": methodArg.Name,
-					// "type": methodArg.Type,
-				}).Errorf("failed to expand lookup result: %s", err)
-			}
+			// Avoid recursing forever, since an interface has dependencies that will
+			// likely reference the interface.  For all other Kinds, we want to
+			// continue to expand.
+			if result.Kind != KindInterface {
+				processed, err := expandLookupResults(s, result)
+				if err != nil {
+					log.WithFields(log.Fields{
+						// "name": methodArg.Name,
+						// "type": methodArg.Type,
+					}).Errorf("failed to expand lookup result: %s", err)
+				}
 
-			if processed != nil {
-				for _, f := range *processed {
-					if !hasType(f, expandedTypes) {
-						expandedTypes = append(expandedTypes, f)
+				if processed != nil {
+					for _, f := range *processed {
+						if !hasType(f, expandedTypes) {
+							expandedTypes = append(expandedTypes, f)
+						}
 					}
 				}
+
 			}
+
 		}
 
 	}
