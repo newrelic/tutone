@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
+	"github.com/newrelic/tutone/generators/nerdgraphclient"
 	"github.com/newrelic/tutone/generators/typegen"
 	"github.com/newrelic/tutone/internal/codegen"
 	"github.com/newrelic/tutone/internal/config"
@@ -98,8 +99,8 @@ func findPackageConfigByName(name string, packages []config.PackageConfig) *conf
 func generatePkgTypes(pkgConfig *config.PackageConfig, cfg *config.Config, s *schema.Schema) error {
 	allGenerators := map[string]codegen.Generator{
 		// &terraform.Generator{},
-		"typegen": &typegen.Generator{},
-		// "nerdgraph_client": &nerdgraphclient.Generator{},
+		"typegen":         &typegen.Generator{},
+		"nerdgraphclient": &nerdgraphclient.Generator{},
 	}
 
 	log.WithFields(log.Fields{
@@ -131,7 +132,7 @@ func generatePkgTypes(pkgConfig *config.PackageConfig, cfg *config.Config, s *sc
 
 			err = g.Generate(s, genConfig, pkgConfig)
 			if err != nil {
-				return fmt.Errorf("failed to call Generaet() for provider %T: %s", generatorName, err)
+				return fmt.Errorf("failed to call Generate() for provider %T: %s", generatorName, err)
 			}
 
 			err = g.Execute(genConfig, pkgConfig)

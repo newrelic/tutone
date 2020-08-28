@@ -18,6 +18,7 @@ type GolangGenerator struct {
 	Imports     []string
 	Scalars     []GoScalar
 	Interfaces  []GoInterface
+	Methods     []GoMethod
 }
 
 type GoStruct struct {
@@ -55,6 +56,103 @@ type GoInterface struct {
 	Name        string
 	Description string
 	Type        string
+}
+
+type GoMethod struct {
+	Description string
+	Name        string
+	QueryVars   []QueryVar
+	Signature   GoMethodSignature
+}
+
+type GoMethodSignature struct {
+	Input  []GoMethodInputType
+	Return []string
+}
+
+type GoMethodInputType struct {
+	Name string
+	Type string
+}
+
+type QueryVar struct {
+	Key   string
+	Value string
+	Type  string
+}
+
+func GenerateGoMethodsForPackage(s *schema.Schema, genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig) (*[]GoMethod, error) {
+
+	var methods []GoMethod
+
+	for _, field := range s.MutationType.Fields {
+		for _, pkgMethod := range pkgConfig.Methods {
+
+			if field.Name == pkgMethod.Name {
+
+				method := GoMethod{
+					Name:        field.Name,
+					Description: field.GetDescription(),
+				}
+
+				// TODO It seem like we should never include the error here, and
+				// instead assume an error is used in the method.
+				// if field.Type.Name != "" {
+				// 	pointerReturn := fmt.Sprintf("*%s", field.Type.Name)
+				// 	method.Signature.Return = pointerReturn, "error"
+				// }
+				// Also, if we're trying to operate a field.Type without a name, what
+				// is even happening?  Maybe that should be a log at the top of the
+				// block with a continue.
+
+				if field.Type.Name != "" {
+					// pointerReturn := fmt.Sprintf("*%s", field.Type.Name)
+					pointerReturn := field.Type.Name
+					method.Signature.Return = []string{pointerReturn, "error"}
+				} else {
+					method.Signature.Return = []string{"error"}
+				}
+
+				// field.Args are the arguments that are used to query the nerdgraph
+				// method.  Here we build up the QueryVars object, as well as the
+				// GoMethod.Signature.
+				for _, methodArg := range field.Args {
+					typeName, err := methodArg.GetTypeNameWithOverride(pkgConfig)
+					if err != nil {
+						log.Error(err)
+						continue
+					}
+
+					inputType := GoMethodInputType{
+						Name: methodArg.GetName(),
+						Type: typeName,
+					}
+
+					// We should only need to create a query variable for method
+					// arguments which are NON_NULL.
+					if methodArg.Type.Kind == schema.KindNonNull {
+						queryVar := QueryVar{
+							Key:   methodArg.Name,
+							Value: inputType.Name,
+							Type:  methodArg.Type.OfType.Name,
+						}
+
+						method.QueryVars = append(method.QueryVars, queryVar)
+					}
+
+					method.Signature.Input = append(method.Signature.Input, inputType)
+				}
+
+				methods = append(methods, method)
+			}
+		}
+	}
+
+	if len(methods) > 0 {
+		return &methods, nil
+	}
+
+	return nil, fmt.Errorf("no methods for package")
 }
 
 func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig, expandedTypes *[]*schema.Type) (*[]GoStruct, *[]GoEnum, *[]GoScalar, *[]GoInterface, error) {
