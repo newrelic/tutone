@@ -95,7 +95,8 @@ func GenerateGoMethodsForPackage(s *schema.Schema, genConfig *config.GeneratorCo
 				}
 
 				if field.Type.Name != "" {
-					pointerReturn := fmt.Sprintf("*%s", field.Type.Name)
+					// pointerReturn := fmt.Sprintf("*%s", field.Type.Name)
+					pointerReturn := field.Type.Name
 					method.Signature.Return = []string{pointerReturn, "error"}
 				} else {
 					method.Signature.Return = []string{"error"}
