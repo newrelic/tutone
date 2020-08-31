@@ -17,6 +17,8 @@ type Field struct {
 	Type         TypeRef     `json:"type"`
 	Args         []Field     `json:"args,omitempty"`
 	DefaultValue interface{} `json:"defaultValue,omitempty"`
+
+	Fields []Field `json:"fields,omitempty"`
 }
 
 // GetDescription formats the description into a GoDoc comment.

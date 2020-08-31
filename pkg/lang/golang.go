@@ -81,9 +81,61 @@ type QueryVar struct {
 	Type  string
 }
 
-func GenerateGoMethodsForPackage(s *schema.Schema, genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig) (*[]GoMethod, error) {
+func getRootQueryFields(gqlRootQueryTypeName string, types []*schema.Type) []schema.Field {
+	for _, t := range types {
+		if t.Name == gqlRootQueryTypeName {
+			return t.Fields
+		}
+	}
 
+	return []schema.Field{}
+}
+
+func getTypeMetadata(typeName string, types []*schema.Type) []schema.Field {
+	for _, t := range types {
+		if t.Name == typeName {
+			return t.Fields
+		}
+	}
+
+	return []schema.Field{}
+}
+
+func GenerateGoMethodsForPackage(
+	s *schema.Schema,
+	genConfig *config.GeneratorConfig,
+	pkgConfig *config.PackageConfig,
+) (*[]GoMethod, error) {
 	var methods []GoMethod
+
+	log.Print("\n\n **************************** \n")
+
+	// gqlRootQueryTypeName := s.QueryType.Name
+	// gqlRootQueryFields := getRootQueryFields(gqlRootQueryTypeName, s.Types)
+
+	// gqlActorMetadata := getTypeMetadata("Actor", s.Types)
+	// gqlAccountMetadata := getTypeMetadata("Account", s.Types)
+
+	// log.Printf("\n gqlActorMetadata:  %+v \n", gqlActorMetadata)
+	// log.Printf("\n gqlAccountMetadata:  %+v \n", gqlAccountMetadata)
+
+	// for _, field := range s.Types {
+
+	// 	// log.Printf("\n FIELD - name:  %+v \n", field.Name)
+	// 	// log.Printf("  FIELD - kind:  %+v \n", field.Kind)
+	// 	// log.Printf("  FIELD - fields:  %+v \n", field.Fields)
+
+	// 	// 	// if field.Name == "actor" {
+	// 	// 	// 	for _, qq := range q.
+	// 	// 	// }
+
+	// 	// 	// log.Printf("\n Root Query:  %+v \n", q.Name)
+	// 	// 	// for _, pkgMethod := range pkgConfig.Methods {
+
+	// 	// 	// }
+	// }
+
+	log.Print("\n **************************** \n\n")
 
 	for _, field := range s.MutationType.Fields {
 		for _, pkgMethod := range pkgConfig.Methods {

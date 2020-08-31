@@ -16,6 +16,50 @@ type Generator struct {
 	lang.GolangGenerator
 }
 
+func getTypeMetadata(typeName string, types []*schema.Type) []schema.Field {
+	for _, t := range types {
+		if t.Name == typeName {
+			return t.Fields
+		}
+	}
+
+	return []schema.Field{}
+}
+
+func findMethod(name string, types []*schema.Type) *schema.Field {
+
+	for _, t := range types {
+		// if t.Name == name {
+		// 	return t
+		// }
+
+		result := findField(name, t.Fields, t.Name)
+
+		log.Printf(" Result Field:  %+v \n", result)
+
+		if result != nil {
+			return result
+		}
+	}
+
+	return nil
+}
+
+func findField(name string, fields []schema.Field, typeName string) *schema.Field {
+	for _, f := range fields {
+
+		if typeName == "AlertsAccountStitchedFields" {
+			log.Printf(" findField on Type: %v - %v - %v \n", f.Name, name, f.Name == name)
+		}
+
+		if f.Name == name {
+			return &f
+		}
+	}
+
+	return nil
+}
+
 func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig) error {
 	if genConfig == nil {
 		return fmt.Errorf("unable to Generate with nil genConfig")
@@ -24,6 +68,22 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 	if pkgConfig == nil {
 		return fmt.Errorf("unable to Generate with nil pkgConfig")
 	}
+
+	// var found bool
+
+	for _, method := range pkgConfig.Methods {
+		log.Printf(" SEARCHING FOR:  %+v \n", method.Name)
+
+		result := findMethod(method.Name, s.Types)
+
+		log.Printf(" END RESULT:  %+v \n", result)
+	}
+
+	// gqlActorMetadata := getTypeMetadata("Actor", s.Types)
+	// gqlAccountMetadata := getTypeMetadata("Account", s.Types)
+
+	// log.Printf("\n ACTOR:  %+v \n", gqlActorMetadata)
+	// log.Printf(" ACCOUNT:  %+v \n", gqlAccountMetadata)
 
 	expandedTypes, err := schema.ExpandTypes(s, pkgConfig.Types, pkgConfig.Methods)
 	if err != nil {
