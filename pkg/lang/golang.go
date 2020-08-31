@@ -197,7 +197,8 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 				// append the term "Interface" to it, as is done in the "Implements"
 				// below.
 				if f.Type.OfType != nil {
-					if f.Type.OfType.Kind == schema.KindInterface {
+					kinds := f.Type.OfType.GetKinds()
+					if kinds[len(kinds)-1] == schema.KindInterface {
 						typeNameSuffix = "Interface"
 					}
 				}

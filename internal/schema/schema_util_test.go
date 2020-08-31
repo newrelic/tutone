@@ -53,6 +53,13 @@ func TestExpandTypes(t *testing.T) {
 			Methods:       []config.MethodConfig{},
 			ExpectedNames: []string{"Boolean", "CloudProvider", "CloudService", "EpochSeconds", "Int", "String"},
 		},
+		"nested slice of interface": {
+			Types: []config.TypeConfig{{
+				Name: "CloudLinkedAccount",
+			}},
+			Methods:       []config.MethodConfig{},
+			ExpectedNames: []string{"CloudLinkedAccount", "EpochSeconds", "Int", "String", "CloudIntegration", "CloudProvider"},
+		},
 	}
 
 	for _, tc := range cases {

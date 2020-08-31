@@ -155,6 +155,10 @@ func ExpandType(s *Schema, t *Type) (*[]*Type, error) {
 				"kind": result.Kind,
 			}).Debug("type found for field")
 
+			if !hasType(result, expandedTypes) {
+				expandedTypes = append(expandedTypes, result)
+			}
+
 			// Avoid recursing forever, since an interface has dependencies that will
 			// likely reference the interface.  For all other Kinds, we want to
 			// continue to expand.
@@ -174,7 +178,6 @@ func ExpandType(s *Schema, t *Type) (*[]*Type, error) {
 						}
 					}
 				}
-
 			}
 
 		}
