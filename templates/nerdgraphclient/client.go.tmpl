@@ -1,0 +1,53 @@
+package {{.PackageName}}
+{{$packageName := .PackageName}}
+
+{{range .Methods}}
+{{/*
+// TODO The name of the method here could use some love. Perhaps we allow an
+// override from the user at config time, so that we are able to replace what
+// exists?  Perhps too this is an opporunity for us to use the method prefix as
+// some kind of indicator for which package this method should belong to,
+// perhaps.
+*/}}
+{{ .Description }}
+func (a *{{$packageName|title}}) {{.Name | title}}(
+  {{- range .Signature.Input}}
+    {{.Name | untitle}} {{.Type}},
+  {{- end}}
+    ) (*{{ .Signature.Return | join ", "}}) {
+
+	resp := {{.Name}}Response{}
+	vars := map[string]interface{}{
+  {{- range .QueryVars}}
+    "{{.Key}}": {{.Value | untitle}},
+  {{- end}}
+	}
+
+	if err := a.client.NerdGraphQuery({{.Name}}Mutation, vars, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp.{{first .Signature.Return}}, nil
+}
+
+{{   if gt (len .QueryVars) 0 }}
+type {{.Name}}Response struct {
+  {{.Name | title}} {{first .Signature.Return}} `json:"{{.Name}}"`
+}
+{{   end}}
+
+const {{.Name}}Mutation = `
+	mutation {{.Name|title}}(
+  {{- range .QueryVars}}
+      ${{.Key}}: {{.Type}}!
+  {{- end}}
+  ){
+		{{.Name}}(
+  {{- range .QueryVars}}
+      {{.Key}}: ${{.Value | untitle}},
+  {{- end}}
+    ) { ` + {{.Name}}Fields + ` } }
+`
+
+{{ end}}
+

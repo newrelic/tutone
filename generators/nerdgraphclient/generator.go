@@ -1,15 +1,12 @@
-package typegen
+package nerdgraphclient
 
 import (
-	"bytes"
 	"fmt"
-	"go/format"
 	"os"
-	"path"
-	"text/template"
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/newrelic/tutone/internal/codegen"
 	"github.com/newrelic/tutone/internal/config"
 	"github.com/newrelic/tutone/internal/schema"
 	"github.com/newrelic/tutone/pkg/lang"
@@ -19,7 +16,6 @@ type Generator struct {
 	lang.GolangGenerator
 }
 
-// Generate is the entry point for this Generator.
 func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig) error {
 	if genConfig == nil {
 		return fmt.Errorf("unable to Generate with nil genConfig")
@@ -39,7 +35,14 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 		return err
 	}
 
-	// The Execute() below expects to have Generator g populated for use in the template files.
+	// TODO idea:
+	// err = lang.GenerateTypesForPackage(&g)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// lang.Normalize(&g, genConfig, pkgConfig)
+
 	g.PackageName = pkgConfig.Name
 	g.Imports = pkgConfig.Imports
 
@@ -59,10 +62,18 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 		g.Interfaces = *interfacesForGen
 	}
 
+	methodsForGen, err := lang.GenerateGoMethodsForPackage(s, genConfig, pkgConfig)
+	if err != nil {
+		return err
+	}
+
+	if methodsForGen != nil {
+		g.Methods = *methodsForGen
+	}
+
 	return nil
 }
 
-// Execute performs the template render and file writement, according to the received configurations for the current Generator instance.
 func (g *Generator) Execute(genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig) error {
 	var err error
 
@@ -78,53 +89,42 @@ func (g *Generator) Execute(genConfig *config.GeneratorConfig, pkgConfig *config
 		}
 	}
 
-	// Default file name is 'types.go'
-	fileName := "types.go"
+	// Default file name is 'nerdgraph.go'
+	fileName := "nerdgraphclient.go"
 	if genConfig.FileName != "" {
 		fileName = genConfig.FileName
+		if err != nil {
+			return err
+		}
 	}
 
-	filePath := fmt.Sprintf("%s/%s", destinationPath, fileName)
-	file, err := os.Create(filePath)
-	if err != nil {
-		log.Error(err)
-	}
-	defer file.Close()
-
-	templateName := "types.go.tmpl"
+	templateName := "client.go.tmpl"
 	if genConfig.TemplateName != "" {
 		templateName = genConfig.TemplateName
+		if err != nil {
+			return err
+		}
 	}
 
-	templateDir := "templates/typegen"
+	filePath, err := codegen.RenderStringFromGenerator(fmt.Sprintf("%s/%s", destinationPath, fileName), g)
+	if err != nil {
+		return err
+	}
+
+	templateDir := "templates/nerdgraphclient"
 	if genConfig.TemplateDir != "" {
-		templateDir = genConfig.TemplateDir
+		templateDir, err = codegen.RenderStringFromGenerator(genConfig.TemplateDir, g)
+		if err != nil {
+			return err
+		}
 	}
 
-	templatePath := path.Join(templateDir, templateName)
-
-	tmpl, err := template.ParseFiles(templatePath)
-	if err != nil {
-		return err
+	c := codegen.CodeGen{
+		TemplateDir:     templateDir,
+		TemplateName:    templateName,
+		DestinationFile: filePath,
+		DestinationDir:  destinationPath,
 	}
 
-	var resultBuf bytes.Buffer
-
-	err = tmpl.Execute(&resultBuf, g)
-	if err != nil {
-		return err
-	}
-
-	formatted, err := format.Source(resultBuf.Bytes())
-	if err != nil {
-		return err
-	}
-
-	// Rewrite the file with the formatted output
-	_, err = file.WriteAt(formatted, 0)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return c.WriteFile(g)
 }

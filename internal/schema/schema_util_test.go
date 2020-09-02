@@ -3,6 +3,7 @@
 package schema
 
 import (
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -18,28 +19,67 @@ func TestExpandTypes(t *testing.T) {
 	s, err := Load("../../testdata/schema.json")
 	assert.NoError(t, err)
 
-	config := []config.TypeConfig{
-		{
-			Name: "AlertsPolicy",
+	cases := map[string]struct {
+		Types         []config.TypeConfig
+		Methods       []config.MethodConfig
+		ExpectErr     bool
+		ExpectReason  string
+		ExpectedNames []string
+	}{
+		"single type": {
+			Types: []config.TypeConfig{{
+				Name: "AlertsPolicy",
+			}},
+			Methods: []config.MethodConfig{},
+			ExpectedNames: []string{
+				"AlertsPolicy",
+				"ID",
+				"Int",
+				"AlertsIncidentPreference",
+				"String",
+			},
+		},
+		"single method": {
+			Types: []config.TypeConfig{},
+			Methods: []config.MethodConfig{{
+				Name: "alertsNrqlConditionBaselineCreate",
+			}},
+			ExpectedNames: []string{"AlertsFillOption", "AlertsNrqlBaselineCondition", "AlertsNrqlBaselineDirection", "AlertsNrqlConditionBaselineInput", "AlertsNrqlConditionExpiration", "AlertsNrqlConditionExpirationInput", "AlertsNrqlConditionPriority", "AlertsNrqlConditionQuery", "AlertsNrqlConditionQueryInput", "AlertsNrqlConditionSignal", "AlertsNrqlConditionSignalInput", "AlertsNrqlConditionTerms", "AlertsNrqlConditionTermsOperator", "AlertsNrqlConditionThresholdOccurrences", "AlertsNrqlConditionType", "AlertsNrqlDynamicConditionTermsInput", "AlertsNrqlDynamicConditionTermsOperator", "AlertsViolationTimeLimit", "Boolean", "Float", "ID", "Int", "String"},
+		},
+		"sample interface type": {
+			Types: []config.TypeConfig{{
+				Name: "CloudProvider",
+			}},
+			Methods:       []config.MethodConfig{},
+			ExpectedNames: []string{"Boolean", "CloudProvider", "CloudService", "EpochSeconds", "Int", "String"},
+		},
+		"nested slice of interface": {
+			Types: []config.TypeConfig{{
+				Name: "CloudLinkedAccount",
+			}},
+			Methods:       []config.MethodConfig{},
+			ExpectedNames: []string{"CloudLinkedAccount", "EpochSeconds", "Int", "String", "CloudIntegration", "CloudProvider"},
 		},
 	}
 
-	results, err := ExpandTypes(s, config)
-	assert.NoError(t, err)
-	require.NotNil(t, results)
-	assert.Equal(t, len(*results), 5)
+	for _, tc := range cases {
+		results, err := ExpandTypes(s, tc.Types, tc.Methods)
+		if tc.ExpectErr {
+			require.NotNil(t, err)
+			require.Equal(t, err.Error(), tc.ExpectReason)
+		} else {
+			require.Nil(t, err)
+		}
 
-	expectedNames := []string{
-		"AlertsPolicy",
-		"ID",
-		"Int",
-		"AlertsIncidentPreference",
-		"String",
-	}
+		names := []string{}
+		for _, r := range *results {
+			names = append(names, r.Name)
+		}
 
-	for _, r := range *results {
-		hasString := stringInStrings(r.Name, expectedNames)
-		assert.True(t, hasString)
+		sort.Strings(names)
+		sort.Strings(tc.ExpectedNames)
+
+		assert.Equal(t, tc.ExpectedNames, names)
 	}
 }
 

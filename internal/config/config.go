@@ -34,9 +34,10 @@ type CacheConfig struct {
 
 // PackageConfig is the information about a single package, which types to include from the schema, and which generators to use for this package.
 type PackageConfig struct {
-	Name  string       `yaml:"name,omitempty"`
-	Path  string       `yaml:"path,omitempty"`
-	Types []TypeConfig `yaml:"types,omitempty"`
+	Name    string         `yaml:"name,omitempty"`
+	Path    string         `yaml:"path,omitempty"`
+	Types   []TypeConfig   `yaml:"types,omitempty"`
+	Methods []MethodConfig `yaml:"methods,omitempty"`
 	// Generators is a list of names that reference a generator in the Config struct.
 	Generators []string `yaml:"generators,omitempty"`
 	Imports    []string `yaml:"imports,omitempty"`
@@ -49,6 +50,10 @@ type GeneratorConfig struct {
 	TemplateDir     string `yaml:"template_dir,omitempty"`
 	FileName        string `yaml:"fileName,omitempty"`
 	TemplateName    string `yaml:"templateName,omitempty"`
+}
+
+type MethodConfig struct {
+	Name string `yaml:"name"`
 }
 
 // TypeConfig is the information about which types to render and any data specific to handling of the type.

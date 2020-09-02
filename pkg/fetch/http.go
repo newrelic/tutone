@@ -157,8 +157,7 @@ func (e *Endpoint) fetch(query GraphqlQuery) (*schema.QueryResponse, error) {
 
 	if e.Auth.APIKey != "" {
 		log.WithFields(log.Fields{
-			"header": e.Auth.Header,
-			"apiKey": e.Auth.APIKey,
+			"header": req.Header,
 		}).Trace("setting API Key header")
 		req.Header.Set(e.Auth.Header, e.Auth.APIKey)
 	}
@@ -169,6 +168,7 @@ func (e *Endpoint) fetch(query GraphqlQuery) (*schema.QueryResponse, error) {
 		IdleConnTimeout:       e.HTTP.Timeout,
 		ResponseHeaderTimeout: e.HTTP.Timeout,
 	}
+
 	client := &http.Client{Transport: tr}
 
 	log.WithFields(log.Fields{
