@@ -50,6 +50,7 @@ type PackageConfig struct {
 	Types []TypeConfig `yaml:"types,omitempty"`
 	// Methods is a list of Method configurations to include in the package.
 	Methods []MethodConfig `yaml:"methods,omitempty"`
+	Queries []QueryConfig  `yaml:"queries,omitempty"`
 	// Generators is a list of names that reference a generator in the Config struct.
 	Generators []string `yaml:"generators,omitempty"`
 	// Imports is a list of strings to represent what pacakges to import for a given package.
@@ -83,6 +84,10 @@ type TypeConfig struct {
 	CreateAs string `yaml:"create_as,omitempty"`
 	// SkipTypeCreate allows the user to skip creating a Scalar type.
 	SkipTypeCreate bool `yaml:"skip_type_create,omitempty"`
+}
+
+type QueryConfig struct {
+	Path string `yaml:"path"`
 }
 
 const (

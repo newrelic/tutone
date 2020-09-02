@@ -25,6 +25,11 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 		return fmt.Errorf("unable to Generate with nil pkgConfig")
 	}
 
+	_, err := schema.ExpandQueries(s, pkgConfig.Types, pkgConfig.Queries)
+	if err != nil {
+		return err
+	}
+
 	expandedTypes, err := schema.ExpandTypes(s, pkgConfig.Types, pkgConfig.Methods)
 	if err != nil {
 		log.Error(err)

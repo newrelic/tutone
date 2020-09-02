@@ -82,6 +82,26 @@ func hasType(t *Type, types []*Type) bool {
 	return false
 }
 
+func ExpandQueries(s *Schema, types []config.TypeConfig, queries []config.QueryConfig) (interface{}, error) {
+	if s == nil {
+		return nil, fmt.Errorf("unable to expand types from nil schema")
+	}
+
+	log.Print("\n\n **************************** \n")
+
+	// var expandedQueryTypes []*Type
+
+	for _, q := range queries {
+		queryPath := strings.Split(q.Path, ".")
+		log.Printf("\n queryPath:  %+v \n", queryPath)
+
+	}
+
+	log.Print("\n **************************** \n\n")
+
+	return nil, nil
+}
+
 // ExpandType receives a Type which is used to determine the Type for all
 // nested fields.
 func ExpandType(s *Schema, t *Type) (*[]*Type, error) {
