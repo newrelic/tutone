@@ -1,5 +1,21 @@
+<a name="unreleased"></a>
+## [Unreleased]
+
+### Bug Fixes
+- ensure only specific package types are generated when passing --package option
+- **codegen:** update package ref for go mod usage
+- **generate:** ensure correct generator client
+- **lang:** remove pointer reference from return type
+- **nerdgraphclient:** move condition block end to exclude mutation
+- **schema:** avoid recursing forever when handling interface kinds
+- **schema:** ensure recursive expansion for additional Kinds
+- **schema:** ensure proper handling of list interfaces
+### Features
+- **codegen:** implement sprig community template functions
+- **lang:** begin GoMethod implementation
+- **schema:** implement type expansion based on method name
 <a name="v0.1.2"></a>
-## [v0.1.2] - 2020-08-13
+## [v0.1.2] - 2020-08-14
 <a name="v0.1.1"></a>
 ## [v0.1.1] - 2020-07-23
 ### Bug Fixes
