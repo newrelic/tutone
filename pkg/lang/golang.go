@@ -170,7 +170,7 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 		switch t.Kind {
 		case schema.KindInputObject, schema.KindObject, schema.KindInterface:
 			xxx := GoStruct{
-				Name:        t.Name,
+				Name:        t.GetName(),
 				Description: t.GetDescription(),
 			}
 
@@ -245,13 +245,13 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 			structsForGen = append(structsForGen, xxx)
 		case schema.KindENUM:
 			xxx := GoEnum{
-				Name:        t.Name,
+				Name:        t.GetName(),
 				Description: t.GetDescription(),
 			}
 
 			for _, v := range t.EnumValues {
 				value := GoEnumValue{
-					Name:        v.Name,
+					Name:        v.GetName(),
 					Description: v.GetDescription(),
 				}
 
