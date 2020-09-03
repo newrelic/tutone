@@ -219,7 +219,7 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 
 			var implements []string
 			for _, x := range t.Interfaces {
-				implements = append(implements, x.Name)
+				implements = append(implements, x.GetName())
 			}
 
 			xxx.Implements = implements
@@ -229,14 +229,12 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 				// xxx.Name += "Type"
 
 				// Ensure that the struct for the graphql interface implements the go interface
-				xxx.Implements = append(xxx.Implements, t.Name)
+				xxx.Implements = append(xxx.Implements, t.GetName())
 
 				// Handle the interface
 				yyy := GoInterface{
 					Description: t.GetDescription(),
-					// Append "Interface" to Go interface names
-					// to avoid name conflicts with types/structs
-					Name: t.GetName() + "Interface",
+					Name:        t.GetName(),
 				}
 
 				interfacesForGen = append(interfacesForGen, yyy)
