@@ -134,7 +134,7 @@ func ExpandType(s *Schema, t *Type) (*[]*Type, error) {
 				continue
 			}
 		} else if i.Type.Kind == KindObject || i.Type.Kind == KindInputObject || i.Type.Kind == KindENUM {
-			result, err = s.LookupTypeByName(i.Type.GetName())
+			result, err = s.LookupTypeByName(i.Type.Name)
 			if err != nil {
 				log.WithFields(log.Fields{
 					// "name": i.Type.Name,
@@ -187,6 +187,34 @@ func ExpandType(s *Schema, t *Type) (*[]*Type, error) {
 	return &expandedTypes, nil
 }
 
+// expandTypesFromName is used to operate over the schema, and expand the results based on a type name received as a string.
+func expandTypesFromName(s *Schema, name string) (*[]*Type, error) {
+	var expandedTypes []*Type
+
+	result, err := s.LookupTypeByName(name)
+	if err != nil {
+		return nil, fmt.Errorf("failed lookup method argument: %s", err)
+	}
+
+	processed, err := expandLookupResults(s, result)
+	if err != nil {
+		log.WithFields(log.Fields{
+			// "name": methodArg.Name,
+			// "type": methodArg.Type,
+		}).Errorf("failed to process lookup result: %s", err)
+	}
+
+	if processed != nil {
+		for _, f := range *processed {
+			if !hasType(f, expandedTypes) {
+				expandedTypes = append(expandedTypes, f)
+			}
+		}
+	}
+
+	return &expandedTypes, nil
+}
+
 // ExpandTypes receives a set of config.TypeConfig, which is then expanded to include
 // all the nested types from the fields.
 func ExpandTypes(s *Schema, types []config.TypeConfig, methods []config.MethodConfig) (*[]*Type, error) {
@@ -200,7 +228,7 @@ func ExpandTypes(s *Schema, types []config.TypeConfig, methods []config.MethodCo
 		if schemaType != nil {
 
 			// Constrain our handling to include only the type names which are mentioned in the configuration.
-			if typeNameInTypes(schemaType.GetName(), types) {
+			if typeNameInTypes(schemaType.Name, types) {
 				log.WithFields(log.Fields{
 					"name": schemaType.GetName(),
 				}).Debugf("config type: %s", schemaType.Name)
@@ -233,10 +261,9 @@ func ExpandTypes(s *Schema, types []config.TypeConfig, methods []config.MethodCo
 		if methodNameInMethods(field.Name, methods) {
 			log.WithFields(log.Fields{
 				"name": field.GetName(),
-			}).Warnf("config method: %s", field.Name)
+			}).Debugf("config method: %s", field.Name)
 
-			// TODO field.Type.Name needs to be included
-			result, err := s.LookupTypeByName(field.Type.Name)
+			results, err := expandTypesFromName(s, field.Type.Name)
 			if err != nil {
 				log.WithFields(log.Fields{
 					// "name": methodArg.Name,
@@ -245,24 +272,8 @@ func ExpandTypes(s *Schema, types []config.TypeConfig, methods []config.MethodCo
 				continue
 			}
 
-			if result != nil {
-				log.WithFields(log.Fields{
-					"method": field.Name,
-					// "name":   methodArg.Name,
-					"type": result.Name,
-				}).Debugf("argument type for method found")
-			}
-
-			processed, err := expandLookupResults(s, result)
-			if err != nil {
-				log.WithFields(log.Fields{
-					// "name": methodArg.Name,
-					// "type": methodArg.Type,
-				}).Errorf("failed to process lookup result: %s", err)
-			}
-
-			if processed != nil {
-				for _, f := range *processed {
+			if results != nil {
+				for _, f := range *results {
 					if !hasType(f, expandedTypes) {
 						expandedTypes = append(expandedTypes, f)
 					}
@@ -276,7 +287,7 @@ func ExpandTypes(s *Schema, types []config.TypeConfig, methods []config.MethodCo
 				}).Debug("argument for method")
 
 				if methodArg.Type.OfType != nil {
-					result, err := s.LookupTypeByName(methodArg.Type.OfType.GetTypeName())
+					results, err := expandTypesFromName(s, methodArg.Type.OfType.GetTypeName())
 					if err != nil {
 						log.WithFields(log.Fields{
 							"name": methodArg.Name,
@@ -285,35 +296,31 @@ func ExpandTypes(s *Schema, types []config.TypeConfig, methods []config.MethodCo
 						continue
 					}
 
-					if result != nil {
-						log.WithFields(log.Fields{
-							"method": field.Name,
-							"name":   methodArg.Name,
-							"type":   result.Name,
-						}).Debugf("argument type for method found")
-					}
-
-					processed, err := expandLookupResults(s, result)
-					if err != nil {
-						log.WithFields(log.Fields{
-							"name": methodArg.Name,
-							"type": methodArg.Type,
-						}).Errorf("failed to process lookup result: %s", err)
-					}
-
-					if processed != nil {
-						for _, f := range *processed {
+					if results != nil {
+						for _, f := range *results {
 							if !hasType(f, expandedTypes) {
 								expandedTypes = append(expandedTypes, f)
 							}
 						}
 					}
-				} else {
+				}
+
+				results, err := expandTypesFromName(s, methodArg.Type.Name)
+				if err != nil {
 					log.WithFields(log.Fields{
 						"name": methodArg.Name,
-					}).Warn("mutation methodArg thing not handled")
-
+						"type": methodArg.Type,
+					}).Errorf("failed to process lookup result: %s", err)
 				}
+
+				if results != nil {
+					for _, f := range *results {
+						if !hasType(f, expandedTypes) {
+							expandedTypes = append(expandedTypes, f)
+						}
+					}
+				}
+
 			}
 		}
 	}
@@ -332,6 +339,7 @@ func ExpandTypes(s *Schema, types []config.TypeConfig, methods []config.MethodCo
 	return &expandedTypes, nil
 }
 
+// expandLookupResults is used to operate over a schema to expand the received type.
 func expandLookupResults(s *Schema, result *Type) (*[]*Type, error) {
 	if result == nil {
 		return nil, fmt.Errorf("unable to process nil result")
@@ -390,6 +398,12 @@ func formatGoName(name string) string {
 	default:
 		fieldName = strings.Title(name)
 	}
+
+	r := strings.NewReplacer(
+		"Api", "API",
+	)
+
+	fieldName = r.Replace(fieldName)
 
 	return fieldName
 }

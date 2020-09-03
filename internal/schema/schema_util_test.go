@@ -60,6 +60,13 @@ func TestExpandTypes(t *testing.T) {
 			Methods:       []config.MethodConfig{},
 			ExpectedNames: []string{"CloudLinkedAccount", "EpochSeconds", "Int", "String", "CloudIntegration", "CloudProvider"},
 		},
+		"leveraging string replacer": {
+			Types: []config.TypeConfig{},
+			Methods: []config.MethodConfig{{
+				Name: "apiAccessCreateKeys",
+			}},
+			ExpectedNames: []string{"ApiAccessCreateIngestKeyInput", "ApiAccessCreateInput", "ApiAccessCreateKeyResponse", "ApiAccessCreateUserKeyInput", "ApiAccessIngestKeyType", "ApiAccessKey", "ApiAccessKeyError", "Int"},
+		},
 	}
 
 	for _, tc := range cases {
