@@ -1,4 +1,4 @@
-project_name: developer-toolkit-template-go
+project_name: tutone
 
 env:
   - GO111MODULE=on
