@@ -87,7 +87,7 @@ func (r *TypeRef) GetType() (string, bool, error) {
 	case "":
 		return "", true, fmt.Errorf("empty field name: %+v", r)
 	default:
-		return n, true, nil
+		return formatGoName(n), true, nil
 	}
 }
 
