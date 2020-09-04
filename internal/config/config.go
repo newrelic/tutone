@@ -10,49 +10,67 @@ import (
 
 // Config is the information keeper for generating go structs from type names.
 type Config struct {
-	LogLevel string `yaml:"log_level,omitempty"` // LogLevel sets the logging level
-
-	Endpoint string      `yaml:"endpoint"`
-	Auth     AuthConfig  `yaml:"auth"`
-	Cache    CacheConfig `yaml:"cache"`
-
-	Packages   []PackageConfig   `yaml:"packages,omitempty"`
+	// LogLevel sets the logging level
+	LogLevel string `yaml:"log_level,omitempty"`
+	// Endpoint is the URL for the GraphQL API
+	Endpoint string `yaml:"endpoint"`
+	// Auth contains details about how to authenticate to the API in the case that it's required.
+	Auth AuthConfig `yaml:"auth"`
+	// Cache contains information on how and where to store the schema.
+	Cache CacheConfig `yaml:"cache"`
+	// Packages contain the information on how to break up the schema into code packages.
+	Packages []PackageConfig `yaml:"packages,omitempty"`
+	// Generators configure the work engine of this project.
 	Generators []GeneratorConfig `yaml:"generators,omitempty"`
 }
 
 // AuthConfig is the information necessary to authenticate to the NerdGraph API.
 type AuthConfig struct {
+	// Header is the name of the API request header that is used to authenticate.
 	Header string `yaml:"header,omitempty"`
+	// EnvVar is the name of the environment variable to attach to the above header.
 	EnvVar string `yaml:"api_key_env_var,omitempty"`
 }
 
 // CacheConfig is the information necessary to store the NerdGraph schema in JSON.
 type CacheConfig struct {
-	Enable     bool   `yaml:",omitempty"`
+	// Enable or disable the schema caching.
+	Enable bool `yaml:",omitempty"`
+	// SchemaFile is the location where the schema should be cached.
 	SchemaFile string `yaml:"schema_file,omitempty"`
 }
 
 // PackageConfig is the information about a single package, which types to include from the schema, and which generators to use for this package.
 type PackageConfig struct {
-	Name    string         `yaml:"name,omitempty"`
-	Path    string         `yaml:"path,omitempty"`
-	Types   []TypeConfig   `yaml:"types,omitempty"`
+	// Name is the string that is used to refer to the name of the package.
+	Name string `yaml:"name,omitempty"`
+	// Path is the relative path within the project.
+	Path string `yaml:"path,omitempty"`
+	// Types is a list of Type configurations to include in the package.
+	Types []TypeConfig `yaml:"types,omitempty"`
+	// Methods is a list of Method configurations to include in the package.
 	Methods []MethodConfig `yaml:"methods,omitempty"`
 	// Generators is a list of names that reference a generator in the Config struct.
 	Generators []string `yaml:"generators,omitempty"`
-	Imports    []string `yaml:"imports,omitempty"`
+	// Imports is a list of strings to represent what pacakges to import for a given package.
+	Imports []string `yaml:"imports,omitempty"`
 }
 
 // GeneratorConfig is the information necessary to execute a generator.
 type GeneratorConfig struct {
-	Name            string `yaml:"name,omitempty"`
-	DestinationFile string `yaml:"destination_file,omitempty"`
-	TemplateDir     string `yaml:"template_dir,omitempty"`
-	FileName        string `yaml:"fileName,omitempty"`
-	TemplateName    string `yaml:"templateName,omitempty"`
+	// Name is the string that is used to reference a generator.
+	Name string `yaml:"name,omitempty"`
+	// TemplateDir is the path to the directory that contains all of the templates.
+	TemplateDir string `yaml:"template_dir,omitempty"`
+	// FileName is the target file that is to be generated.
+	FileName string `yaml:"fileName,omitempty"`
+	// TemplateName is the name of the template within the TemplateDir.
+	TemplateName string `yaml:"templateName,omitempty"`
 }
 
+// MethodConfig is the information about the GraphQL methods.
 type MethodConfig struct {
+	// Name is the name of the GraphQL method.
 	Name string `yaml:"name"`
 }
 
