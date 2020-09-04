@@ -22,7 +22,19 @@ auth:
   # Default: TUTONE_API_KEY
   api_key_env_var: NEW_RELIC_API_KEY
 
-generate:
-  # Name of the file within a package to write types
-  # Default: types.go
-  types_file: types.go
+packages:
+  - name: nerdgraph
+    path: pkg/nerdgraph
+    generators:
+      - typegen
+    methods:
+      - name: apiAccessCreateKeys
+    types:
+      - name: AlertsPolicy
+      - name: ID
+        field_type_override: string
+        skip_type_create: true
+
+generators:
+  - name: typegen
+    fileName: "types.go"

@@ -37,7 +37,7 @@ jobs:
           author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
           signoff: false
           branch: update/changelog
-          title: "chore: update changelog"
+          title: "${{ github.ref }} Changelog Update"
           base: master
           body: |
             Update changelog
@@ -45,14 +45,8 @@ jobs:
 
             [1]: https://github.com/peter-evans/create-pull-request
           labels: |
-            report
+            changelog
             automated pr
-          assignees: ""
-          reviewers: ""
-          team-reviewers: |
-            developer-toolkit
-          milestone: 0
-          draft: false
 
       - name: Check output
         run: |
