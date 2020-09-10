@@ -430,6 +430,11 @@ func formatGoName(name string) string {
 
 	r := strings.NewReplacer(
 		"Api", "API",
+		"Guid", "GUID",
+		"Nrql", "NRQL",
+		"Nrdb", "NRDB",
+		"Url", "URL",
+		"ApplicationId", "ApplicationID",
 	)
 
 	fieldName = r.Replace(fieldName)
