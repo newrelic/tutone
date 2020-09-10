@@ -178,6 +178,35 @@ func ExpandType(s *Schema, t *Type) (*[]*Type, error) {
 						}
 					}
 				}
+			} else {
+				// KindInterface should also look for possibleTypes
+				for _, possibleType := range result.PossibleTypes {
+					r, err := s.LookupTypeByName(possibleType.Name)
+					if err != nil {
+						log.WithFields(log.Fields{
+							// "name": i.Type.Name,
+							// "kind": i.Type.Kind,
+						}).Errorf("failed lookup possibleType name: %s", err)
+						continue
+					}
+
+					processed, err := expandLookupResults(s, r)
+					if err != nil {
+						log.WithFields(log.Fields{
+							// "name": methodArg.Name,
+							// "type": methodArg.Type,
+						}).Errorf("failed to expand lookup result: %s", err)
+					}
+
+					if processed != nil {
+						for _, f := range *processed {
+							if !hasType(f, expandedTypes) {
+								expandedTypes = append(expandedTypes, f)
+							}
+						}
+					}
+
+				}
 			}
 
 		}
