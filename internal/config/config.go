@@ -54,6 +54,8 @@ type PackageConfig struct {
 	Generators []string `yaml:"generators,omitempty"`
 	// Imports is a list of strings to represent what pacakges to import for a given package.
 	Imports []string `yaml:"imports,omitempty"`
+
+	Commands []CommandConfig `yaml:"commands,omitempty"`
 }
 
 // GeneratorConfig is the information necessary to execute a generator.
@@ -83,6 +85,14 @@ type TypeConfig struct {
 	CreateAs string `yaml:"create_as,omitempty"`
 	// SkipTypeCreate allows the user to skip creating a Scalar type.
 	SkipTypeCreate bool `yaml:"skip_type_create,omitempty"`
+}
+
+// CommandConfig is the information necessary to generate a CLI command.
+type CommandConfig struct {
+	Name             string `yaml:"name"`
+	ShortDescription string `yaml:"shortDescription"`
+	LongDescription  string `yaml:"longDescription"`
+	InputType        string `yaml:"inputType"`
 }
 
 const (

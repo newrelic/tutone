@@ -1,0 +1,30 @@
+package {{.PackageName}}
+
+{{- if gt (len .Imports) 0 }}
+import (
+  {{- range .Imports}}
+  {{.}}
+  {{- end}}
+)
+{{- end}}
+
+{{range .Commands}}
+
+var {{.Name}}Input string
+
+var cmd{{.Name | title}} = &cobra.Command{
+  Use: "{{.Name}}",
+  Short: "{{.ShortDescription}}",
+  Long: "{{.LongDescription}}",
+  Example: "newrelic nerdgraph mutation {{.Name}} --input='{json}'",
+  Run: func(cmd *cobra.Command, args []string) {
+    client.WithClient(func(nrClient *newrelic.NewRelic) {
+      var input {{.InputType}}
+			err := json.Unmarshal([]byte({{.Name}}Input), &input)
+			if err != nil {
+				log.Fatal(err)
+			}
+    })
+  },
+}
+{{- end}}
