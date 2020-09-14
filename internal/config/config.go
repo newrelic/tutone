@@ -54,14 +54,45 @@ type PackageConfig struct {
 	Generators []string `yaml:"generators,omitempty"`
 	// Imports is a list of strings to represent what pacakges to import for a given package.
 	Imports []string `yaml:"imports,omitempty"`
+
+	Commands []Command `yaml:"commands,omitempty"`
 }
+
+type Command struct {
+	Name             string        `yaml:"name,omitempty"`
+	ShortDescription string        `yaml:"shortDescription,omitempty"`
+	LongDescription  string        `yaml:"longDescription,omitempty"`
+	Example          string        `yaml:"example,omitempty"`
+	InputType        string        `yaml:"inputType,omitempty"`
+	ClientMethod     string        `yaml:"clientMethod,omitempty"`
+	Flags            []CommandFlag `yaml:"flags,omitempty"`
+	Subcommands      []Command     `yaml:"subcommands,omitempty"`
+}
+
+type CommandFlag struct {
+	Name         string `yaml:"name,omitempty"`
+	Type         string `yaml:"type,omitempty"`
+	DefaultValue string `yaml:"defaultValue"`
+	Description  string `yaml:"description"`
+	VariableName string `yaml:"variableName"`
+	Required     bool   `yaml:"required"`
+}
+
+// type Subcommand struct {
+// 	Name             string `yaml:"name,omitempty"`
+// 	ShortDescription string `yaml:"shortDescription,omitempty"`
+// 	LongDescription  string `yaml:"longDescription,omitempty"`
+// 	Example          string `yaml:"example,omitempty"`
+// 	InputType        string `yaml:"inputType,omitempty"`
+// 	ClientMethod     string `yaml:"clientMethod,omitempty"`
+// }
 
 // GeneratorConfig is the information necessary to execute a generator.
 type GeneratorConfig struct {
 	// Name is the string that is used to reference a generator.
 	Name string `yaml:"name,omitempty"`
 	// TemplateDir is the path to the directory that contains all of the templates.
-	TemplateDir string `yaml:"template_dir,omitempty"`
+	TemplateDir string `yaml:"templateDir,omitempty"`
 	// FileName is the target file that is to be generated.
 	FileName string `yaml:"fileName,omitempty"`
 	// TemplateName is the name of the template within the TemplateDir.

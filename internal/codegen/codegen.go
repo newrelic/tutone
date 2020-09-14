@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"go/format"
-	"html/template"
 	"os"
 	"path"
+	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
 	log "github.com/sirupsen/logrus"
@@ -48,7 +48,7 @@ func (c *CodeGen) WriteFile(g Generator) error {
 	templatePath := path.Join(c.TemplateDir, c.TemplateName)
 	templateName := path.Base(templatePath)
 
-	tmpl, err := template.New(templateName).Funcs(sprig.FuncMap()).ParseFiles(templatePath)
+	tmpl, err := template.New(templateName).Funcs(sprig.TxtFuncMap()).ParseFiles(templatePath)
 	if err != nil {
 		return err
 	}
