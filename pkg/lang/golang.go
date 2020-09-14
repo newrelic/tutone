@@ -149,6 +149,9 @@ func GenerateGoMethodsForPackage(s *schema.Schema, genConfig *config.GeneratorCo
 	}
 
 	if len(methods) > 0 {
+		sort.SliceStable(methods, func(i, j int) bool {
+			return methods[i].Name < methods[j].Name
+		})
 		return &methods, nil
 	}
 
