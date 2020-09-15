@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"sort"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -120,4 +122,59 @@ func (s *Schema) LookupTypeByName(typeName string) (*Type, error) {
 	}
 
 	return nil, fmt.Errorf("type by name %s not found", typeName)
+}
+
+// QueryFields returns a string that contains all of the fields possible during a query, including nested objects.
+func (s *Schema) QueryFields(t *Type) string {
+	var lines []string
+
+	sort.SliceStable(t.Fields, func(i, j int) bool {
+		return t.Fields[i].Name < t.Fields[j].Name
+	})
+
+	for _, field := range t.Fields {
+		kinds := field.Type.GetKinds()
+
+		if len(kinds) > 0 && kinds[len(kinds)-1] == "OBJECT" {
+			line := fmt.Sprintf("%s {", field.Name)
+			lines = append(lines, line)
+
+			typeName := field.Type.GetTypeName()
+
+			subT, err := s.LookupTypeByName(typeName)
+			if err != nil {
+				log.Error(err)
+			}
+
+			subTContent := s.QueryFields(subT)
+			subTLines := strings.Split(subTContent, "\n")
+			for _, b := range subTLines {
+				lines = append(lines, fmt.Sprintf("\t%s", b))
+			}
+
+			lines = append(lines, "}")
+		} else {
+			lines = append(lines, field.Name)
+		}
+	}
+
+	for _, possibleType := range t.PossibleTypes {
+
+		possibleT, err := s.LookupTypeByName(possibleType.Name)
+		if err != nil {
+			log.Error(err)
+		}
+
+		lines = append(lines, fmt.Sprintf("... on %s {", possibleType.Name))
+
+		possibleTContent := s.QueryFields(possibleT)
+
+		possibleTLines := strings.Split(possibleTContent, "\n")
+		for _, b := range possibleTLines {
+			lines = append(lines, fmt.Sprintf("\t%s", b))
+		}
+		lines = append(lines, "}")
+	}
+
+	return strings.Join(lines, "\n")
 }
