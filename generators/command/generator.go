@@ -9,6 +9,7 @@ import (
 	"github.com/newrelic/tutone/internal/codegen"
 	"github.com/newrelic/tutone/internal/config"
 	"github.com/newrelic/tutone/internal/schema"
+	"github.com/newrelic/tutone/internal/util"
 	"github.com/newrelic/tutone/pkg/lang"
 )
 
@@ -92,44 +93,42 @@ func (g *Generator) Execute(genConfig *config.GeneratorConfig, pkgConfig *config
 		return err
 	}
 
-	// Default file name is '{{ packageName }}.go'
-	fileName := "command.go"
-	if genConfig.FileName != "" {
-		fileName = genConfig.FileName
-	}
+	for _, command := range pkgConfig.Commands {
+		fileName := fmt.Sprintf("command_%s.go", util.ToSnakeCase(command.Name))
 
-	// Default template name is '{{ packageName }}.go.tmpl'
-	templateName := "command.go.tmpl"
-	if genConfig.TemplateName != "" {
-		templateName = genConfig.TemplateName
-	}
+		// Default template name is '{{ packageName }}.go.tmpl'
+		templateName := "command.go.tmpl"
+		if genConfig.TemplateName != "" {
+			templateName = genConfig.TemplateName
+		}
 
-	fPath := fmt.Sprintf("%s/%s", destinationPath, fileName)
-	destinationFile, err := codegen.RenderStringFromGenerator(fPath, g)
-	if err != nil {
-		return err
-	}
-
-	templateDir := "templates/command"
-	if genConfig.TemplateDir != "" {
-		templateDir, err = codegen.RenderStringFromGenerator(genConfig.TemplateDir, g)
+		fPath := fmt.Sprintf("%s/%s", destinationPath, fileName)
+		destinationFile, err := codegen.RenderStringFromGenerator(fPath, g)
 		if err != nil {
 			return err
 		}
-	}
 
-	c := codegen.CodeGen{
-		TemplateDir:     templateDir,
-		TemplateName:    templateName,
-		DestinationFile: destinationFile,
-		DestinationDir:  destinationPath,
-	}
+		templateDir := "templates/command"
+		if genConfig.TemplateDir != "" {
+			templateDir, err = codegen.RenderStringFromGenerator(genConfig.TemplateDir, g)
+			if err != nil {
+				return err
+			}
+		}
 
-	if err := c.WriteFile(g); err != nil {
-		return err
-	}
+		c := codegen.CodeGen{
+			TemplateDir:     templateDir,
+			TemplateName:    templateName,
+			DestinationFile: destinationFile,
+			DestinationDir:  destinationPath,
+		}
 
-	printSuccessMessage(pkgConfig, destinationFile)
+		if err := c.WriteFile(g); err != nil {
+			return err
+		}
+
+		printSuccessMessage(pkgConfig, destinationFile)
+	}
 
 	return nil
 }
