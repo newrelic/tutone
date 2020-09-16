@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
+	"github.com/newrelic/tutone/generators/command"
 	"github.com/newrelic/tutone/generators/nerdgraphclient"
 	"github.com/newrelic/tutone/generators/typegen"
 	"github.com/newrelic/tutone/internal/codegen"
@@ -101,6 +102,7 @@ func generatePkgTypes(pkgConfig *config.PackageConfig, cfg *config.Config, s *sc
 		// &terraform.Generator{},
 		"typegen":         &typegen.Generator{},
 		"nerdgraphclient": &nerdgraphclient.Generator{},
+		"command":         &command.Generator{},
 	}
 
 	log.WithFields(log.Fields{

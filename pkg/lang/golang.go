@@ -10,6 +10,33 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+type CommandGenerator struct {
+	PackageName string
+	Imports     []string
+	Commands    []Command
+}
+
+type Command struct {
+	Name             string
+	ShortDescription string
+	LongDescription  string
+	Example          string
+	InputType        string
+	ClientMethod     string
+	Flags            []CommandFlag
+	Subcommands      []Command
+}
+
+type CommandFlag struct {
+	Name           string
+	Type           string
+	FlagMethodName string
+	DefaultValue   string
+	Description    string
+	VariableName   string
+	Required       bool
+}
+
 // GolangGenerator is enough information to generate Go code for a single package.
 type GolangGenerator struct {
 	Types       []GoStruct
