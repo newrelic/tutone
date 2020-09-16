@@ -63,6 +63,7 @@ type GoMethod struct {
 	Name        string
 	QueryVars   []QueryVar
 	Signature   GoMethodSignature
+	QueryString string
 }
 
 type GoMethodSignature struct {
@@ -109,6 +110,7 @@ func GenerateGoMethodsForPackage(s *schema.Schema, genConfig *config.GeneratorCo
 					// pointerReturn := fmt.Sprintf("*%s", field.Type.Name)
 					pointerReturn := field.Type.Name
 					method.Signature.Return = []string{pointerReturn, "error"}
+					method.QueryString = schema.PrefixLineTab(schema.PrefixLineTab(s.QueryFieldsForTypeName(field.Type.Name)))
 				} else {
 					method.Signature.Return = []string{"error"}
 				}
