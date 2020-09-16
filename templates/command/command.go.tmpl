@@ -13,9 +13,9 @@ import (
 {{- $cmdVarName := print "cmd" $cmdNameTitleCase -}}
 
 var {{$cmdVarName}} = &cobra.Command{
-	Use: {{.Name | quote }},
-	Short: {{.ShortDescription | quote }},
-  Long: {{.LongDescription | quote }},
+	Use: {{.Name | quote}},
+	Short: {{.ShortDescription | quote}},
+  Long: {{.LongDescription | quote}},
 }
 
 {{range .Subcommands}}
@@ -28,10 +28,10 @@ var {{$cmdVarName}} = &cobra.Command{
 {{- end}}
 
 var {{$cmdVarName}} = &cobra.Command{
-  Use: {{.Name | quote }},
-  Short: {{.ShortDescription | quote }},
-  Long: {{.LongDescription | quote }},
-  Example: "newrelic nerdgraph mutation {{.Name}} --input='{json}'",
+  Use: {{.Name | quote}},
+  Short: {{.ShortDescription | quote}},
+  Long: {{.LongDescription | quote}},
+  Example: {{.Example | quote}},
   Run: func(cmd *cobra.Command, args []string) {
     client.WithClient(func(nrClient *newrelic.NewRelic) {
       var input {{.InputType}}
@@ -67,7 +67,7 @@ func init() {
     {{- $defaultVal = 0 -}}
   {{- end}}
 
-  {{ $cmdVarName }}.Flags().{{- .FlagMethodName -}}(&{{.VariableName}}, {{.Name | quote }}, {{$defaultVal}}, {{.Description | quote}})
+  {{$cmdVarName}}.Flags().{{- .FlagMethodName -}}(&{{.VariableName}}, {{.Name | quote}}, {{$defaultVal}}, {{.Description | quote}})
   {{- if .Required}}
   utils.LogIfError({{- $cmdVarName -}}.MarkFlagRequired({{.Name | quote}}))
   {{end}}
