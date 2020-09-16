@@ -3,8 +3,6 @@
 package schema
 
 import (
-	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -21,28 +19,20 @@ func TestTypeQueryFields(t *testing.T) {
 	cases := map[string]struct {
 		TypeName string
 		Result   string
-		// Methods       []config.MethodConfig
-		// ExpectErr     bool
-		// ExpectReason  string
-		// ExpectedNames []string
 	}{
 		"AlertsNrqlCondition": {
 			TypeName: "AlertsNrqlCondition",
 			Result: alertsNrqlCondition + `
 ... on AlertsNrqlBaselineCondition {
-` + prefixLineTab(alertsNrqlBaselineCondition) + `
+` + PrefixLineTab(alertsNrqlBaselineCondition) + `
 }
 ... on AlertsNrqlOutlierCondition {
-` + prefixLineTab(alertsNrqlOutlierCondition) + `
+` + PrefixLineTab(alertsNrqlOutlierCondition) + `
 }
 ... on AlertsNrqlStaticCondition {
-` + prefixLineTab(alertsNrqlStaticCondition) + `
+` + PrefixLineTab(alertsNrqlStaticCondition) + `
 }`,
 		},
-		// "AlertsNrqlConditionsSearchResultSet": {
-		// 	TypeName: "AlertsNrqlConditionsSearchResultSet",
-		// 	Result:   "yes",
-		// },
 		"AlertsNrqlBaselineCondition": {
 			TypeName: "AlertsNrqlBaselineCondition",
 			Result:   alertsNrqlBaselineCondition,
@@ -192,14 +182,3 @@ type
 valueFunction
 violationTimeLimit`
 )
-
-// Add a \t character to the beginning of each line.
-func prefixLineTab(s string) string {
-	var lines []string
-
-	for _, t := range strings.Split(s, "\n") {
-		lines = append(lines, fmt.Sprintf("\t%s", t))
-	}
-
-	return strings.Join(lines, "\n")
-}

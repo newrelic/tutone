@@ -27,6 +27,17 @@ func filterDescription(description string) string {
 	return strings.TrimSpace(ret)
 }
 
+// PrefixLineTab adds a \t character to the beginning of each line.
+func PrefixLineTab(s string) string {
+	var lines []string
+
+	for _, t := range strings.Split(s, "\n") {
+		lines = append(lines, fmt.Sprintf("\t%s", t))
+	}
+
+	return strings.Join(lines, "\n")
+}
+
 func formatDescription(name string, description string) string {
 	if strings.TrimSpace(description) == "" {
 		return ""

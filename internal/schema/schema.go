@@ -124,6 +124,16 @@ func (s *Schema) LookupTypeByName(typeName string) (*Type, error) {
 	return nil, fmt.Errorf("type by name %s not found", typeName)
 }
 
+func (s *Schema) QueryFieldsForTypeName(name string) string {
+	t, err := s.LookupTypeByName(name)
+	if err != nil {
+		log.Errorf("failed to to retrieve type by name")
+		return ""
+	}
+
+	return s.QueryFields(t)
+}
+
 // QueryFields returns a string that contains all of the fields possible during a query, including nested objects.
 func (s *Schema) QueryFields(t *Type) string {
 	var lines []string

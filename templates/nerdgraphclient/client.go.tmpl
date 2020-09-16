@@ -46,7 +46,8 @@ const {{.Name}}Mutation = `
   {{- range .QueryVars}}
       {{.Key}}: ${{.Value | untitle}},
   {{- end}}
-    ) { ` + {{.Name}}Fields + ` } }
+    )
+{{ .QueryString}} }
 `
 
 {{ end}}
