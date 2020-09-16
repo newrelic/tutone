@@ -1,4 +1,5 @@
-package {{.PackageName}}
+{{- $packageName := .PackageName -}}
+package {{$packageName}}
 
 {{- if gt (len .Imports) 0 }}
 import (
@@ -16,6 +17,7 @@ var {{$cmdVarName}} = &cobra.Command{
 	Use: {{.Name | quote}},
 	Short: {{.ShortDescription | quote}},
   Long: {{.LongDescription | quote}},
+  Example: "newrelic {{$packageName}} {{.Name}} --help",
 }
 
 {{range .Subcommands}}
