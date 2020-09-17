@@ -36,6 +36,7 @@ func Generate(options GeneratorOptions) error {
 			viper.GetString("auth.header"),
 			viper.GetString("auth.api_key_env_var"),
 			schemaFile,
+			options.Refetch,
 		)
 	}
 
