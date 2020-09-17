@@ -45,7 +45,7 @@ type GolangGenerator struct {
 	Imports     []string
 	Scalars     []GoScalar
 	Interfaces  []GoInterface
-	Methods     []GoMethod
+	Mutations   []GoMethod
 }
 
 type GoStruct struct {
@@ -110,13 +110,12 @@ type QueryVar struct {
 }
 
 func GenerateGoMethodsForPackage(s *schema.Schema, genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig) (*[]GoMethod, error) {
-
 	var methods []GoMethod
 
 	for _, field := range s.MutationType.Fields {
-		for _, pkgMethod := range pkgConfig.Methods {
+		for _, pkgMutation := range pkgConfig.Mutations {
 
-			if field.Name == pkgMethod.Name {
+			if field.Name == pkgMutation.Name {
 
 				method := GoMethod{
 					Name:        field.Name,

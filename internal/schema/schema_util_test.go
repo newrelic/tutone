@@ -21,7 +21,7 @@ func TestExpandTypes(t *testing.T) {
 
 	cases := map[string]struct {
 		Types         []config.TypeConfig
-		Methods       []config.MethodConfig
+		Mutations     []config.MutationConfig
 		ExpectErr     bool
 		ExpectReason  string
 		ExpectedNames []string
@@ -30,7 +30,7 @@ func TestExpandTypes(t *testing.T) {
 			Types: []config.TypeConfig{{
 				Name: "AlertsPolicy",
 			}},
-			Methods: []config.MethodConfig{},
+			Mutations: []config.MutationConfig{},
 			ExpectedNames: []string{
 				"AlertsPolicy",
 				"ID",
@@ -39,9 +39,9 @@ func TestExpandTypes(t *testing.T) {
 				"String",
 			},
 		},
-		"single method": {
+		"single mutation": {
 			Types: []config.TypeConfig{},
-			Methods: []config.MethodConfig{{
+			Mutations: []config.MutationConfig{{
 				Name: "alertsNrqlConditionBaselineCreate",
 			}},
 			ExpectedNames: []string{"AlertsFillOption", "AlertsNrqlBaselineCondition", "AlertsNrqlBaselineDirection", "AlertsNrqlCondition", "AlertsNrqlConditionBaselineInput", "AlertsNrqlConditionExpiration", "AlertsNrqlConditionExpirationInput", "AlertsNrqlConditionPriority", "AlertsNrqlConditionQuery", "AlertsNrqlConditionQueryInput", "AlertsNrqlConditionSignal", "AlertsNrqlConditionSignalInput", "AlertsNrqlConditionTerms", "AlertsNrqlConditionTermsOperator", "AlertsNrqlConditionThresholdOccurrences", "AlertsNrqlConditionType", "AlertsNrqlDynamicConditionTermsInput", "AlertsNrqlDynamicConditionTermsOperator", "AlertsNrqlOutlierCondition", "AlertsNrqlStaticCondition", "AlertsNrqlStaticConditionValueFunction", "AlertsViolationTimeLimit", "Boolean", "Float", "ID", "Int", "Seconds", "String"},
@@ -50,19 +50,19 @@ func TestExpandTypes(t *testing.T) {
 			Types: []config.TypeConfig{{
 				Name: "CloudProvider",
 			}},
-			Methods:       []config.MethodConfig{},
+			Mutations:     []config.MutationConfig{},
 			ExpectedNames: []string{"Boolean", "CloudAwsGovCloudProvider", "CloudAwsProvider", "CloudBaseProvider", "CloudGcpProvider", "CloudProvider", "CloudService", "EpochSeconds", "Int", "String"},
 		},
 		"nested slice of interface": {
 			Types: []config.TypeConfig{{
 				Name: "CloudLinkedAccount",
 			}},
-			Methods:       []config.MethodConfig{},
+			Mutations:     []config.MutationConfig{},
 			ExpectedNames: []string{"Boolean", "CloudAlbIntegration", "CloudApigatewayIntegration", "CloudAutoscalingIntegration", "CloudAwsAppsyncIntegration", "CloudAwsAthenaIntegration", "CloudAwsCognitoIntegration", "CloudAwsConnectIntegration", "CloudAwsDirectconnectIntegration", "CloudAwsDocdbIntegration", "CloudAwsFsxIntegration", "CloudAwsGlueIntegration", "CloudAwsGovCloudProvider", "CloudAwsKinesisanalyticsIntegration", "CloudAwsMediaconvertIntegration", "CloudAwsMediapackagevodIntegration", "CloudAwsMqIntegration", "CloudAwsMskIntegration", "CloudAwsNeptuneIntegration", "CloudAwsProvider", "CloudAwsQldbIntegration", "CloudAwsRoute53resolverIntegration", "CloudAwsStatesIntegration", "CloudAwsTransitgatewayIntegration", "CloudAwsWafIntegration", "CloudAwsWafv2Integration", "CloudAwsXrayIntegration", "CloudAzureApimanagementIntegration", "CloudAzureAppgatewayIntegration", "CloudAzureAppserviceIntegration", "CloudAzureContainersIntegration", "CloudAzureCosmosdbIntegration", "CloudAzureCostmanagementIntegration", "CloudAzureDatafactoryIntegration", "CloudAzureEventhubIntegration", "CloudAzureExpressrouteIntegration", "CloudAzureFirewallsIntegration", "CloudAzureFrontdoorIntegration", "CloudAzureFunctionsIntegration", "CloudAzureKeyvaultIntegration", "CloudAzureLoadbalancerIntegration", "CloudAzureLogicappsIntegration", "CloudAzureMachinelearningIntegration", "CloudAzureMariadbIntegration", "CloudAzureMysqlIntegration", "CloudAzurePostgresqlIntegration", "CloudAzurePowerbidedicatedIntegration", "CloudAzureRediscacheIntegration", "CloudAzureServicebusIntegration", "CloudAzureServicefabricIntegration", "CloudAzureSqlIntegration", "CloudAzureSqlmanagedIntegration", "CloudAzureStorageIntegration", "CloudAzureVirtualmachineIntegration", "CloudAzureVirtualnetworksIntegration", "CloudAzureVmsIntegration", "CloudAzureVpngatewaysIntegration", "CloudBaseIntegration", "CloudBaseProvider", "CloudBillingIntegration", "CloudCloudfrontIntegration", "CloudCloudtrailIntegration", "CloudDynamodbIntegration", "CloudEbsIntegration", "CloudEc2Integration", "CloudEcsIntegration", "CloudEfsIntegration", "CloudElasticacheIntegration", "CloudElasticbeanstalkIntegration", "CloudElasticsearchIntegration", "CloudElbIntegration", "CloudEmrIntegration", "CloudGcpAppengineIntegration", "CloudGcpBigqueryIntegration", "CloudGcpDataflowIntegration", "CloudGcpDataprocIntegration", "CloudGcpDatastoreIntegration", "CloudGcpFirebasedatabaseIntegration", "CloudGcpFirebasehostingIntegration", "CloudGcpFirebasestorageIntegration", "CloudGcpFirestoreIntegration", "CloudGcpFunctionsIntegration", "CloudGcpInterconnectIntegration", "CloudGcpKubernetesIntegration", "CloudGcpLoadbalancingIntegration", "CloudGcpProvider", "CloudGcpPubsubIntegration", "CloudGcpRouterIntegration", "CloudGcpRunIntegration", "CloudGcpSpannerIntegration", "CloudGcpSqlIntegration", "CloudGcpStorageIntegration", "CloudGcpVmsIntegration", "CloudGcpVpcaccessIntegration", "CloudHealthIntegration", "CloudIamIntegration", "CloudIntegration", "CloudIotIntegration", "CloudKinesisFirehoseIntegration", "CloudKinesisIntegration", "CloudLambdaIntegration", "CloudLinkedAccount", "CloudProvider", "CloudRdsIntegration", "CloudRedshiftIntegration", "CloudRoute53Integration", "CloudS3Integration", "CloudService", "CloudSesIntegration", "CloudSnsIntegration", "CloudSqsIntegration", "CloudTrustedadvisorIntegration", "CloudVpcIntegration", "EpochSeconds", "Int", "String"},
 		},
 		"leveraging string replacer": {
 			Types: []config.TypeConfig{},
-			Methods: []config.MethodConfig{{
+			Mutations: []config.MutationConfig{{
 				Name: "apiAccessCreateKeys",
 			}},
 			ExpectedNames: []string{"ApiAccessCreateKeyResponse", "ApiAccessIngestKey", "ApiAccessIngestKeyError", "ApiAccessIngestKeyErrorType", "ApiAccessIngestKeyType", "ApiAccessKey", "ApiAccessKeyError", "ApiAccessKeyType", "ApiAccessUserKey", "ApiAccessUserKeyError", "ApiAccessUserKeyErrorType", "ID", "Int", "String"},
@@ -70,7 +70,7 @@ func TestExpandTypes(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		results, err := ExpandTypes(s, tc.Types, tc.Methods)
+		results, err := ExpandTypes(s, tc.Types, tc.Mutations)
 		if tc.ExpectErr {
 			require.NotNil(t, err)
 			require.Equal(t, err.Error(), tc.ExpectReason)

@@ -29,7 +29,7 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 		return fmt.Errorf("unable to Generate with nil pkgConfig")
 	}
 
-	expandedTypes, err := schema.ExpandTypes(s, pkgConfig.Types, pkgConfig.Methods)
+	expandedTypes, err := schema.ExpandTypes(s, pkgConfig.Types, pkgConfig.Mutations)
 	if err != nil {
 		log.Error(err)
 	}
