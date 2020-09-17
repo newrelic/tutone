@@ -70,14 +70,15 @@ type Query struct {
 	Endpoints []EndpointConfig `yaml:"endpoints,omitempty"`
 }
 type Command struct {
-	Name             string        `yaml:"name,omitempty"`
-	ShortDescription string        `yaml:"shortDescription,omitempty"`
-	LongDescription  string        `yaml:"longDescription,omitempty"`
-	Example          string        `yaml:"example,omitempty"`
-	InputType        string        `yaml:"inputType,omitempty"`
-	ClientMethod     string        `yaml:"clientMethod,omitempty"`
-	Flags            []CommandFlag `yaml:"flags,omitempty"`
-	Subcommands      []Command     `yaml:"subcommands,omitempty"`
+	Name              string        `yaml:"name,omitempty"`
+	ShortDescription  string        `yaml:"shortDescription,omitempty"`
+	LongDescription   string        `yaml:"longDescription,omitempty"`
+	Example           string        `yaml:"example,omitempty"`
+	InputType         string        `yaml:"inputType,omitempty"`
+	ClientPackageName string        `yaml:"clientPackageName,omitempty"`
+	ClientMethod      string        `yaml:"clientMethod,omitempty"`
+	Flags             []CommandFlag `yaml:"flags,omitempty"`
+	Subcommands       []Command     `yaml:"subcommands,omitempty"`
 }
 
 type CommandFlag struct {
@@ -99,6 +100,8 @@ type GeneratorConfig struct {
 	FileName string `yaml:"fileName,omitempty"`
 	// TemplateName is the name of the template within the TemplateDir.
 	TemplateName string `yaml:"templateName,omitempty"`
+	// TemplateURL is a URL to a downloadable file to use as a Go template
+	TemplateURL string `yaml:"templateURL,omitempty"`
 }
 
 // MutationConfig is the information about the GraphQL mutations.

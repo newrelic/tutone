@@ -23,10 +23,9 @@ var {{$cmdVarName}} = &cobra.Command{
 {{range .Subcommands}}
 {{- $nameTitleCase := .Name | title -}}
 {{- $cmdVarName := print "cmd" $nameTitleCase -}}
-{{- $inputVarName := print .Name "Input" -}}
 
 {{range .Flags}}
-  var {{.VariableName}} {{.Type}}
+  var {{.VariableName}} {{.VariableType}}
 {{- end}}
 
 var {{$cmdVarName}} = &cobra.Command{
@@ -36,11 +35,17 @@ var {{$cmdVarName}} = &cobra.Command{
   Example: {{.Example | quote}},
   Run: func(cmd *cobra.Command, args []string) {
     client.WithClient(func(nrClient *newrelic.NewRelic) {
-      var input {{.InputType}}
-			err := json.Unmarshal([]byte({{.Name}}Input), &input)
-			utils.LogIfFatal(err)
+      {{- range .Flags }}
+      {{ if .IsInputType }}
 
-      resp, err := {{.ClientMethod}}(accountID, input)
+      var {{ .Name }} {{ .ClientType }}
+
+			err := json.Unmarshal([]byte({{.VariableName}}), &{{.Name}})
+			utils.LogIfFatal(err)
+      {{- end -}}
+      {{end}}
+
+      resp, err := {{.ClientMethod}}({{.ClientMethodArgs | join ", "}})
 			utils.LogIfFatal(err)
 
 			utils.LogIfFatal(output.Print(resp))
@@ -51,7 +56,7 @@ var {{$cmdVarName}} = &cobra.Command{
 {{- end}}
 
 func init() {
-{{- range .Commands}}
+{{ range .Commands }}
 {{- $parentCmdNameTitleCase := .Name | title -}}
 {{- $parentCmdVarName := print "cmd" $parentCmdNameTitleCase -}}
   Command.AddCommand({{$parentCmdVarName}})
@@ -59,7 +64,6 @@ func init() {
 {{ range .Subcommands}}
 {{- $subCmdNameTitleCase := .Name | title -}}
 {{- $cmdVarName := print "cmd" $subCmdNameTitleCase -}}
-{{- $inputVarName := print .Name "Input" -}}
 
   {{$parentCmdVarName}}.AddCommand({{$cmdVarName}})
 
