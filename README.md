@@ -79,14 +79,14 @@ Please see the [config documentation][pkg_go_dev] for details about specific fie
 ### packages
 
 The `packages` field in the configuration contains the details about which
-types and methods to include from the schema, and where the package is located.
+types and mutations to include from the schema, and where the package is located.
 
 | Name       | Required | Description                                                             |
 | ---------- | -------- | ----------------------------------------------------------------------- |
 | name       | Yes      | The name of the package                                                 |
 | path       | Yes      | Name of the package the output file will be part of (see `-p` flag)     |
 | generators | Yes      | A list of generator names from the `generators` field                   |
-| methods    | No       | A list of methods from which to infer types                             |
+| mutations  | No       | A list of mutations from which to infer types                             |
 | types      | No       | A list of types from which to start expanding the inferred set of types |
 
 ### Generators

@@ -70,9 +70,9 @@ func typeNameInTypes(s string, types []config.TypeConfig) bool {
 	return false
 }
 
-// methodNameInMethods determines if a name is already present in a set of config.MethodConfig.
-func methodNameInMethods(s string, methods []config.MethodConfig) bool {
-	for _, t := range methods {
+// mutationNameInMutations determines if a name is already present in a set of config.MutationConfig.
+func mutationNameInMutations(s string, mutations []config.MutationConfig) bool {
+	for _, t := range mutations {
 		if t.Name == s {
 			return true
 		}
@@ -98,7 +98,7 @@ func hasType(t *Type, types []*Type) bool {
 
 // ExpandTypes receives a set of config.TypeConfig, which is then expanded to include
 // all the nested types from the fields.
-func ExpandTypes(s *Schema, types []config.TypeConfig, methods []config.MethodConfig) (*[]*Type, error) {
+func ExpandTypes(s *Schema, types []config.TypeConfig, mutations []config.MutationConfig) (*[]*Type, error) {
 	if s == nil {
 		return nil, fmt.Errorf("unable to expand types from nil schema")
 	}
@@ -122,29 +122,29 @@ func ExpandTypes(s *Schema, types []config.TypeConfig, methods []config.MethodCo
 		}
 	}
 
-	var methodFields []Field
-	methodFields = append(methodFields, s.MutationType.Fields...)
-	methodFields = append(methodFields, s.MutationType.InputFields...)
+	var mutationFields []Field
+	mutationFields = append(mutationFields, s.MutationType.Fields...)
+	mutationFields = append(mutationFields, s.MutationType.InputFields...)
 
-	for _, field := range methodFields {
-		// Constrain our handling to include only the method names which are mentioned in the configuration.
-		if methodNameInMethods(field.Name, methods) {
+	for _, field := range mutationFields {
+		// Constrain our handling to include only the mutation names which are mentioned in the configuration.
+		if mutationNameInMutations(field.Name, mutations) {
 			err = expander.ExpandTypeFromName(field.Type.Name)
 			if err != nil {
 				log.WithFields(log.Fields{
 					"name":  field.Type.Name,
 					"field": field.Name,
-				}).Errorf("unable to expand method field type: %s", err)
+				}).Errorf("unable to expand mutation field type: %s", err)
 			}
 
-			for _, methodArg := range field.Args {
-				if methodArg.Type.OfType != nil {
-					err := expander.ExpandTypeFromName(methodArg.Type.OfType.GetTypeName())
+			for _, mutationArg := range field.Args {
+				if mutationArg.Type.OfType != nil {
+					err := expander.ExpandTypeFromName(mutationArg.Type.OfType.GetTypeName())
 					if err != nil {
 						log.WithFields(log.Fields{
-							"name": methodArg.Name,
-							"type": methodArg.Type,
-						}).Errorf("failed to expand method argument: %s", err)
+							"name": mutationArg.Name,
+							"type": mutationArg.Type,
+						}).Errorf("failed to expand mutation argument: %s", err)
 					}
 				}
 			}

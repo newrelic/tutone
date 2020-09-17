@@ -48,8 +48,8 @@ type PackageConfig struct {
 	Path string `yaml:"path,omitempty"`
 	// Types is a list of Type configurations to include in the package.
 	Types []TypeConfig `yaml:"types,omitempty"`
-	// Methods is a list of Method configurations to include in the package.
-	Methods []MethodConfig `yaml:"methods,omitempty"`
+	// Mutations is a list of Method configurations to include in the package.
+	Mutations []MutationConfig `yaml:"mutations,omitempty"`
 	// Generators is a list of names that reference a generator in the Config struct.
 	Generators []string `yaml:"generators,omitempty"`
 	// Imports is a list of strings to represent what pacakges to import for a given package.
@@ -90,8 +90,8 @@ type GeneratorConfig struct {
 	TemplateName string `yaml:"templateName,omitempty"`
 }
 
-// MethodConfig is the information about the GraphQL methods.
-type MethodConfig struct {
+// MutationConfig is the information about the GraphQL mutations.
+type MutationConfig struct {
 	// Name is the name of the GraphQL method.
 	Name string `yaml:"name"`
 }

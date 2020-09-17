@@ -27,7 +27,7 @@ packages:
     path: pkg/nerdgraph
     generators:
       - typegen
-    methods:
+    mutations:
       - name: apiAccessCreateKeys
     types:
       - name: AlertsPolicy

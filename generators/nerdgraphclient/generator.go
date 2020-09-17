@@ -25,7 +25,7 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 		return fmt.Errorf("unable to Generate with nil pkgConfig")
 	}
 
-	expandedTypes, err := schema.ExpandTypes(s, pkgConfig.Types, pkgConfig.Methods)
+	expandedTypes, err := schema.ExpandTypes(s, pkgConfig.Types, pkgConfig.Mutations)
 	if err != nil {
 		log.Error(err)
 	}
@@ -62,13 +62,13 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 		g.Interfaces = *interfacesForGen
 	}
 
-	methodsForGen, err := lang.GenerateGoMethodsForPackage(s, genConfig, pkgConfig)
+	mutationsForGen, err := lang.GenerateGoMethodsForPackage(s, genConfig, pkgConfig)
 	if err != nil {
 		return err
 	}
 
-	if methodsForGen != nil {
-		g.Methods = *methodsForGen
+	if mutationsForGen != nil {
+		g.Mutations = *mutationsForGen
 	}
 
 	return nil
