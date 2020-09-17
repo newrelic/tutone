@@ -1,9 +1,12 @@
 package command
 
 import (
+	"bytes"
 	"fmt"
 	"os"
+	"text/template"
 
+	"github.com/Masterminds/sprig"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/newrelic/tutone/internal/codegen"
@@ -41,10 +44,13 @@ func hydrateCommand(s *schema.Schema, command config.Command) lang.Command {
 			fmt.Print("\n\n **************************** \n")
 			// fmt.Printf("\n cmdType:  %+v \n", cmdType)
 
+			// TODO: set a "mutation" or "query" type on the subcommand tutone config
+			// or maybe just a boolean "isMutation" or something like that
 			_ = hydrateMutationSubcommand(s, cmdType, subCmdConfig)
 
 			fmt.Print("\n **************************** \n\n")
 
+			// Old news, bye bye
 			cmd.Subcommands[i] = lang.Command{
 				Name:             subCmdConfig.Name,
 				ShortDescription: subCmdConfig.ShortDescription,
@@ -60,12 +66,47 @@ func hydrateCommand(s *schema.Schema, command config.Command) lang.Command {
 	return cmd
 }
 
+type Arg struct {
+	Name string
+	Type string
+}
+
 func hydrateMutationSubcommand(s *schema.Schema, sCmd *schema.Field, cmdConfig config.Command) *lang.Command {
 	fmt.Printf("\n hydrateSubcommand - schema:     %+v \n", sCmd)
 
-	// tmpl, err := template.New("test").Parse("{{.Method}}({{.}}) items are made of {{.Material}}")
+	tmpl, err := template.New("test").Funcs(sprig.TxtFuncMap()).Parse(`
+		{{- .Method -}}({{- range .Args }}{{ .Name }} {{ end -}})
+	`)
 
-	// methodTemplate :=
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	data := struct {
+		Method string
+		Args   []Arg
+	}{
+		Method: cmdConfig.ClientMethod,
+		Args: []Arg{
+			{
+				Name: "accountId",
+				Type: "int",
+			},
+			{
+				Name: "policy",
+				Type: "AlertsPolicyInput",
+			},
+		},
+	}
+
+	var resultBuf bytes.Buffer
+	err = tmpl.Execute(&resultBuf, data)
+
+	fmt.Printf("\n\n Method Signature: %v \n\n", resultBuf.String())
+
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// inputTypes := map[string]interface{}{}
 	for _, inputType := range sCmd.Args {
