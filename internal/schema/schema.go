@@ -113,6 +113,16 @@ func (s *Schema) Save(file string) error {
 	return ioutil.WriteFile(file, schemaFile, 0644)
 }
 
+func (s *Schema) LookupRootMutationTypeFieldByName(name string) (*Field, error) {
+	for _, f := range s.MutationType.Fields {
+		if f.Name == name {
+			return &f, nil
+		}
+	}
+
+	return nil, fmt.Errorf("`RootMutationType.Field` by name %s not found", name)
+}
+
 // LookupTypeByName digs in the schema for a type that matches the given name.
 func (s *Schema) LookupTypeByName(typeName string) (*Type, error) {
 	for _, t := range s.Types {

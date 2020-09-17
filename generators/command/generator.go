@@ -22,7 +22,7 @@ var goTypesToCobraFlagMethodMap = map[string]string{
 	"string": "StringVar",
 }
 
-func hydrateCommand(command config.Command) lang.Command {
+func hydrateCommand(s *schema.Schema, command config.Command) lang.Command {
 	cmd := lang.Command{
 		Name:             command.Name,
 		ShortDescription: command.ShortDescription,
@@ -33,20 +33,57 @@ func hydrateCommand(command config.Command) lang.Command {
 	if len(command.Subcommands) > 0 {
 		cmd.Subcommands = make([]lang.Command, len(command.Subcommands))
 
-		for i, sCmd := range command.Subcommands {
+		for i, subCmdConfig := range command.Subcommands {
+			cmdType, err := s.LookupRootMutationTypeFieldByName(subCmdConfig.Name)
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Print("\n\n **************************** \n")
+			// fmt.Printf("\n cmdType:  %+v \n", cmdType)
+
+			_ = hydrateMutationSubcommand(s, cmdType, subCmdConfig)
+
+			fmt.Print("\n **************************** \n\n")
+
 			cmd.Subcommands[i] = lang.Command{
-				Name:             sCmd.Name,
-				ShortDescription: sCmd.ShortDescription,
-				LongDescription:  sCmd.LongDescription,
-				Example:          sCmd.Example,
-				InputType:        sCmd.InputType,
-				ClientMethod:     sCmd.ClientMethod,
-				Flags:            hydrateFlags(sCmd.Flags),
+				Name:             subCmdConfig.Name,
+				ShortDescription: subCmdConfig.ShortDescription,
+				LongDescription:  subCmdConfig.LongDescription,
+				Example:          subCmdConfig.Example,
+				InputType:        subCmdConfig.InputType,
+				ClientMethod:     subCmdConfig.ClientMethod,
+				Flags:            hydrateFlags(subCmdConfig.Flags),
 			}
 		}
 	}
 
 	return cmd
+}
+
+func hydrateMutationSubcommand(s *schema.Schema, sCmd *schema.Field, cmdConfig config.Command) *lang.Command {
+	fmt.Printf("\n hydrateSubcommand - schema:     %+v \n", sCmd)
+
+	// tmpl, err := template.New("test").Parse("{{.Method}}({{.}}) items are made of {{.Material}}")
+
+	// methodTemplate :=
+
+	// inputTypes := map[string]interface{}{}
+	for _, inputType := range sCmd.Args {
+
+		fmt.Printf("\n hydrateSubcommand - inputType:  %+v \n", inputType)
+
+		// inputTypes = append(inputTypes, map[string]interface{} {
+		// 	ClientMethod: fmt.Sprintf("%v(%v %v)", cmdConfig.ClientMethod,
+		// })
+	}
+
+	cmdResult := lang.Command{
+		Name:             sCmd.Name,
+		ShortDescription: sCmd.Description, // TODO: allow user to override this in their tutone.yml
+		LongDescription:  cmdConfig.LongDescription,
+	}
+
+	return &cmdResult
 }
 
 func hydrateFlags(flags []config.CommandFlag) []lang.CommandFlag {
@@ -75,7 +112,7 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 
 	cmds := make([]lang.Command, len(pkgConfig.Commands))
 	for i, c := range pkgConfig.Commands {
-		cmds[i] = hydrateCommand(c)
+		cmds[i] = hydrateCommand(s, c)
 	}
 
 	g.Commands = cmds
