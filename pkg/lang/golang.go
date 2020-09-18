@@ -10,6 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// TODO: Move CommandGenerator and its friends to a proper home
 type CommandGenerator struct {
 	PackageName string
 	Imports     []string

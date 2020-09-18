@@ -71,57 +71,47 @@ type Arg struct {
 	Type string
 }
 
+type ClientMethodData struct {
+	Method string
+	Args   []Arg
+}
+
+const fnTemplate = `{{- .Method -}}({{- range .Args }}{{ .Name }}, {{ end -}})`
+
 func hydrateMutationSubcommand(s *schema.Schema, sCmd *schema.Field, cmdConfig config.Command) *lang.Command {
-	fmt.Printf("\n hydrateSubcommand - schema:     %+v \n", sCmd)
-
-	tmpl, err := template.New("test").Funcs(sprig.TxtFuncMap()).Parse(`
-		{{- .Method -}}({{- range .Args }}{{ .Name }} {{ end -}})
-	`)
+	tmpl, err := template.New("dynamicTemplateName").Funcs(sprig.TxtFuncMap()).Parse(fnTemplate)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	data := struct {
-		Method string
-		Args   []Arg
-	}{
+	clientMethodData := ClientMethodData{
 		Method: cmdConfig.ClientMethod,
-		Args: []Arg{
-			{
-				Name: "accountId",
-				Type: "int",
-			},
-			{
-				Name: "policy",
-				Type: "AlertsPolicyInput",
-			},
-		},
+		Args:   []Arg{},
 	}
 
-	var resultBuf bytes.Buffer
-	err = tmpl.Execute(&resultBuf, data)
+	for _, arg := range sCmd.Args {
+		clientMethodData.Args = append(clientMethodData.Args, Arg{
+			Name: arg.Name,
+		})
 
-	fmt.Printf("\n\n Method Signature: %v \n\n", resultBuf.String())
+		// fmt.Printf("\n hydrateSubcommand - inputType:  %+v \n", arg)
+	}
+
+	var methodBuffer bytes.Buffer
+	err = tmpl.Execute(&methodBuffer, clientMethodData)
+
+	fmt.Printf("\n\n Method Signature: %v \n\n", methodBuffer.String())
 
 	if err != nil {
 		log.Fatal(err)
-	}
-
-	// inputTypes := map[string]interface{}{}
-	for _, inputType := range sCmd.Args {
-
-		fmt.Printf("\n hydrateSubcommand - inputType:  %+v \n", inputType)
-
-		// inputTypes = append(inputTypes, map[string]interface{} {
-		// 	ClientMethod: fmt.Sprintf("%v(%v %v)", cmdConfig.ClientMethod,
-		// })
 	}
 
 	cmdResult := lang.Command{
 		Name:             sCmd.Name,
 		ShortDescription: sCmd.Description, // TODO: allow user to override this in their tutone.yml
 		LongDescription:  cmdConfig.LongDescription,
+		ClientMethod:     methodBuffer.String(),
 	}
 
 	return &cmdResult
