@@ -21,8 +21,9 @@ type SubscriptionInfo struct {
 	Name string `yaml:"name"`
 }
 
-type QueryInfo struct {
-	Name string `yaml:"name"`
+type QueryArg struct {
+	Key   string
+	Value string
 }
 
 // Schema contains data about the GraphQL schema as returned by the server
@@ -187,4 +188,42 @@ func (s *Schema) QueryFields(t *Type) string {
 	}
 
 	return strings.Join(lines, "\n")
+}
+
+// QueryArgs is meant to fill in the data necessary for a query(<args_go_here>) string.  For example, the
+// query($guids: [String]!) { actor ...
+func (s *Schema) QueryArgs(t *Type, fields []string) []QueryArg {
+	args := []QueryArg{}
+
+	for _, f := range t.Fields {
+		if stringInStrings(f.Name, fields) {
+
+			for _, a := range f.Args {
+				queryArg := QueryArg{
+					Key: a.Name,
+				}
+
+				var value string
+				var suffix string
+
+				if a.Type.Kind == KindNonNull {
+					suffix = "!"
+				}
+
+				typeKinds := a.Type.GetKinds()
+				if typeKinds[0] == KindList {
+					value = fmt.Sprintf("[%s]%s", a.Type.GetTypeName(), suffix)
+				} else {
+					value = fmt.Sprintf("%s%s", a.Type.GetTypeName(), suffix)
+				}
+
+				queryArg.Value = value
+
+				args = append(args, queryArg)
+
+			}
+		}
+	}
+
+	return args
 }

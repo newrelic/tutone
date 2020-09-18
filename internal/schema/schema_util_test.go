@@ -89,13 +89,3 @@ func TestExpandTypes(t *testing.T) {
 		assert.Equal(t, tc.ExpectedNames, names)
 	}
 }
-
-func stringInStrings(s string, ss []string) bool {
-	for _, sss := range ss {
-		if s == sss {
-			return true
-		}
-	}
-
-	return false
-}
