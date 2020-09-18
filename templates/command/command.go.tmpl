@@ -36,11 +36,13 @@ var {{$cmdVarName}} = &cobra.Command{
   Example: {{.Example | quote}},
   Run: func(cmd *cobra.Command, args []string) {
     client.WithClient(func(nrClient *newrelic.NewRelic) {
-      var input {{.InputType}}
-			err := json.Unmarshal([]byte({{.Name}}Input), &input)
+      {{- range .InputObjects }}
+      var {{.Name}} {{.GoType}}
+			err := json.Unmarshal([]byte({{.GoType}}), &{{.Name}})
 			utils.LogIfFatal(err)
+      {{end}}
 
-      resp, err := {{.ClientMethod}}(accountID, input)
+      resp, err := {{.ClientMethod}}({{.ClientMethodArgs | join ", "}})
 			utils.LogIfFatal(err)
 
 			utils.LogIfFatal(output.Print(resp))

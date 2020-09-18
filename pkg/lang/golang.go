@@ -17,6 +17,11 @@ type CommandGenerator struct {
 	Commands    []Command
 }
 
+type InputObject struct {
+	Name   string
+	GoType string
+}
+
 type Command struct {
 	Name             string
 	ShortDescription string
@@ -24,6 +29,8 @@ type Command struct {
 	Example          string
 	InputType        string
 	ClientMethod     string
+	ClientMethodArgs []string
+	InputObjects     []InputObject
 	Flags            []CommandFlag
 	Subcommands      []Command
 }

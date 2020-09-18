@@ -1,12 +1,9 @@
 package command
 
 import (
-	"bytes"
 	"fmt"
 	"os"
-	"text/template"
 
-	"github.com/Masterminds/sprig"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/newrelic/tutone/internal/codegen"
@@ -46,20 +43,25 @@ func hydrateCommand(s *schema.Schema, command config.Command) lang.Command {
 
 			// TODO: set a "mutation" or "query" type on the subcommand tutone config
 			// or maybe just a boolean "isMutation" or something like that
-			_ = hydrateMutationSubcommand(s, cmdType, subCmdConfig)
+
+			subCommand := hydrateMutationSubcommand(s, cmdType, subCmdConfig)
+			cmd.Subcommands[i] = *subCommand
+
+			flags := hydrateFlags(subCmdConfig.Flags)
+			cmd.Subcommands[i].Flags = flags
 
 			fmt.Print("\n **************************** \n\n")
 
 			// Old news, bye bye
-			cmd.Subcommands[i] = lang.Command{
-				Name:             subCmdConfig.Name,
-				ShortDescription: subCmdConfig.ShortDescription,
-				LongDescription:  subCmdConfig.LongDescription,
-				Example:          subCmdConfig.Example,
-				InputType:        subCmdConfig.InputType,
-				ClientMethod:     subCmdConfig.ClientMethod,
-				Flags:            hydrateFlags(subCmdConfig.Flags),
-			}
+			// cmd.Subcommands[i] = lang.Command{
+			// 	Name:             subCmdConfig.Name,
+			// 	ShortDescription: subCmdConfig.ShortDescription,
+			// 	LongDescription:  subCmdConfig.LongDescription,
+			// 	Example:          subCmdConfig.Example,
+			// 	InputType:        subCmdConfig.InputType,
+			// 	ClientMethod:     subCmdConfig.ClientMethod,
+			// 	Flags:            hydrateFlags(subCmdConfig.Flags),
+			// }
 		}
 	}
 
@@ -67,55 +69,30 @@ func hydrateCommand(s *schema.Schema, command config.Command) lang.Command {
 }
 
 type Arg struct {
-	Name string
-	Type string
+	Name     string
+	Type     string
+	Required bool
+	OfType   string
 }
 
 type ClientMethodData struct {
-	Method string
-	Args   []Arg
+	Method string // Example: "nrClient.Alerts.CreatePolicyMutation"
+	Args   []string
 }
 
-const fnTemplate = `{{- .Method -}}({{- range .Args }}{{ .Name }}, {{ end -}})`
+// const fnTemplate = `{{- .Method -}}({{.Args | join ", "}})`
 
-func hydrateMutationSubcommand(s *schema.Schema, sCmd *schema.Field, cmdConfig config.Command) *lang.Command {
-	tmpl, err := template.New("dynamicTemplateName").Funcs(sprig.TxtFuncMap()).Parse(fnTemplate)
+// func selectInputObjects(endpointFields []schema.Field) *[]schema.Field {
+// 	var inputs []schema.Field
 
-	if err != nil {
-		log.Fatal(err)
-	}
+// 	for _, f := range endpointFields {
+// 		if f.Type.OfType.Kind == schema.KindInputObject {
+// 			inputs = append(inputs, f)
+// 		}
+// 	}
 
-	clientMethodData := ClientMethodData{
-		Method: cmdConfig.ClientMethod,
-		Args:   []Arg{},
-	}
-
-	for _, arg := range sCmd.Args {
-		clientMethodData.Args = append(clientMethodData.Args, Arg{
-			Name: arg.Name,
-		})
-
-		// fmt.Printf("\n hydrateSubcommand - inputType:  %+v \n", arg)
-	}
-
-	var methodBuffer bytes.Buffer
-	err = tmpl.Execute(&methodBuffer, clientMethodData)
-
-	fmt.Printf("\n\n Method Signature: %v \n\n", methodBuffer.String())
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	cmdResult := lang.Command{
-		Name:             sCmd.Name,
-		ShortDescription: sCmd.Description, // TODO: allow user to override this in their tutone.yml
-		LongDescription:  cmdConfig.LongDescription,
-		ClientMethod:     methodBuffer.String(),
-	}
-
-	return &cmdResult
-}
+// 	return &inputs
+// }
 
 func hydrateFlags(flags []config.CommandFlag) []lang.CommandFlag {
 	cmdFlags := make([]lang.CommandFlag, len(flags))
@@ -133,6 +110,33 @@ func hydrateFlags(flags []config.CommandFlag) []lang.CommandFlag {
 	}
 
 	return cmdFlags
+}
+
+func hydrateMutationSubcommand(s *schema.Schema, sCmd *schema.Field, cmdConfig config.Command) *lang.Command {
+	var clientMethodArgs []string
+	var clientMethodInputOjects []lang.InputObject
+	for _, arg := range sCmd.Args {
+		clientMethodArgs = append(clientMethodArgs, arg.Name)
+
+		if arg.Type.OfType.Kind == schema.KindInputObject {
+			clientMethodInputOjects = append(clientMethodInputOjects, lang.InputObject{
+				Name:   arg.Name,
+				GoType: sCmd.Name + "Input",
+			})
+		}
+	}
+
+	cmdResult := lang.Command{
+		Name:             sCmd.Name,
+		ShortDescription: sCmd.Description, // TODO: allow user to override this in their tutone.yml
+		LongDescription:  cmdConfig.LongDescription,
+		ClientMethod:     cmdConfig.ClientMethod,
+		ClientMethodArgs: clientMethodArgs,
+		Example:          cmdConfig.Example,
+		InputObjects:     clientMethodInputOjects,
+	}
+
+	return &cmdResult
 }
 
 func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig) error {
