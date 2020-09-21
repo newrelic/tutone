@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,18 +10,13 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"text/template"
 
+	"github.com/Masterminds/sprig"
 	log "github.com/sirupsen/logrus"
 )
 
-type MutationInfo struct {
-	Name string `yaml:"name"`
-}
-
-type SubscriptionInfo struct {
-	Name string `yaml:"name"`
-}
-
+// QueryArg is the key value pair for an nerdgraph query argument on an endpoint.  These might be required, or not.
 type QueryArg struct {
 	Key   string
 	Value string
@@ -125,10 +121,11 @@ func (s *Schema) LookupTypeByName(typeName string) (*Type, error) {
 	return nil, fmt.Errorf("type by name %s not found", typeName)
 }
 
+// QueryFieldsForTypeName will lookup a type by the received name, and return the query fields for that type, or log an error and return and empty string.
 func (s *Schema) QueryFieldsForTypeName(name string) string {
 	t, err := s.LookupTypeByName(name)
 	if err != nil {
-		log.Errorf("failed to to retrieve type by name")
+		log.Errorf("failed to to retrieve type by name: %s", err)
 		return ""
 	}
 
@@ -227,3 +224,73 @@ func (s *Schema) QueryArgs(t *Type, fields []string) []QueryArg {
 
 	return args
 }
+
+// GetQueryStringForEndpoint packs a nerdgraph query header and footer around the set of query fields for a given type name and endpoint.
+func (s *Schema) GetQueryStringForEndpoint(name string, endpoint string) string {
+	t, err := s.LookupTypeByName(name)
+	if err != nil {
+		log.Error(err)
+		return ""
+	}
+
+	args := s.QueryArgs(t, []string{endpoint})
+
+	var queryFields string
+	for _, f := range t.Fields {
+		if f.Name == endpoint {
+			fieldType, lookupErr := s.LookupTypeByName(f.Type.Name)
+			if lookupErr != nil {
+				log.Error(lookupErr)
+				return ""
+			}
+
+			queryFields = s.QueryFields(fieldType)
+			break
+		}
+	}
+
+	data := struct {
+		TypeName string
+		Endpoint string
+		Args     []QueryArg
+		Fields   string
+	}{
+		t.Name,
+		endpoint,
+		args,
+		PrefixLineTab(queryFields),
+	}
+
+	tmpl, err := template.New(name).Funcs(sprig.TxtFuncMap()).Parse(queryHeader)
+	if err != nil {
+		log.Error(err)
+		return ""
+	}
+
+	var result bytes.Buffer
+
+	err = tmpl.Execute(&result, data)
+	if err != nil {
+		log.Error(err)
+		return ""
+	}
+
+	final := result.String() + queryFooter
+	log.Printf("final: %+v", final)
+
+	return final
+}
+
+var queryHeader = `query(
+	{{- range .Args}}
+	${{.Key}}: {{.Value}},
+	{{- end}}
+) { {{.TypeName|lower}} { {{.Endpoint}}(
+	{{- range .Args}}
+	{{.Key}}: ${{.Key}},
+	{{- end}}
+) {
+{{.Fields}}
+`
+
+var queryFooter = `} } }`

@@ -70,6 +70,35 @@ func TestQueryArgs(t *testing.T) {
 	}
 }
 
+func TestGetQueryStringForEndpoint(t *testing.T) {
+	t.Parallel()
+
+	// schema cached by 'make test-prep'
+	s, err := Load("../../testdata/schema.json")
+	require.NoError(t, err)
+
+	cases := map[string]struct {
+		TypeName string
+		Field    string
+		Result   string
+	}{
+		"entities": {
+			TypeName: "Actor",
+			Field:    "entitySearch",
+			Result:   entitiesQuery,
+			// entityQuery,
+			// entitySearchQuery,
+		},
+	}
+
+	for n, tc := range cases {
+		t.Logf("TestCase: %s", n)
+
+		result := s.GetQueryStringForEndpoint(tc.TypeName, tc.Field)
+		assert.Equal(t, tc.Result, result)
+	}
+}
+
 func TestTypeQueryFields(t *testing.T) {
 	t.Parallel()
 
@@ -242,4 +271,31 @@ terms {
 type
 valueFunction
 violationTimeLimit`
+
+	entitiesQuery = `query(
+	$query: String,
+	$queryBuilder: EntitySearchQueryBuilder,
+	$sortBy: [EntitySearchSortCriteria],
+) { actor { entitySearch(
+	query: $query,
+	queryBuilder: $queryBuilder,
+	sortBy: $sortBy,
+) {
+	count
+	counts {
+		count
+		facet
+	}
+	query
+	results {
+		entities
+		nextCursor
+	}
+	types {
+		count
+		domain
+		entityType
+		type
+	}
+} } }`
 )
