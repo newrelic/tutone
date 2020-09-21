@@ -1,7 +1,6 @@
 package command
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 
@@ -16,18 +15,6 @@ import (
 
 type Generator struct {
 	lang.CommandGenerator
-}
-
-type Arg struct {
-	Name     string
-	Type     string
-	Required bool
-	OfType   string
-}
-
-type ClientMethodData struct {
-	Method string // Example: "nrClient.Alerts.CreatePolicyMutation"
-	Args   []string
 }
 
 var goTypesToCobraFlagMethodMap = map[string]string{
@@ -66,12 +53,6 @@ func hydrateCommand(s *schema.Schema, command config.Command) lang.Command {
 	return cmd
 }
 
-func toJSON(data interface{}) string {
-	c, _ := json.MarshalIndent(data, "", "  ")
-
-	return string(c)
-}
-
 func getCobraFlagMethodName(typeString string) string {
 	if v, ok := goTypesToCobraFlagMethodMap[typeString]; ok {
 		return v
@@ -86,17 +67,17 @@ func hydrateFlagsFromSchema(args []schema.Field, cmdConfig config.Command) []lan
 
 	for _, arg := range args {
 		variableName := arg.Name
-		// isInputObject := arg.Type.OfType.Kind == "INPUT_OBJECT"
-		if arg.Type.OfType.Kind == "INPUT_OBJECT" {
+		if arg.Type.OfType.Kind == schema.KindInputObject {
+			// Add 'Input' suffix to the input variable name
 			variableName = fmt.Sprintf("%sInput", cmdConfig.Name)
 		}
 
-		// goType := getGoPrimitiveType(arg.Type.GetType())
-
 		typ, _, _ := arg.Type.GetType()
+		typeName := arg.Type.GetTypeName()
 
-		fmt.Printf("\n ARG:      %+v \n", toJSON(arg))
-		fmt.Printf("\n GetType:  %+v \n", typ)
+		fmt.Printf("\n ARG:          %+v \n", arg)
+		fmt.Printf("\n GetType:      %+v \n", typ)
+		fmt.Printf("\n GetTypeName:  %+v \n", typeName)
 
 		variableType := "string"
 		if arg.IsGoType() {
@@ -105,7 +86,7 @@ func hydrateFlagsFromSchema(args []schema.Field, cmdConfig config.Command) []lan
 
 		flags = append(flags, lang.CommandFlag{
 			Name:           arg.Name,
-			Type:           cmdConfig.ClientPackageName + "." + typ,
+			Type:           typ,
 			FlagMethodName: getCobraFlagMethodName(typ),
 			DefaultValue:   "",
 			Description:    arg.Description,
@@ -117,35 +98,32 @@ func hydrateFlagsFromSchema(args []schema.Field, cmdConfig config.Command) []lan
 		})
 	}
 
-	fmt.Printf("\n FLAGS:  %+v \n", toJSON(flags))
+	fmt.Printf("\n FLAGS:  %+v \n", flags)
 
 	return flags
 }
 
 func hydrateMutationSubcommand(s *schema.Schema, sCmd *schema.Field, cmdConfig config.Command) *lang.Command {
 	var clientMethodArgs []string
-	var clientMethodInputOjects []lang.InputObject
 	for _, arg := range sCmd.Args {
 		clientMethodArgs = append(clientMethodArgs, arg.Name)
-
-		if arg.Type.OfType.Kind == schema.KindInputObject {
-			clientMethodInputOjects = append(clientMethodInputOjects, lang.InputObject{
-				Name:   arg.Name,
-				GoType: cmdConfig.ClientPackageName + "." + arg.Type.OfType.GetName(), // TODO: generate this from flags
-			})
-		}
 	}
 
 	flags := hydrateFlagsFromSchema(sCmd.Args, cmdConfig)
 
+	shortDescription := sCmd.Description
+	// Allow user to override schema field/arg description
+	if cmdConfig.ShortDescription != "" {
+		shortDescription = cmdConfig.ShortDescription
+	}
+
 	cmdResult := lang.Command{
 		Name:             sCmd.Name,
-		ShortDescription: sCmd.Description, // TODO: allow user to override this in their tutone.yml
+		ShortDescription: shortDescription,
 		LongDescription:  cmdConfig.LongDescription,
 		ClientMethod:     cmdConfig.ClientMethod,
 		ClientMethodArgs: clientMethodArgs,
 		Example:          cmdConfig.Example,
-		InputObjects:     clientMethodInputOjects,
 		Flags:            flags,
 	}
 

@@ -23,7 +23,6 @@ var {{$cmdVarName}} = &cobra.Command{
 {{range .Subcommands}}
 {{- $nameTitleCase := .Name | title -}}
 {{- $cmdVarName := print "cmd" $nameTitleCase -}}
-{{- $inputVarName := print .Name "Input" -}}
 
 {{range .Flags}}
   var {{.VariableName}} {{.VariableType}}
@@ -63,7 +62,6 @@ func init() {
 {{ range .Subcommands}}
 {{- $subCmdNameTitleCase := .Name | title -}}
 {{- $cmdVarName := print "cmd" $subCmdNameTitleCase -}}
-{{- $inputVarName := print .Name "Input" -}}
 
   {{$parentCmdVarName}}.AddCommand({{$cmdVarName}})
 
