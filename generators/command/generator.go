@@ -1,6 +1,7 @@
 package command
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -15,6 +16,18 @@ import (
 
 type Generator struct {
 	lang.CommandGenerator
+}
+
+type Arg struct {
+	Name     string
+	Type     string
+	Required bool
+	OfType   string
+}
+
+type ClientMethodData struct {
+	Method string // Example: "nrClient.Alerts.CreatePolicyMutation"
+	Args   []string
 }
 
 var goTypesToCobraFlagMethodMap = map[string]string{
@@ -39,7 +52,6 @@ func hydrateCommand(s *schema.Schema, command config.Command) lang.Command {
 				log.Fatal(err)
 			}
 			fmt.Print("\n\n **************************** \n")
-			// fmt.Printf("\n cmdType:  %+v \n", cmdType)
 
 			// TODO: set a "mutation" or "query" type on the subcommand tutone config
 			// or maybe just a boolean "isMutation" or something like that
@@ -47,69 +59,67 @@ func hydrateCommand(s *schema.Schema, command config.Command) lang.Command {
 			subCommand := hydrateMutationSubcommand(s, cmdType, subCmdConfig)
 			cmd.Subcommands[i] = *subCommand
 
-			flags := hydrateFlags(subCmdConfig.Flags)
-			cmd.Subcommands[i].Flags = flags
-
 			fmt.Print("\n **************************** \n\n")
-
-			// Old news, bye bye
-			// cmd.Subcommands[i] = lang.Command{
-			// 	Name:             subCmdConfig.Name,
-			// 	ShortDescription: subCmdConfig.ShortDescription,
-			// 	LongDescription:  subCmdConfig.LongDescription,
-			// 	Example:          subCmdConfig.Example,
-			// 	InputType:        subCmdConfig.InputType,
-			// 	ClientMethod:     subCmdConfig.ClientMethod,
-			// 	Flags:            hydrateFlags(subCmdConfig.Flags),
-			// }
 		}
 	}
 
 	return cmd
 }
 
-type Arg struct {
-	Name     string
-	Type     string
-	Required bool
-	OfType   string
+func toJSON(data interface{}) string {
+	c, _ := json.MarshalIndent(data, "", "  ")
+
+	return string(c)
 }
 
-type ClientMethodData struct {
-	Method string // Example: "nrClient.Alerts.CreatePolicyMutation"
-	Args   []string
-}
-
-// const fnTemplate = `{{- .Method -}}({{.Args | join ", "}})`
-
-// func selectInputObjects(endpointFields []schema.Field) *[]schema.Field {
-// 	var inputs []schema.Field
-
-// 	for _, f := range endpointFields {
-// 		if f.Type.OfType.Kind == schema.KindInputObject {
-// 			inputs = append(inputs, f)
-// 		}
-// 	}
-
-// 	return &inputs
-// }
-
-func hydrateFlags(flags []config.CommandFlag) []lang.CommandFlag {
-	cmdFlags := make([]lang.CommandFlag, len(flags))
-
-	for i, f := range flags {
-		cmdFlags[i] = lang.CommandFlag{
-			Name:           f.Name,
-			Type:           f.Type,
-			FlagMethodName: goTypesToCobraFlagMethodMap[f.Type],
-			DefaultValue:   f.DefaultValue,
-			Description:    f.Description,
-			VariableName:   f.VariableName,
-			Required:       f.Required,
-		}
+func getCobraFlagMethodName(typeString string) string {
+	if v, ok := goTypesToCobraFlagMethodMap[typeString]; ok {
+		return v
 	}
 
-	return cmdFlags
+	// Almost all CRUD inputs will be a JSON string
+	return "StringVar"
+}
+
+func hydrateFlagsFromSchema(args []schema.Field, cmdConfig config.Command) []lang.CommandFlag {
+	var flags []lang.CommandFlag
+
+	for _, arg := range args {
+		variableName := arg.Name
+		// isInputObject := arg.Type.OfType.Kind == "INPUT_OBJECT"
+		if arg.Type.OfType.Kind == "INPUT_OBJECT" {
+			variableName = fmt.Sprintf("%sInput", cmdConfig.Name)
+		}
+
+		// goType := getGoPrimitiveType(arg.Type.GetType())
+
+		typ, _, _ := arg.Type.GetType()
+
+		fmt.Printf("\n ARG:      %+v \n", toJSON(arg))
+		fmt.Printf("\n GetType:  %+v \n", typ)
+
+		variableType := "string"
+		if arg.IsGoType() {
+			variableType = typ
+		}
+
+		flags = append(flags, lang.CommandFlag{
+			Name:           arg.Name,
+			Type:           cmdConfig.ClientPackageName + "." + typ,
+			FlagMethodName: getCobraFlagMethodName(typ),
+			DefaultValue:   "",
+			Description:    arg.Description,
+			VariableName:   variableName,
+			VariableType:   variableType,
+			Required:       arg.Type.Kind == "NON_NULL",
+			IsInputType:    arg.Type.OfType.Kind == schema.KindInputObject,
+			ClientType:     cmdConfig.ClientPackageName + "." + typ,
+		})
+	}
+
+	fmt.Printf("\n FLAGS:  %+v \n", toJSON(flags))
+
+	return flags
 }
 
 func hydrateMutationSubcommand(s *schema.Schema, sCmd *schema.Field, cmdConfig config.Command) *lang.Command {
@@ -121,10 +131,12 @@ func hydrateMutationSubcommand(s *schema.Schema, sCmd *schema.Field, cmdConfig c
 		if arg.Type.OfType.Kind == schema.KindInputObject {
 			clientMethodInputOjects = append(clientMethodInputOjects, lang.InputObject{
 				Name:   arg.Name,
-				GoType: sCmd.Name + "Input",
+				GoType: cmdConfig.ClientPackageName + "." + arg.Type.OfType.GetName(), // TODO: generate this from flags
 			})
 		}
 	}
+
+	flags := hydrateFlagsFromSchema(sCmd.Args, cmdConfig)
 
 	cmdResult := lang.Command{
 		Name:             sCmd.Name,
@@ -134,6 +146,7 @@ func hydrateMutationSubcommand(s *schema.Schema, sCmd *schema.Field, cmdConfig c
 		ClientMethodArgs: clientMethodArgs,
 		Example:          cmdConfig.Example,
 		InputObjects:     clientMethodInputOjects,
+		Flags:            flags,
 	}
 
 	return &cmdResult

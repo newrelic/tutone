@@ -59,14 +59,15 @@ type PackageConfig struct {
 }
 
 type Command struct {
-	Name             string        `yaml:"name,omitempty"`
-	ShortDescription string        `yaml:"shortDescription,omitempty"`
-	LongDescription  string        `yaml:"longDescription,omitempty"`
-	Example          string        `yaml:"example,omitempty"`
-	InputType        string        `yaml:"inputType,omitempty"`
-	ClientMethod     string        `yaml:"clientMethod,omitempty"`
-	Flags            []CommandFlag `yaml:"flags,omitempty"`
-	Subcommands      []Command     `yaml:"subcommands,omitempty"`
+	Name              string        `yaml:"name,omitempty"`
+	ShortDescription  string        `yaml:"shortDescription,omitempty"`
+	LongDescription   string        `yaml:"longDescription,omitempty"`
+	Example           string        `yaml:"example,omitempty"`
+	InputType         string        `yaml:"inputType,omitempty"`
+	ClientPackageName string        `yaml:"clientPackageName,omitempty"`
+	ClientMethod      string        `yaml:"clientMethod,omitempty"`
+	Flags             []CommandFlag `yaml:"flags,omitempty"`
+	Subcommands       []Command     `yaml:"subcommands,omitempty"`
 }
 
 type CommandFlag struct {

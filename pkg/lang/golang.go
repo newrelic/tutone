@@ -42,7 +42,10 @@ type CommandFlag struct {
 	DefaultValue   string
 	Description    string
 	VariableName   string
+	VariableType   string
+	ClientType     string
 	Required       bool
+	IsInputType    bool
 }
 
 // GolangGenerator is enough information to generate Go code for a single package.

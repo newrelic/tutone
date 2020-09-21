@@ -79,3 +79,22 @@ func (f *Field) GetTags() string {
 
 	return jsonTag + "\"`"
 }
+
+func (f *Field) IsGoType() bool {
+	goTypes := []string{
+		"int",
+		"string",
+		"bool",
+		"boolean",
+	}
+
+	name := strings.ToLower(f.Type.GetTypeName())
+
+	for _, x := range goTypes {
+		if x == name {
+			return true
+		}
+	}
+
+	return false
+}
