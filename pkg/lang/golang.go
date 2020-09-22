@@ -109,8 +109,13 @@ type QueryVar struct {
 	Type  string
 }
 
-func GenerateGoMethodsForPackage(s *schema.Schema, genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig) (*[]GoMethod, error) {
+// GenerateGoMethodMutationsForPackage uses the provided configuration to generate the GoMethod structs that contain the information about performing GraphQL mutations.
+func GenerateGoMethodMutationsForPackage(s *schema.Schema, genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig) (*[]GoMethod, error) {
 	var methods []GoMethod
+
+	if len(pkgConfig.Mutations) == 0 {
+		return nil, nil
+	}
 
 	for _, field := range s.MutationType.Fields {
 		for _, pkgMutation := range pkgConfig.Mutations {
