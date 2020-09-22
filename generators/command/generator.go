@@ -53,31 +53,30 @@ func hydrateCommand(s *schema.Schema, command config.Command) lang.Command {
 	return cmd
 }
 
-func getCobraFlagMethodName(typeString string) string {
-	if v, ok := goTypesToCobraFlagMethodMap[typeString]; ok {
-		return v
-	}
-
-	// Almost all CRUD inputs will be a JSON string
-	return "StringVar"
-}
-
 func hydrateFlagsFromSchema(args []schema.Field, cmdConfig config.Command) []lang.CommandFlag {
 	var flags []lang.CommandFlag
 
 	for _, arg := range args {
-		variableName := arg.Name
+		var variableName string
 		if arg.Type.OfType.Kind == schema.KindInputObject {
 			// Add 'Input' suffix to the input variable name
 			variableName = fmt.Sprintf("%sInput", cmdConfig.Name)
+		} else {
+			variableName = fmt.Sprintf("%s%s", cmdConfig.Name, arg.Name)
 		}
 
 		typ, _, _ := arg.Type.GetType()
 		typeName := arg.Type.GetTypeName()
 
-		fmt.Printf("\n ARG:          %+v \n", arg)
-		fmt.Printf("\n GetType:      %+v \n", typ)
-		fmt.Printf("\n GetTypeName:  %+v \n", typeName)
+		// fmt.Printf("\n ARG:          %+v \n", arg)
+		// fmt.Printf("\n GetType:      %+v \n", typ)
+		// fmt.Printf("\n GetTypeName:  %+v \n", typeName)
+
+		// TODO: Put this into a helper method or find an existing helper method
+		isOfTypeScalarID := typeName == "ID" && arg.Type.OfType.Kind == schema.KindScalar
+		if isOfTypeScalarID {
+			typ = "string"
+		}
 
 		variableType := "string"
 		if arg.IsGoType() {
@@ -104,15 +103,21 @@ func hydrateFlagsFromSchema(args []schema.Field, cmdConfig config.Command) []lan
 }
 
 func hydrateMutationSubcommand(s *schema.Schema, sCmd *schema.Field, cmdConfig config.Command) *lang.Command {
-	var clientMethodArgs []string
-	for _, arg := range sCmd.Args {
-		clientMethodArgs = append(clientMethodArgs, arg.Name)
-	}
-
 	flags := hydrateFlagsFromSchema(sCmd.Args, cmdConfig)
 
+	var clientMethodArgs []string
+	for _, f := range flags {
+		varName := f.VariableName
+		// If the client method argument is an `INPUT_OBJECT`,
+		// we need the regular name for use with unmarshallig.
+		if f.IsInputType {
+			varName = f.Name
+		}
+		clientMethodArgs = append(clientMethodArgs, varName)
+	}
+
 	shortDescription := sCmd.Description
-	// Allow user to override schema field/arg description
+	// Allow configuration to override the description that comes from NerdGraph
 	if cmdConfig.ShortDescription != "" {
 		shortDescription = cmdConfig.ShortDescription
 	}
@@ -128,6 +133,15 @@ func hydrateMutationSubcommand(s *schema.Schema, sCmd *schema.Field, cmdConfig c
 	}
 
 	return &cmdResult
+}
+
+func getCobraFlagMethodName(typeString string) string {
+	if v, ok := goTypesToCobraFlagMethodMap[typeString]; ok {
+		return v
+	}
+
+	// Almost all CRUD inputs will be a JSON string
+	return "StringVar"
 }
 
 func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig) error {
