@@ -123,6 +123,21 @@ func ExpandTypes(s *Schema, pkgConfig *config.PackageConfig) (*[]*Type, error) {
 					log.Error(err)
 				}
 			}
+
+			queries := []string{}
+			for _, pkgQuery := range pkgConfig.Queries {
+				queries = append(queries, pkgQuery.Endpoints...)
+			}
+
+			for _, field := range schemaType.Fields {
+				if stringInStrings(field.Name, queries) {
+					err = expander.ExpandTypeFromName(field.Type.GetTypeName())
+					if err != nil {
+						log.Error(err)
+					}
+				}
+			}
+
 		}
 	}
 
@@ -153,6 +168,7 @@ func ExpandTypes(s *Schema, pkgConfig *config.PackageConfig) (*[]*Type, error) {
 				}
 			}
 		}
+
 	}
 
 	return expander.ExpandedTypes(), nil

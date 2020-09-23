@@ -70,6 +70,47 @@ func TestQueryArgs(t *testing.T) {
 	}
 }
 
+func TestLookupTypesByFieldPath(t *testing.T) {
+	t.Parallel()
+
+	// schema cached by 'make test-prep'
+	s, err := Load("../../testdata/schema.json")
+	require.NoError(t, err)
+
+	actorType, err := s.LookupTypeByName("Actor")
+	require.NoError(t, err)
+	cloudType, err := s.LookupTypeByName("CloudActorFields")
+	require.NoError(t, err)
+
+	cases := map[string]struct {
+		FieldPath []string
+		Result    []*Type
+	}{
+		"cloud": {
+			FieldPath: []string{"actor", "cloud"},
+			Result:    []*Type{actorType, cloudType},
+		},
+	}
+
+	for n, tc := range cases {
+		t.Logf("TestCase: %s", n)
+
+		result, err := s.LookupQueryTypesByFieldPath(tc.FieldPath)
+		require.NoError(t, err)
+
+		require.Equal(t, len(tc.Result), len(result))
+
+		for i := range tc.Result {
+			assert.Equal(t, tc.Result[i], result[i])
+		}
+
+	}
+
+}
+
+// func TestGetQueryStringForEndpoint(t *testing.T) {
+// }
+
 func TestGetQueryStringForEndpoint(t *testing.T) {
 	t.Parallel()
 

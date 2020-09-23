@@ -111,6 +111,8 @@ func (s *Schema) Save(file string) error {
 }
 
 // LookupTypeByName digs in the schema for a type that matches the given name.
+// This is commonly used for retrieving the Type of a TypeRef, since the name
+// is the only piece of data to go on.
 func (s *Schema) LookupTypeByName(typeName string) (*Type, error) {
 	for _, t := range s.Types {
 		if t.Name == typeName {
@@ -121,7 +123,48 @@ func (s *Schema) LookupTypeByName(typeName string) (*Type, error) {
 	return nil, fmt.Errorf("type by name %s not found", typeName)
 }
 
-// QueryFieldsForTypeName will lookup a type by the received name, and return the query fields for that type, or log an error and return and empty string.
+// LookupQueryTypesByFieldPath is used to retrieve the types, when all you know is
+// the path of field names to an endpoint.
+func (s *Schema) LookupQueryTypesByFieldPath(fieldPath []string) ([]*Type, error) {
+	types := make([]*Type, len(fieldPath))
+	var err error
+
+	startingT, err := s.LookupTypeByName("RootQueryType")
+	if err != nil {
+		return nil, err
+	}
+
+	fieldType := func(t *Type, fieldName string) (*Type, error) {
+		for _, f := range t.Fields {
+			if f.Name == fieldName {
+				return s.LookupTypeByName(f.Type.GetTypeName())
+			}
+		}
+
+		return nil, fmt.Errorf("no field name %s on type %s", fieldName, t.Name)
+	}
+
+	found := 0
+
+	t := startingT
+
+	for _, fieldName := range fieldPath {
+		t, err = fieldType(t, fieldName)
+		if err != nil {
+			return nil, err
+		}
+
+		types[found] = t
+		found++
+	}
+
+	return types, nil
+}
+
+// QueryFieldsForTypeName will lookup a type by the received name, and return
+// the query fields for that type, or log an error and return and empty string.
+// The returned string is used in a mutation, so that the relevant fields are
+// returned once the mutation is performed, or during a query for a given type.
 func (s *Schema) QueryFieldsForTypeName(name string) string {
 	t, err := s.LookupTypeByName(name)
 	if err != nil {
@@ -132,7 +175,9 @@ func (s *Schema) QueryFieldsForTypeName(name string) string {
 	return s.QueryFields(t)
 }
 
-// QueryFields returns a string that contains all of the fields possible during a query, including nested objects.
+// QueryFields returns a string that contains all of the fields possible during
+// a query, including nested objects.  This string is formatted for use in a
+// GraphQL query or mutation API call.
 func (s *Schema) QueryFields(t *Type) string {
 	var lines []string
 
@@ -187,8 +232,8 @@ func (s *Schema) QueryFields(t *Type) string {
 	return strings.Join(lines, "\n")
 }
 
-// QueryArgs is meant to fill in the data necessary for a query(<args_go_here>) string.  For example, the
-// query($guids: [String]!) { actor ...
+// QueryArgs is meant to fill in the data necessary for a query(<args_go_here>)
+// string.  For example, query($guids: [String]!) { actor ...
 func (s *Schema) QueryArgs(t *Type, fields []string) []QueryArg {
 	args := []QueryArg{}
 
@@ -238,7 +283,7 @@ func (s *Schema) GetQueryStringForEndpoint(name string, endpoint string) string 
 	var queryFields string
 	for _, f := range t.Fields {
 		if f.Name == endpoint {
-			fieldType, lookupErr := s.LookupTypeByName(f.Type.Name)
+			fieldType, lookupErr := s.LookupTypeByName(f.Type.GetTypeName())
 			if lookupErr != nil {
 				log.Error(lookupErr)
 				return ""
@@ -261,7 +306,7 @@ func (s *Schema) GetQueryStringForEndpoint(name string, endpoint string) string 
 		PrefixLineTab(queryFields),
 	}
 
-	tmpl, err := template.New(name).Funcs(sprig.TxtFuncMap()).Parse(queryHeader)
+	tmpl, err := template.New(name).Funcs(sprig.TxtFuncMap()).Parse(queryHeaderTemplate)
 	if err != nil {
 		log.Error(err)
 		return ""
@@ -276,12 +321,11 @@ func (s *Schema) GetQueryStringForEndpoint(name string, endpoint string) string 
 	}
 
 	final := result.String() + queryFooter
-	log.Printf("final: %+v", final)
 
 	return final
 }
 
-var queryHeader = `query(
+var queryHeaderTemplate = `query(
 	{{- range .Args}}
 	${{.Key}}: {{.Value}},
 	{{- end}}
