@@ -71,6 +71,15 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 		g.Mutations = *mutationsForGen
 	}
 
+	queriesForGen, err := lang.GenerateGoMethodQueriesForPackage(s, genConfig, pkgConfig)
+	if err != nil {
+		return err
+	}
+
+	if queriesForGen != nil {
+		g.Queries = *queriesForGen
+	}
+
 	return nil
 }
 

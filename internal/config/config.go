@@ -56,6 +56,18 @@ type PackageConfig struct {
 	Imports []string `yaml:"imports,omitempty"`
 
 	Commands []Command `yaml:"commands,omitempty"`
+
+	Queries []Query `yaml:"queries,omitempty"`
+}
+
+// Query is the information necessary to build a query method.  The Paths
+// reference the the place in the hierarcy, while the names reference the
+// objects within those paths to query.
+type Query struct {
+	// Path is the path of TypeNames in GraphQL that preceed the objects being queried.
+	Path []string `yaml:"path,omitempty"`
+	// Names is a list of TypeName entries that will be found at the above Path.
+	Endpoints []string `yaml:"endpoints,omitempty"`
 }
 
 type Command struct {
