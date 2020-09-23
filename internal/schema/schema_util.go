@@ -98,9 +98,13 @@ func hasType(t *Type, types []*Type) bool {
 
 // ExpandTypes receives a set of config.TypeConfig, which is then expanded to include
 // all the nested types from the fields.
-func ExpandTypes(s *Schema, types []config.TypeConfig, mutations []config.MutationConfig) (*[]*Type, error) {
+func ExpandTypes(s *Schema, pkgConfig *config.PackageConfig) (*[]*Type, error) {
 	if s == nil {
 		return nil, fmt.Errorf("unable to expand types from nil schema")
+	}
+
+	if pkgConfig == nil {
+		return nil, fmt.Errorf("unable to expand types from nil PackageConfig")
 	}
 
 	var err error
@@ -109,7 +113,7 @@ func ExpandTypes(s *Schema, types []config.TypeConfig, mutations []config.Mutati
 	for _, schemaType := range s.Types {
 		if schemaType != nil {
 			// Constrain our handling to include only the type names which are mentioned in the configuration.
-			if typeNameInTypes(schemaType.Name, types) {
+			if typeNameInTypes(schemaType.Name, pkgConfig.Types) {
 				log.WithFields(log.Fields{
 					"name": schemaType.GetName(),
 				}).Debugf("config type: %s", schemaType.Name)
@@ -128,8 +132,8 @@ func ExpandTypes(s *Schema, types []config.TypeConfig, mutations []config.Mutati
 
 	for _, field := range mutationFields {
 		// Constrain our handling to include only the mutation names which are mentioned in the configuration.
-		if mutationNameInMutations(field.Name, mutations) {
-			err = expander.ExpandTypeFromName(field.Type.Name)
+		if mutationNameInMutations(field.Name, pkgConfig.Mutations) {
+			err = expander.ExpandTypeFromName(field.Type.GetTypeName())
 			if err != nil {
 				log.WithFields(log.Fields{
 					"name":  field.Type.Name,

@@ -70,7 +70,12 @@ func TestExpandTypes(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		results, err := ExpandTypes(s, tc.Types, tc.Mutations)
+		testConfig := &config.PackageConfig{
+			Types:     tc.Types,
+			Mutations: tc.Mutations,
+		}
+
+		results, err := ExpandTypes(s, testConfig)
 		if tc.ExpectErr {
 			require.NotNil(t, err)
 			require.Equal(t, err.Error(), tc.ExpectReason)
