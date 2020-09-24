@@ -68,7 +68,7 @@ func (a *{{$packageName|title}}) Get{{.Name | title}}(
   {{- end}}
 ) (*{{ .Signature.Return | join ", "}}) {
 
-	resp := {{.Name}}Response{}
+	resp := {{.ResponseObjectType}}{}
 	vars := map[string]interface{}{
   {{- range .QueryVars}}
     "{{.Key}}": {{.Value | untitle}},
@@ -79,13 +79,13 @@ func (a *{{$packageName|title}}) Get{{.Name | title}}(
 		return nil, err
 	}
 
-  {{- if .Signature.ReturnSlice}}
+  {{ if .Signature.ReturnSlice}}
 	if len(resp.{{.Signature.ReturnPath | join "."}}.{{.Name}}) == 0 {
 		return nil, errors.NewNotFound("")
 	}
   {{- end}}
 
-	return resp.{{.Signature.ReturnPath | join "."}}.{{.Name}}, nil
+	return &resp.{{.Signature.ReturnPath | join "."}}.{{.Name}}, nil
 }
 
 const get{{.Name}}Query = `

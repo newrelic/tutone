@@ -93,6 +93,8 @@ type GoMethod struct {
 	QueryVars   []QueryVar
 	Signature   GoMethodSignature
 	QueryString string
+	// ResponseObjectType is the name of the type for the API response.  Note that this is not the method return, but the API call response.
+	ResponseObjectType string
 }
 
 type GoMethodSignature struct {
@@ -100,7 +102,7 @@ type GoMethodSignature struct {
 	Return []string
 	// ReturnSlice indicates if the response is a slice of objects or not.  Used to flag KindList.
 	ReturnSlice bool
-	// Return path is the fields on the response object that nest the restuls the given method will return.
+	// Return path is the fields on the response object that nest the results the given method will return.
 	ReturnPath []string
 }
 
@@ -137,54 +139,18 @@ func GenerateGoMethodQueriesForPackage(s *schema.Schema, genConfig *config.Gener
 
 		for _, endpointName := range pkgQuery.Endpoints {
 
+			// The endpoint we care about will always be on the last of the path elements specified.
 			t := typePath[len(typePath)-1]
 
 			for _, field := range t.Fields {
 				if field.Name == endpointName {
-					method := GoMethod{
-						Name:        field.GetName(),
-						Description: field.GetDescription(),
-					}
+					method := goMethodForField(s, field, pkgConfig)
 
-					log.Infof("Kinds: %+v", field.Type.GetKinds())
-
-					var prefix string
-					kinds := field.Type.GetKinds()
-					if kinds[0] == schema.KindList {
-						prefix = "[]"
-						method.Signature.ReturnSlice = true
-					}
-
-					pointerReturn := fmt.Sprintf("%s%s", prefix, field.Type.GetTypeName())
-					method.Signature.Return = []string{pointerReturn, "error"}
 					method.QueryString = s.GetQueryStringForEndpoint(t.Name, endpointName)
 					method.Signature.ReturnPath = returnPath
-
-					for _, methodArg := range field.Args {
-						typeName, err := methodArg.GetTypeNameWithOverride(pkgConfig)
-						if err != nil {
-							log.Error(err)
-							continue
-						}
-
-						inputType := GoMethodInputType{
-							Name: methodArg.GetName(),
-							Type: typeName,
-						}
-
-						queryVar := QueryVar{
-							Key:   methodArg.Name,
-							Value: inputType.Name,
-							Type:  methodArg.Type.GetTypeName(),
-						}
-
-						method.QueryVars = append(method.QueryVars, queryVar)
-
-						method.Signature.Input = append(method.Signature.Input, inputType)
-					}
+					method.ResponseObjectType = fmt.Sprintf("%sResponse", endpointName)
 
 					methods = append(methods, method)
-
 				}
 
 			}
@@ -215,45 +181,8 @@ func GenerateGoMethodMutationsForPackage(s *schema.Schema, genConfig *config.Gen
 		for _, pkgMutation := range pkgConfig.Mutations {
 
 			if field.Name == pkgMutation.Name {
-
-				method := GoMethod{
-					Name:        field.GetName(),
-					Description: field.GetDescription(),
-				}
-
-				pointerReturn := field.Type.GetTypeName()
-				method.Signature.Return = []string{pointerReturn, "error"}
-				method.QueryString = schema.PrefixLineTab(schema.PrefixLineTab(s.QueryFieldsForTypeName(field.Type.Name)))
-
-				// field.Args are the arguments that are used to query the nerdgraph
-				// method.  Here we build up the QueryVars object, as well as the
-				// GoMethod.Signature.
-				for _, methodArg := range field.Args {
-					typeName, err := methodArg.GetTypeNameWithOverride(pkgConfig)
-					if err != nil {
-						log.Error(err)
-						continue
-					}
-
-					inputType := GoMethodInputType{
-						Name: methodArg.GetName(),
-						Type: typeName,
-					}
-
-					// We should only need to create a query variable for method
-					// arguments which are NON_NULL.
-					if methodArg.Type.Kind == schema.KindNonNull {
-						queryVar := QueryVar{
-							Key:   methodArg.Name,
-							Value: inputType.Name,
-							Type:  methodArg.Type.GetTypeName(),
-						}
-
-						method.QueryVars = append(method.QueryVars, queryVar)
-					}
-
-					method.Signature.Input = append(method.Signature.Input, inputType)
-				}
+				method := goMethodForField(s, field, pkgConfig)
+				method.QueryString = schema.PrefixLineTab(s.QueryFieldsForTypeName(field.Type.Name))
 
 				methods = append(methods, method)
 			}
@@ -454,6 +383,7 @@ func getStructField(f schema.Field, pkgConfig *config.PackageConfig) GoStructFie
 func constrainedResponseStructs(s *schema.Schema, pkgConfig *config.PackageConfig, expandedTypes *[]*schema.Type) []GoStruct {
 	var goStructs []GoStruct
 
+	// Determine if the typeName received exists in the received expandedTypes list.
 	isExpanded := func(expandedTypes *[]*schema.Type, typeName string) bool {
 		for _, t := range *expandedTypes {
 			if t.GetName() == typeName {
@@ -464,6 +394,7 @@ func constrainedResponseStructs(s *schema.Schema, pkgConfig *config.PackageConfi
 		return false
 	}
 
+	// Determine if the received typeName is in the  received schema.Type list.
 	isInPath := func(types []*schema.Type, typeName string) bool {
 		for _, t := range types {
 			if t.GetName() == typeName {
@@ -474,7 +405,10 @@ func constrainedResponseStructs(s *schema.Schema, pkgConfig *config.PackageConfi
 		return false
 	}
 
+	// Build a response object for each one of the queries in the configuration.
 	for _, query := range pkgConfig.Queries {
+
+		// Retrieve the corresponding types for each of the field names in the query config.
 		pathTypes, err := s.LookupQueryTypesByFieldPath(query.Path)
 		if err != nil {
 			log.Error(err)
@@ -504,21 +438,71 @@ func constrainedResponseStructs(s *schema.Schema, pkgConfig *config.PackageConfi
 
 		// Ensure we have a response struct for each of the endpoints in our config.
 		for _, endpoint := range query.Endpoints {
+
 			xxx := GoStruct{
 				Name: fmt.Sprintf("%sResponse", endpoint),
 			}
 
+			// For the top level response object, we only use the first field path that is received from the user.
 			firstType := pathTypes[0]
 
 			field := GoStructField{
-				Name: firstType.Name,
-				Type: firstType.Name,
+				Name: firstType.GetName(),
+				Type: firstType.GetName(),
+				Tags: fmt.Sprintf("`json:\"%s\"`", query.Path[0]),
 			}
 
 			xxx.Fields = append(xxx.Fields, field)
+			goStructs = append(goStructs, xxx)
 		}
 
 	}
 
 	return goStructs
+}
+
+// goMethodForField creates a new GoMethod based on a field.  Note that the
+// implementation specific information like QueryString are not added to the
+// method, and it is up to the caller to flavor the method accordingly.
+func goMethodForField(s *schema.Schema, field schema.Field, pkgConfig *config.PackageConfig) GoMethod {
+
+	method := GoMethod{
+		Name:        field.GetName(),
+		Description: field.GetDescription(),
+	}
+
+	var prefix string
+	kinds := field.Type.GetKinds()
+	if kinds[0] == schema.KindList {
+		prefix = "[]"
+		method.Signature.ReturnSlice = true
+	}
+
+	pointerReturn := fmt.Sprintf("%s%s", prefix, field.Type.GetTypeName())
+	method.Signature.Return = []string{pointerReturn, "error"}
+
+	for _, methodArg := range field.Args {
+		typeName, err := methodArg.GetTypeNameWithOverride(pkgConfig)
+		if err != nil {
+			log.Error(err)
+			continue
+		}
+
+		inputType := GoMethodInputType{
+			Name: methodArg.GetName(),
+			Type: typeName,
+		}
+
+		queryVar := QueryVar{
+			Key:   methodArg.Name,
+			Value: inputType.Name,
+			Type:  methodArg.Type.GetTypeName(),
+		}
+
+		method.QueryVars = append(method.QueryVars, queryVar)
+
+		method.Signature.Input = append(method.Signature.Input, inputType)
+	}
+
+	return method
 }
