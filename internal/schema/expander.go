@@ -133,12 +133,19 @@ func (x *Expander) expandType(t *Type) error {
 			}
 		}
 
-		if i.Type.Name != "" {
-			err = x.ExpandTypeFromName(i.Type.Name)
+		err = x.ExpandTypeFromName(i.Type.GetTypeName())
+		if err != nil {
+			log.WithFields(log.Fields{
+				"type": i.Type.Name,
+			}).Errorf("failed to expand Type.Name: %s", err)
+		}
+
+		for _, arg := range i.Args {
+			err := x.ExpandTypeFromName(arg.Type.GetTypeName())
 			if err != nil {
 				log.WithFields(log.Fields{
-					"type": i.Type.Name,
-				}).Errorf("failed to expand Type.Name: %s", err)
+					"name": arg.Type.GetTypeName(),
+				}).Errorf("failed to expand type from name: %s", err)
 			}
 		}
 
