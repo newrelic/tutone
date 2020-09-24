@@ -193,6 +193,13 @@ func GenerateGoMethodQueriesForPackage(s *schema.Schema, genConfig *config.Gener
 
 	}
 
+	if len(methods) > 0 {
+		sort.SliceStable(methods, func(i, j int) bool {
+			return methods[i].Name < methods[j].Name
+		})
+		return &methods, nil
+	}
+
 	return &methods, nil
 }
 
@@ -315,6 +322,10 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 
 				interfacesForGen = append(interfacesForGen, yyy)
 			}
+
+			sort.SliceStable(xxx.Fields, func(i, j int) bool {
+				return xxx.Fields[i].Name < xxx.Fields[j].Name
+			})
 
 			structsForGen = append(structsForGen, xxx)
 		case schema.KindENUM:
