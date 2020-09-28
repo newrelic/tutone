@@ -85,6 +85,8 @@ func (t *Type) GetQueryStringFields(s *Schema, depth, maxDepth int) string {
 		return t.Fields[i].Name < t.Fields[j].Name
 	})
 
+	parentFieldNames := []string{}
+
 	for _, field := range t.Fields {
 		kinds := field.Type.GetKinds()
 
@@ -119,8 +121,8 @@ func (t *Type) GetQueryStringFields(s *Schema, depth, maxDepth int) string {
 
 			// If any of the arguments for a given field are required, then we
 			// currently skip the field in the query since we are not handling the
-			// paramaters necessary to fill that out.  TODO is perhaps to ensure that
-			// all the query field arguments are avaiable for each of the nested
+			// parameters necessary to fill that out.  TODO is perhaps to ensure that
+			// all the query field arguments are available for each of the nested
 			// fields.
 			if hasRequiredArg(field.Args) {
 				continue
@@ -141,6 +143,7 @@ func (t *Type) GetQueryStringFields(s *Schema, depth, maxDepth int) string {
 			lines = append(lines, "}")
 		default:
 			lines = append(lines, field.Name)
+			parentFieldNames = append(parentFieldNames, field.Name)
 		}
 
 	}
@@ -158,20 +161,19 @@ func (t *Type) GetQueryStringFields(s *Schema, depth, maxDepth int) string {
 
 		possibleTLines := strings.Split(possibleTContent, "\n")
 		for _, b := range possibleTLines {
+			// Here we skip the fields that are already expressed on the parent type.
+			// Since we are enumerating the interface types on the type, we want to
+			// reduce the query complexity, while still retaining all of the data.
+			// This allows us to rely on the parent types fields and avoid increasing
+			// the complexity by enumerating all fields on the PossibleTypes as well.
+			if stringInStrings(b, parentFieldNames) {
+				continue
+			}
+
 			lines = append(lines, fmt.Sprintf("\t%s", b))
 		}
 		lines = append(lines, "}")
 	}
 
 	return strings.Join(lines, "\n")
-}
-
-func typeInTypes(t *Type, types []*Type) bool {
-	for _, tt := range types {
-		if tt == t {
-			return true
-		}
-	}
-
-	return false
 }

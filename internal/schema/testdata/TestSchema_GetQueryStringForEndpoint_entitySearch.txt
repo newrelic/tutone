@@ -36,197 +36,71 @@ query(
 			type
 			... on ApmApplicationEntityOutline {
 				__typename
-				accountId
 				alertSeverity
 				applicationId
-				domain
-				entityType
-				guid
-				indexedAt
 				language
-				name
-				permalink
-				reporting
-				type
 			}
 			... on ApmDatabaseInstanceEntityOutline {
 				__typename
-				accountId
-				domain
-				entityType
-				guid
 				host
-				indexedAt
-				name
-				permalink
 				portOrPath
-				reporting
-				type
 				vendor
 			}
 			... on ApmExternalServiceEntityOutline {
 				__typename
-				accountId
-				domain
-				entityType
-				guid
 				host
-				indexedAt
-				name
-				permalink
-				reporting
-				type
 			}
 			... on BrowserApplicationEntityOutline {
 				__typename
-				accountId
 				alertSeverity
 				applicationId
-				domain
-				entityType
-				guid
-				indexedAt
-				name
-				permalink
-				reporting
 				servingApmApplicationId
-				type
 			}
 			... on DashboardEntityOutline {
 				__typename
-				accountId
 				dashboardParentGuid
-				domain
-				entityType
-				guid
-				indexedAt
-				name
-				permalink
-				reporting
-				type
 			}
 			... on GenericEntityOutline {
 				__typename
-				accountId
-				domain
-				entityType
-				guid
-				indexedAt
-				name
-				permalink
-				reporting
-				type
 			}
 			... on GenericInfrastructureEntityOutline {
 				__typename
-				accountId
 				alertSeverity
-				domain
-				entityType
-				guid
-				indexedAt
 				integrationTypeCode
-				name
-				permalink
-				reporting
-				type
 			}
 			... on InfrastructureAwsLambdaFunctionEntityOutline {
 				__typename
-				accountId
 				alertSeverity
-				domain
-				entityType
-				guid
-				indexedAt
 				integrationTypeCode
-				name
-				permalink
-				reporting
 				runtime
-				type
 			}
 			... on InfrastructureHostEntityOutline {
 				__typename
-				accountId
 				alertSeverity
-				domain
-				entityType
-				guid
-				indexedAt
-				name
-				permalink
-				reporting
-				type
 			}
 			... on MobileApplicationEntityOutline {
 				__typename
-				accountId
 				alertSeverity
 				applicationId
-				domain
-				entityType
-				guid
-				indexedAt
-				name
-				permalink
-				reporting
-				type
 			}
 			... on SyntheticMonitorEntityOutline {
 				__typename
-				accountId
 				alertSeverity
-				domain
-				entityType
-				guid
-				indexedAt
 				monitorId
 				monitorType
 				monitoredUrl
-				name
 				period
-				permalink
-				reporting
-				type
 			}
 			... on ThirdPartyServiceEntityOutline {
 				__typename
-				accountId
-				domain
-				entityType
-				guid
-				indexedAt
-				name
-				permalink
-				reporting
-				type
 			}
 			... on UnavailableEntityOutline {
 				__typename
-				accountId
-				domain
-				entityType
-				guid
-				indexedAt
-				name
-				permalink
-				reporting
-				type
 			}
 			... on WorkloadEntityOutline {
 				__typename
-				accountId
 				alertSeverity
 				createdAt
-				domain
-				entityType
-				guid
-				indexedAt
-				name
-				permalink
-				reporting
-				type
 				updatedAt
 			}
 		}

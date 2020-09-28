@@ -23,1191 +23,671 @@ integrations {
 			... on CloudAlbIntegration {
 				__typename
 				awsRegions
-				createdAt
 				fetchExtendedInventory
 				fetchTags
-				id
 				inventoryPollingInterval
 				loadBalancerPrefixes
 				metricsPollingInterval
-				name
-				nrAccountId
 				tagKey
 				tagValue
-				updatedAt
 			}
 			... on CloudApigatewayIntegration {
 				__typename
 				awsRegions
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				stagePrefixes
 				tagKey
 				tagValue
-				updatedAt
 			}
 			... on CloudAutoscalingIntegration {
 				__typename
 				awsRegions
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudAwsAppsyncIntegration {
 				__typename
 				awsRegions
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudAwsAthenaIntegration {
 				__typename
 				awsRegions
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudAwsCognitoIntegration {
 				__typename
 				awsRegions
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudAwsConnectIntegration {
 				__typename
 				awsRegions
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudAwsDirectconnectIntegration {
 				__typename
 				awsRegions
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudAwsDocdbIntegration {
 				__typename
 				awsRegions
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudAwsFsxIntegration {
 				__typename
 				awsRegions
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudAwsGlueIntegration {
 				__typename
 				awsRegions
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudAwsKinesisanalyticsIntegration {
 				__typename
 				awsRegions
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudAwsMediaconvertIntegration {
 				__typename
 				awsRegions
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudAwsMediapackagevodIntegration {
 				__typename
 				awsRegions
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudAwsMqIntegration {
 				__typename
 				awsRegions
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudAwsMskIntegration {
 				__typename
 				awsRegions
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudAwsNeptuneIntegration {
 				__typename
 				awsRegions
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudAwsQldbIntegration {
 				__typename
 				awsRegions
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudAwsRoute53resolverIntegration {
 				__typename
 				awsRegions
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudAwsStatesIntegration {
 				__typename
 				awsRegions
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudAwsTransitgatewayIntegration {
 				__typename
 				awsRegions
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudAwsWafIntegration {
 				__typename
 				awsRegions
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudAwsWafv2Integration {
 				__typename
 				awsRegions
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudAwsXrayIntegration {
 				__typename
 				awsRegions
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudAzureApimanagementIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				resourceGroups
-				updatedAt
 			}
 			... on CloudAzureAppgatewayIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				resourceGroups
-				updatedAt
 			}
 			... on CloudAzureAppserviceIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				resourceGroups
-				updatedAt
 			}
 			... on CloudAzureContainersIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				resourceGroups
-				updatedAt
 			}
 			... on CloudAzureCosmosdbIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				resourceGroups
-				updatedAt
 			}
 			... on CloudAzureCostmanagementIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				tagKeys
-				updatedAt
 			}
 			... on CloudAzureDatafactoryIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				resourceGroups
-				updatedAt
 			}
 			... on CloudAzureEventhubIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				resourceGroups
-				updatedAt
 			}
 			... on CloudAzureExpressrouteIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				resourceGroups
-				updatedAt
 			}
 			... on CloudAzureFirewallsIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				resourceGroups
-				updatedAt
 			}
 			... on CloudAzureFrontdoorIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				resourceGroups
-				updatedAt
 			}
 			... on CloudAzureFunctionsIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				resourceGroups
-				updatedAt
 			}
 			... on CloudAzureKeyvaultIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				resourceGroups
-				updatedAt
 			}
 			... on CloudAzureLoadbalancerIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				resourceGroups
-				updatedAt
 			}
 			... on CloudAzureLogicappsIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				resourceGroups
-				updatedAt
 			}
 			... on CloudAzureMachinelearningIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				resourceGroups
-				updatedAt
 			}
 			... on CloudAzureMariadbIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				resourceGroups
-				updatedAt
 			}
 			... on CloudAzureMysqlIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				resourceGroups
-				updatedAt
 			}
 			... on CloudAzurePostgresqlIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				resourceGroups
-				updatedAt
 			}
 			... on CloudAzurePowerbidedicatedIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				resourceGroups
-				updatedAt
 			}
 			... on CloudAzureRediscacheIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				resourceGroups
-				updatedAt
 			}
 			... on CloudAzureServicebusIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				resourceGroups
-				updatedAt
 			}
 			... on CloudAzureServicefabricIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				resourceGroups
-				updatedAt
 			}
 			... on CloudAzureSqlIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				resourceGroups
-				updatedAt
 			}
 			... on CloudAzureSqlmanagedIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				resourceGroups
-				updatedAt
 			}
 			... on CloudAzureStorageIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				resourceGroups
-				updatedAt
 			}
 			... on CloudAzureVirtualmachineIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				resourceGroups
-				updatedAt
 			}
 			... on CloudAzureVirtualnetworksIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				resourceGroups
-				updatedAt
 			}
 			... on CloudAzureVmsIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				resourceGroups
-				updatedAt
 			}
 			... on CloudAzureVpngatewaysIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				resourceGroups
-				updatedAt
 			}
 			... on CloudBaseIntegration {
 				__typename
-				createdAt
-				id
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudBillingIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudCloudfrontIntegration {
 				__typename
-				createdAt
 				fetchLambdasAtEdge
 				fetchTags
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				tagKey
 				tagValue
-				updatedAt
 			}
 			... on CloudCloudtrailIntegration {
 				__typename
 				awsRegions
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudDynamodbIntegration {
 				__typename
 				awsRegions
-				createdAt
 				fetchExtendedInventory
 				fetchTags
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				tagKey
 				tagValue
-				updatedAt
 			}
 			... on CloudEbsIntegration {
 				__typename
 				awsRegions
-				createdAt
 				fetchExtendedInventory
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				tagKey
 				tagValue
-				updatedAt
 			}
 			... on CloudEc2Integration {
 				__typename
 				awsRegions
-				createdAt
 				fetchIpAddresses
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				tagKey
 				tagValue
-				updatedAt
 			}
 			... on CloudEcsIntegration {
 				__typename
 				awsRegions
-				createdAt
 				fetchTags
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				tagKey
 				tagValue
-				updatedAt
 			}
 			... on CloudEfsIntegration {
 				__typename
 				awsRegions
-				createdAt
 				fetchTags
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				tagKey
 				tagValue
-				updatedAt
 			}
 			... on CloudElasticacheIntegration {
 				__typename
 				awsRegions
-				createdAt
 				fetchTags
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				tagKey
 				tagValue
-				updatedAt
 			}
 			... on CloudElasticbeanstalkIntegration {
 				__typename
 				awsRegions
-				createdAt
 				fetchExtendedInventory
 				fetchTags
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				tagKey
 				tagValue
-				updatedAt
 			}
 			... on CloudElasticsearchIntegration {
 				__typename
 				awsRegions
-				createdAt
 				fetchNodes
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				tagKey
 				tagValue
-				updatedAt
 			}
 			... on CloudElbIntegration {
 				__typename
 				awsRegions
-				createdAt
 				fetchExtendedInventory
 				fetchTags
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudEmrIntegration {
 				__typename
 				awsRegions
-				createdAt
 				fetchTags
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				tagKey
 				tagValue
-				updatedAt
 			}
 			... on CloudGcpAppengineIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudGcpBigqueryIntegration {
 				__typename
-				createdAt
 				fetchTags
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudGcpDataflowIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudGcpDataprocIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudGcpDatastoreIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudGcpFirebasedatabaseIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudGcpFirebasehostingIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudGcpFirebasestorageIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudGcpFirestoreIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudGcpFunctionsIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudGcpInterconnectIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudGcpKubernetesIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudGcpLoadbalancingIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudGcpPubsubIntegration {
 				__typename
-				createdAt
 				fetchTags
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudGcpRouterIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudGcpRunIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudGcpSpannerIntegration {
 				__typename
-				createdAt
 				fetchTags
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudGcpSqlIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudGcpStorageIntegration {
 				__typename
-				createdAt
 				fetchTags
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudGcpVmsIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudGcpVpcaccessIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudHealthIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudIamIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				tagKey
 				tagValue
-				updatedAt
 			}
 			... on CloudIotIntegration {
 				__typename
 				awsRegions
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudKinesisFirehoseIntegration {
 				__typename
 				awsRegions
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudKinesisIntegration {
 				__typename
 				awsRegions
-				createdAt
 				fetchShards
 				fetchTags
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				tagKey
 				tagValue
-				updatedAt
 			}
 			... on CloudLambdaIntegration {
 				__typename
 				awsRegions
-				createdAt
 				fetchTags
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				tagKey
 				tagValue
-				updatedAt
 			}
 			... on CloudRdsIntegration {
 				__typename
 				awsRegions
-				createdAt
 				fetchTags
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				tagKey
 				tagValue
-				updatedAt
 			}
 			... on CloudRedshiftIntegration {
 				__typename
 				awsRegions
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				tagKey
 				tagValue
-				updatedAt
 			}
 			... on CloudRoute53Integration {
 				__typename
-				createdAt
 				fetchExtendedInventory
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudS3Integration {
 				__typename
-				createdAt
 				fetchExtendedInventory
 				fetchTags
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				tagKey
 				tagValue
-				updatedAt
 			}
 			... on CloudSesIntegration {
 				__typename
 				awsRegions
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudSnsIntegration {
 				__typename
 				awsRegions
-				createdAt
 				fetchExtendedInventory
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudSqsIntegration {
 				__typename
 				awsRegions
-				createdAt
 				fetchExtendedInventory
 				fetchTags
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				queuePrefixes
 				tagKey
 				tagValue
-				updatedAt
 			}
 			... on CloudTrustedadvisorIntegration {
 				__typename
-				createdAt
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
-				updatedAt
 			}
 			... on CloudVpcIntegration {
 				__typename
 				awsRegions
-				createdAt
 				fetchNatGateway
 				fetchVpn
-				id
 				inventoryPollingInterval
 				metricsPollingInterval
-				name
-				nrAccountId
 				tagKey
 				tagValue
-				updatedAt
 			}
 		}
 		name
@@ -1223,42 +703,18 @@ integrations {
 			... on CloudAwsGovCloudProvider {
 				__typename
 				awsAccountId
-				createdAt
-				icon
-				id
-				name
-				slug
-				updatedAt
 			}
 			... on CloudAwsProvider {
 				__typename
-				createdAt
-				icon
-				id
-				name
 				roleAccountId
 				roleExternalId
-				slug
-				updatedAt
 			}
 			... on CloudBaseProvider {
 				__typename
-				createdAt
-				icon
-				id
-				name
-				slug
-				updatedAt
 			}
 			... on CloudGcpProvider {
 				__typename
-				createdAt
-				icon
-				id
-				name
 				serviceAccountId
-				slug
-				updatedAt
 			}
 		}
 		updatedAt
@@ -1282,42 +738,18 @@ integrations {
 			... on CloudAwsGovCloudProvider {
 				__typename
 				awsAccountId
-				createdAt
-				icon
-				id
-				name
-				slug
-				updatedAt
 			}
 			... on CloudAwsProvider {
 				__typename
-				createdAt
-				icon
-				id
-				name
 				roleAccountId
 				roleExternalId
-				slug
-				updatedAt
 			}
 			... on CloudBaseProvider {
 				__typename
-				createdAt
-				icon
-				id
-				name
-				slug
-				updatedAt
 			}
 			... on CloudGcpProvider {
 				__typename
-				createdAt
-				icon
-				id
-				name
 				serviceAccountId
-				slug
-				updatedAt
 			}
 		}
 		slug
@@ -1327,10 +759,8 @@ integrations {
 	... on CloudAlbIntegration {
 		__typename
 		awsRegions
-		createdAt
 		fetchExtendedInventory
 		fetchTags
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -1344,8 +774,6 @@ integrations {
 		}
 		loadBalancerPrefixes
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -1357,13 +785,10 @@ integrations {
 		}
 		tagKey
 		tagValue
-		updatedAt
 	}
 	... on CloudApigatewayIntegration {
 		__typename
 		awsRegions
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -1376,8 +801,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -1390,13 +813,10 @@ integrations {
 		stagePrefixes
 		tagKey
 		tagValue
-		updatedAt
 	}
 	... on CloudAutoscalingIntegration {
 		__typename
 		awsRegions
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -1409,8 +829,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -1420,13 +838,10 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAwsAppsyncIntegration {
 		__typename
 		awsRegions
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -1439,8 +854,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -1450,13 +863,10 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAwsAthenaIntegration {
 		__typename
 		awsRegions
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -1469,8 +879,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -1480,13 +888,10 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAwsCognitoIntegration {
 		__typename
 		awsRegions
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -1499,8 +904,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -1510,13 +913,10 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAwsConnectIntegration {
 		__typename
 		awsRegions
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -1529,8 +929,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -1540,13 +938,10 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAwsDirectconnectIntegration {
 		__typename
 		awsRegions
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -1559,8 +954,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -1570,13 +963,10 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAwsDocdbIntegration {
 		__typename
 		awsRegions
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -1589,8 +979,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -1600,13 +988,10 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAwsFsxIntegration {
 		__typename
 		awsRegions
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -1619,8 +1004,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -1630,13 +1013,10 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAwsGlueIntegration {
 		__typename
 		awsRegions
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -1649,8 +1029,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -1660,13 +1038,10 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAwsKinesisanalyticsIntegration {
 		__typename
 		awsRegions
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -1679,8 +1054,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -1690,13 +1063,10 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAwsMediaconvertIntegration {
 		__typename
 		awsRegions
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -1709,8 +1079,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -1720,13 +1088,10 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAwsMediapackagevodIntegration {
 		__typename
 		awsRegions
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -1739,8 +1104,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -1750,13 +1113,10 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAwsMqIntegration {
 		__typename
 		awsRegions
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -1769,8 +1129,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -1780,13 +1138,10 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAwsMskIntegration {
 		__typename
 		awsRegions
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -1799,8 +1154,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -1810,13 +1163,10 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAwsNeptuneIntegration {
 		__typename
 		awsRegions
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -1829,8 +1179,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -1840,13 +1188,10 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAwsQldbIntegration {
 		__typename
 		awsRegions
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -1859,8 +1204,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -1870,13 +1213,10 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAwsRoute53resolverIntegration {
 		__typename
 		awsRegions
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -1889,8 +1229,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -1900,13 +1238,10 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAwsStatesIntegration {
 		__typename
 		awsRegions
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -1919,8 +1254,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -1930,13 +1263,10 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAwsTransitgatewayIntegration {
 		__typename
 		awsRegions
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -1949,8 +1279,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -1960,13 +1288,10 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAwsWafIntegration {
 		__typename
 		awsRegions
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -1979,8 +1304,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -1990,13 +1313,10 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAwsWafv2Integration {
 		__typename
 		awsRegions
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2009,8 +1329,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -2020,13 +1338,10 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAwsXrayIntegration {
 		__typename
 		awsRegions
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2039,8 +1354,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -2050,12 +1363,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAzureApimanagementIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2068,8 +1378,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		resourceGroups
 		service {
 			createdAt
@@ -2080,12 +1388,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAzureAppgatewayIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2098,8 +1403,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		resourceGroups
 		service {
 			createdAt
@@ -2110,12 +1413,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAzureAppserviceIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2128,8 +1428,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		resourceGroups
 		service {
 			createdAt
@@ -2140,12 +1438,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAzureContainersIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2158,8 +1453,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		resourceGroups
 		service {
 			createdAt
@@ -2170,12 +1463,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAzureCosmosdbIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2188,8 +1478,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		resourceGroups
 		service {
 			createdAt
@@ -2200,12 +1488,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAzureCostmanagementIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2218,8 +1503,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -2230,12 +1513,9 @@ integrations {
 			updatedAt
 		}
 		tagKeys
-		updatedAt
 	}
 	... on CloudAzureDatafactoryIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2248,8 +1528,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		resourceGroups
 		service {
 			createdAt
@@ -2260,12 +1538,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAzureEventhubIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2278,8 +1553,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		resourceGroups
 		service {
 			createdAt
@@ -2290,12 +1563,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAzureExpressrouteIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2308,8 +1578,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		resourceGroups
 		service {
 			createdAt
@@ -2320,12 +1588,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAzureFirewallsIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2338,8 +1603,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		resourceGroups
 		service {
 			createdAt
@@ -2350,12 +1613,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAzureFrontdoorIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2368,8 +1628,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		resourceGroups
 		service {
 			createdAt
@@ -2380,12 +1638,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAzureFunctionsIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2398,8 +1653,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		resourceGroups
 		service {
 			createdAt
@@ -2410,12 +1663,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAzureKeyvaultIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2428,8 +1678,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		resourceGroups
 		service {
 			createdAt
@@ -2440,12 +1688,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAzureLoadbalancerIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2458,8 +1703,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		resourceGroups
 		service {
 			createdAt
@@ -2470,12 +1713,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAzureLogicappsIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2488,8 +1728,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		resourceGroups
 		service {
 			createdAt
@@ -2500,12 +1738,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAzureMachinelearningIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2518,8 +1753,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		resourceGroups
 		service {
 			createdAt
@@ -2530,12 +1763,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAzureMariadbIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2548,8 +1778,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		resourceGroups
 		service {
 			createdAt
@@ -2560,12 +1788,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAzureMysqlIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2578,8 +1803,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		resourceGroups
 		service {
 			createdAt
@@ -2590,12 +1813,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAzurePostgresqlIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2608,8 +1828,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		resourceGroups
 		service {
 			createdAt
@@ -2620,12 +1838,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAzurePowerbidedicatedIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2638,8 +1853,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		resourceGroups
 		service {
 			createdAt
@@ -2650,12 +1863,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAzureRediscacheIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2668,8 +1878,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		resourceGroups
 		service {
 			createdAt
@@ -2680,12 +1888,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAzureServicebusIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2698,8 +1903,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		resourceGroups
 		service {
 			createdAt
@@ -2710,12 +1913,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAzureServicefabricIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2728,8 +1928,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		resourceGroups
 		service {
 			createdAt
@@ -2740,12 +1938,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAzureSqlIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2758,8 +1953,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		resourceGroups
 		service {
 			createdAt
@@ -2770,12 +1963,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAzureSqlmanagedIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2788,8 +1978,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		resourceGroups
 		service {
 			createdAt
@@ -2800,12 +1988,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAzureStorageIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2818,8 +2003,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		resourceGroups
 		service {
 			createdAt
@@ -2830,12 +2013,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAzureVirtualmachineIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2848,8 +2028,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		resourceGroups
 		service {
 			createdAt
@@ -2860,12 +2038,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAzureVirtualnetworksIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2878,8 +2053,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		resourceGroups
 		service {
 			createdAt
@@ -2890,12 +2063,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAzureVmsIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2908,8 +2078,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		resourceGroups
 		service {
 			createdAt
@@ -2920,12 +2088,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudAzureVpngatewaysIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2938,8 +2103,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		resourceGroups
 		service {
 			createdAt
@@ -2950,12 +2113,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudBaseIntegration {
 		__typename
-		createdAt
-		id
 		linkedAccount {
 			authLabel
 			createdAt
@@ -2966,8 +2126,6 @@ integrations {
 			nrAccountId
 			updatedAt
 		}
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -2977,12 +2135,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudBillingIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -2995,8 +2150,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3006,14 +2159,11 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudCloudfrontIntegration {
 		__typename
-		createdAt
 		fetchLambdasAtEdge
 		fetchTags
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3026,8 +2176,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3039,13 +2187,10 @@ integrations {
 		}
 		tagKey
 		tagValue
-		updatedAt
 	}
 	... on CloudCloudtrailIntegration {
 		__typename
 		awsRegions
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3058,8 +2203,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3069,15 +2212,12 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudDynamodbIntegration {
 		__typename
 		awsRegions
-		createdAt
 		fetchExtendedInventory
 		fetchTags
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3090,8 +2230,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3103,14 +2241,11 @@ integrations {
 		}
 		tagKey
 		tagValue
-		updatedAt
 	}
 	... on CloudEbsIntegration {
 		__typename
 		awsRegions
-		createdAt
 		fetchExtendedInventory
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3123,8 +2258,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3136,14 +2269,11 @@ integrations {
 		}
 		tagKey
 		tagValue
-		updatedAt
 	}
 	... on CloudEc2Integration {
 		__typename
 		awsRegions
-		createdAt
 		fetchIpAddresses
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3156,8 +2286,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3169,14 +2297,11 @@ integrations {
 		}
 		tagKey
 		tagValue
-		updatedAt
 	}
 	... on CloudEcsIntegration {
 		__typename
 		awsRegions
-		createdAt
 		fetchTags
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3189,8 +2314,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3202,14 +2325,11 @@ integrations {
 		}
 		tagKey
 		tagValue
-		updatedAt
 	}
 	... on CloudEfsIntegration {
 		__typename
 		awsRegions
-		createdAt
 		fetchTags
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3222,8 +2342,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3235,14 +2353,11 @@ integrations {
 		}
 		tagKey
 		tagValue
-		updatedAt
 	}
 	... on CloudElasticacheIntegration {
 		__typename
 		awsRegions
-		createdAt
 		fetchTags
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3255,8 +2370,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3268,15 +2381,12 @@ integrations {
 		}
 		tagKey
 		tagValue
-		updatedAt
 	}
 	... on CloudElasticbeanstalkIntegration {
 		__typename
 		awsRegions
-		createdAt
 		fetchExtendedInventory
 		fetchTags
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3289,8 +2399,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3302,14 +2410,11 @@ integrations {
 		}
 		tagKey
 		tagValue
-		updatedAt
 	}
 	... on CloudElasticsearchIntegration {
 		__typename
 		awsRegions
-		createdAt
 		fetchNodes
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3322,8 +2427,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3335,15 +2438,12 @@ integrations {
 		}
 		tagKey
 		tagValue
-		updatedAt
 	}
 	... on CloudElbIntegration {
 		__typename
 		awsRegions
-		createdAt
 		fetchExtendedInventory
 		fetchTags
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3356,8 +2456,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3367,14 +2465,11 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudEmrIntegration {
 		__typename
 		awsRegions
-		createdAt
 		fetchTags
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3387,8 +2482,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3400,12 +2493,9 @@ integrations {
 		}
 		tagKey
 		tagValue
-		updatedAt
 	}
 	... on CloudGcpAppengineIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3418,8 +2508,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3429,13 +2517,10 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudGcpBigqueryIntegration {
 		__typename
-		createdAt
 		fetchTags
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3448,8 +2533,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3459,12 +2542,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudGcpDataflowIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3477,8 +2557,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3488,12 +2566,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudGcpDataprocIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3506,8 +2581,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3517,12 +2590,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudGcpDatastoreIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3535,8 +2605,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3546,12 +2614,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudGcpFirebasedatabaseIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3564,8 +2629,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3575,12 +2638,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudGcpFirebasehostingIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3593,8 +2653,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3604,12 +2662,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudGcpFirebasestorageIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3622,8 +2677,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3633,12 +2686,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudGcpFirestoreIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3651,8 +2701,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3662,12 +2710,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudGcpFunctionsIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3680,8 +2725,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3691,12 +2734,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudGcpInterconnectIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3709,8 +2749,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3720,12 +2758,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudGcpKubernetesIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3738,8 +2773,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3749,12 +2782,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudGcpLoadbalancingIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3767,8 +2797,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3778,13 +2806,10 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudGcpPubsubIntegration {
 		__typename
-		createdAt
 		fetchTags
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3797,8 +2822,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3808,12 +2831,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudGcpRouterIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3826,8 +2846,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3837,12 +2855,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudGcpRunIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3855,8 +2870,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3866,13 +2879,10 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudGcpSpannerIntegration {
 		__typename
-		createdAt
 		fetchTags
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3885,8 +2895,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3896,12 +2904,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudGcpSqlIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3914,8 +2919,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3925,13 +2928,10 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudGcpStorageIntegration {
 		__typename
-		createdAt
 		fetchTags
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3944,8 +2944,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3955,12 +2953,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudGcpVmsIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -3973,8 +2968,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -3984,12 +2977,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudGcpVpcaccessIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -4002,8 +2992,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -4013,12 +3001,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudHealthIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -4031,8 +3016,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -4042,12 +3025,9 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudIamIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -4060,8 +3040,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -4073,13 +3051,10 @@ integrations {
 		}
 		tagKey
 		tagValue
-		updatedAt
 	}
 	... on CloudIotIntegration {
 		__typename
 		awsRegions
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -4092,8 +3067,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -4103,13 +3076,10 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudKinesisFirehoseIntegration {
 		__typename
 		awsRegions
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -4122,8 +3092,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -4133,15 +3101,12 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudKinesisIntegration {
 		__typename
 		awsRegions
-		createdAt
 		fetchShards
 		fetchTags
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -4154,8 +3119,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -4167,14 +3130,11 @@ integrations {
 		}
 		tagKey
 		tagValue
-		updatedAt
 	}
 	... on CloudLambdaIntegration {
 		__typename
 		awsRegions
-		createdAt
 		fetchTags
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -4187,8 +3147,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -4200,14 +3158,11 @@ integrations {
 		}
 		tagKey
 		tagValue
-		updatedAt
 	}
 	... on CloudRdsIntegration {
 		__typename
 		awsRegions
-		createdAt
 		fetchTags
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -4220,8 +3175,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -4233,13 +3186,10 @@ integrations {
 		}
 		tagKey
 		tagValue
-		updatedAt
 	}
 	... on CloudRedshiftIntegration {
 		__typename
 		awsRegions
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -4252,8 +3202,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -4265,13 +3213,10 @@ integrations {
 		}
 		tagKey
 		tagValue
-		updatedAt
 	}
 	... on CloudRoute53Integration {
 		__typename
-		createdAt
 		fetchExtendedInventory
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -4284,8 +3229,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -4295,14 +3238,11 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudS3Integration {
 		__typename
-		createdAt
 		fetchExtendedInventory
 		fetchTags
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -4315,8 +3255,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -4328,13 +3266,10 @@ integrations {
 		}
 		tagKey
 		tagValue
-		updatedAt
 	}
 	... on CloudSesIntegration {
 		__typename
 		awsRegions
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -4347,8 +3282,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -4358,14 +3291,11 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudSnsIntegration {
 		__typename
 		awsRegions
-		createdAt
 		fetchExtendedInventory
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -4378,8 +3308,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -4389,15 +3317,12 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudSqsIntegration {
 		__typename
 		awsRegions
-		createdAt
 		fetchExtendedInventory
 		fetchTags
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -4410,8 +3335,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		queuePrefixes
 		service {
 			createdAt
@@ -4424,12 +3347,9 @@ integrations {
 		}
 		tagKey
 		tagValue
-		updatedAt
 	}
 	... on CloudTrustedadvisorIntegration {
 		__typename
-		createdAt
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -4442,8 +3362,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -4453,15 +3371,12 @@ integrations {
 			slug
 			updatedAt
 		}
-		updatedAt
 	}
 	... on CloudVpcIntegration {
 		__typename
 		awsRegions
-		createdAt
 		fetchNatGateway
 		fetchVpn
-		id
 		inventoryPollingInterval
 		linkedAccount {
 			authLabel
@@ -4474,8 +3389,6 @@ integrations {
 			updatedAt
 		}
 		metricsPollingInterval
-		name
-		nrAccountId
 		service {
 			createdAt
 			icon
@@ -4487,7 +3400,6 @@ integrations {
 		}
 		tagKey
 		tagValue
-		updatedAt
 	}
 }
 name
@@ -4515,42 +3427,18 @@ provider {
 			... on CloudAwsGovCloudProvider {
 				__typename
 				awsAccountId
-				createdAt
-				icon
-				id
-				name
-				slug
-				updatedAt
 			}
 			... on CloudAwsProvider {
 				__typename
-				createdAt
-				icon
-				id
-				name
 				roleAccountId
 				roleExternalId
-				slug
-				updatedAt
 			}
 			... on CloudBaseProvider {
 				__typename
-				createdAt
-				icon
-				id
-				name
-				slug
-				updatedAt
 			}
 			... on CloudGcpProvider {
 				__typename
-				createdAt
-				icon
-				id
-				name
 				serviceAccountId
-				slug
-				updatedAt
 			}
 		}
 		slug
@@ -4561,10 +3449,6 @@ provider {
 	... on CloudAwsGovCloudProvider {
 		__typename
 		awsAccountId
-		createdAt
-		icon
-		id
-		name
 		services {
 			createdAt
 			icon
@@ -4574,15 +3458,9 @@ provider {
 			slug
 			updatedAt
 		}
-		slug
-		updatedAt
 	}
 	... on CloudAwsProvider {
 		__typename
-		createdAt
-		icon
-		id
-		name
 		roleAccountId
 		roleExternalId
 		services {
@@ -4594,15 +3472,9 @@ provider {
 			slug
 			updatedAt
 		}
-		slug
-		updatedAt
 	}
 	... on CloudBaseProvider {
 		__typename
-		createdAt
-		icon
-		id
-		name
 		services {
 			createdAt
 			icon
@@ -4612,15 +3484,9 @@ provider {
 			slug
 			updatedAt
 		}
-		slug
-		updatedAt
 	}
 	... on CloudGcpProvider {
 		__typename
-		createdAt
-		icon
-		id
-		name
 		serviceAccountId
 		services {
 			createdAt
@@ -4631,8 +3497,6 @@ provider {
 			slug
 			updatedAt
 		}
-		slug
-		updatedAt
 	}
 }
 updatedAt
