@@ -67,9 +67,8 @@ type Query struct {
 	// Path is the path of TypeNames in GraphQL that precede the objects being queried.
 	Path []string `yaml:"path,omitempty"`
 	// Names is a list of TypeName entries that will be found at the above Path.
-	Endpoints []string `yaml:"endpoints,omitempty"`
+	Endpoints []EndpointConfig `yaml:"endpoints,omitempty"`
 }
-
 type Command struct {
 	Name             string        `yaml:"name,omitempty"`
 	ShortDescription string        `yaml:"shortDescription,omitempty"`
@@ -105,7 +104,13 @@ type GeneratorConfig struct {
 // MutationConfig is the information about the GraphQL mutations.
 type MutationConfig struct {
 	// Name is the name of the GraphQL method.
-	Name string `yaml:"name"`
+	Name               string `yaml:"name"`
+	MaxQueryFieldDepth int    `yaml:"maxQueryFieldDepth,omitempty"`
+}
+
+type EndpointConfig struct {
+	Name               string `yaml:"name,omitempty"`
+	MaxQueryFieldDepth int    `yaml:"maxQueryFieldDepth,omitempty"`
 }
 
 // TypeConfig is the information about which types to render and any data specific to handling of the type.
