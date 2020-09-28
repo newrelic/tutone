@@ -137,18 +137,22 @@ func GenerateGoMethodQueriesForPackage(s *schema.Schema, genConfig *config.Gener
 			returnPath = append(returnPath, strings.Title(t))
 		}
 
-		for _, endpointName := range pkgQuery.Endpoints {
+		// The endpoint we care about will always be on the last of the path elements specified.
+		t := typePath[len(typePath)-1]
 
-			// The endpoint we care about will always be on the last of the path elements specified.
-			t := typePath[len(typePath)-1]
-
+		// Find the intersection of the received endpoint and the field name on the last type in the path.
+		// For example, given the following path...
+		// actor { cloud { } }
+		// ... we want to generate the method based on the Type of the field 'cloud'.
+		for _, endpoint := range pkgQuery.Endpoints {
 			for _, field := range t.Fields {
-				if field.Name == endpointName {
+				if field.Name == endpoint.Name {
+
 					method := goMethodForField(s, field, pkgConfig)
 
-					method.QueryString = s.GetQueryStringForEndpoint(t.Name, endpointName)
+					method.QueryString = s.GetQueryStringForEndpoint(typePath, pkgQuery.Path, endpoint.Name, endpoint.MaxQueryFieldDepth)
+					method.ResponseObjectType = fmt.Sprintf("%sResponse", endpoint.Name)
 					method.Signature.ReturnPath = returnPath
-					method.ResponseObjectType = fmt.Sprintf("%sResponse", endpointName)
 
 					methods = append(methods, method)
 				}
@@ -177,17 +181,28 @@ func GenerateGoMethodMutationsForPackage(s *schema.Schema, genConfig *config.Gen
 		return nil, nil
 	}
 
-	for _, field := range s.MutationType.Fields {
-		for _, pkgMutation := range pkgConfig.Mutations {
-
-			if field.Name == pkgMutation.Name {
-				method := goMethodForField(s, field, pkgConfig)
-				method.QueryString = schema.PrefixLineTab(s.QueryFieldsForTypeName(field.Type.Name))
-
-				methods = append(methods, method)
-			}
+	// for _, field := range s.MutationType.Fields {
+	for _, pkgMutation := range pkgConfig.Mutations {
+		field, err := s.LookupMutationByName(pkgMutation.Name)
+		if err != nil {
+			log.Error(err)
+			continue
 		}
+
+		if field == nil {
+			log.Errorf("unable to generate mutation from nil field, %s", pkgMutation.Name)
+			continue
+		}
+
+		// if field.Name == pkgMutation.Name {
+		method := goMethodForField(s, *field, pkgConfig)
+		// method.QueryString = schema.PrefixLineTab(s.QueryFieldsForTypeName(field.Type.GetTypeName(), pkgMutation.MaxQueryFieldDepth))
+		method.QueryString = s.GetQueryStringForMutation(field, pkgMutation.MaxQueryFieldDepth)
+
+		methods = append(methods, method)
+		// }
 	}
+	// }
 
 	if len(methods) > 0 {
 		sort.SliceStable(methods, func(i, j int) bool {
@@ -440,7 +455,7 @@ func constrainedResponseStructs(s *schema.Schema, pkgConfig *config.PackageConfi
 		for _, endpoint := range query.Endpoints {
 
 			xxx := GoStruct{
-				Name: fmt.Sprintf("%sResponse", endpoint),
+				Name: fmt.Sprintf("%sResponse", endpoint.Name),
 			}
 
 			// For the top level response object, we only use the first field path that is received from the user.
