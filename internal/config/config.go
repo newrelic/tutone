@@ -89,6 +89,8 @@ type GeneratorConfig struct {
 	FileName string `yaml:"fileName,omitempty"`
 	// TemplateName is the name of the template within the TemplateDir.
 	TemplateName string `yaml:"templateName,omitempty"`
+	// TemplateURL is a URL to a downloadable file to use as a Go template
+	TemplateURL string `yaml:"templateURL,omitempty"`
 }
 
 // MutationConfig is the information about the GraphQL mutations.

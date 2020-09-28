@@ -2,6 +2,8 @@ package command
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 
 	log "github.com/sirupsen/logrus"
@@ -30,24 +32,23 @@ func hydrateCommand(s *schema.Schema, command config.Command) lang.Command {
 		Example:          command.Example,
 	}
 
-	if len(command.Subcommands) > 0 {
-		cmd.Subcommands = make([]lang.Command, len(command.Subcommands))
+	if len(command.Subcommands) == 0 {
+		return lang.Command{} // TODO: Return an error instead
+	}
 
-		for i, subCmdConfig := range command.Subcommands {
-			cmdType, err := s.LookupRootMutationTypeFieldByName(subCmdConfig.Name)
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Print("\n\n **************************** \n")
+	cmd.Subcommands = make([]lang.Command, len(command.Subcommands))
 
-			// TODO: set a "mutation" or "query" type on the subcommand tutone config
-			// or maybe just a boolean "isMutation" or something like that
-
-			subCommand := hydrateMutationSubcommand(s, cmdType, subCmdConfig)
-			cmd.Subcommands[i] = *subCommand
-
-			fmt.Print("\n **************************** \n\n")
+	for i, subCmdConfig := range command.Subcommands {
+		cmdType, err := s.LookupRootMutationTypeFieldByName(subCmdConfig.Name)
+		if err != nil {
+			log.Fatal(err)
 		}
+
+		// TODO: set a "mutation" or "query" type on the subcommand tutone config
+		// or maybe just a boolean "isMutation" or something like that
+
+		subCommand := hydrateMutationSubcommand(s, cmdType, subCmdConfig)
+		cmd.Subcommands[i] = *subCommand
 	}
 
 	return cmd
@@ -68,10 +69,6 @@ func hydrateFlagsFromSchema(args []schema.Field, cmdConfig config.Command) []lan
 		typ, _, _ := arg.Type.GetType()
 		typeName := arg.Type.GetTypeName()
 
-		// fmt.Printf("\n ARG:          %+v \n", arg)
-		// fmt.Printf("\n GetType:      %+v \n", typ)
-		// fmt.Printf("\n GetTypeName:  %+v \n", typeName)
-
 		// TODO: Put this into a helper method or find an existing helper method
 		isOfTypeScalarID := typeName == "ID" && arg.Type.OfType.Kind == schema.KindScalar
 		if isOfTypeScalarID {
@@ -83,7 +80,11 @@ func hydrateFlagsFromSchema(args []schema.Field, cmdConfig config.Command) []lan
 			variableType = typ
 		}
 
-		flags = append(flags, lang.CommandFlag{
+		isRequired := arg.Type.Kind == schema.KindNonNull
+		isInputType := arg.Type.OfType.Kind == schema.KindInputObject
+		clientType := fmt.Sprintf("%s.%s", cmdConfig.ClientPackageName, typ)
+
+		flag := lang.CommandFlag{
 			Name:           arg.Name,
 			Type:           typ,
 			FlagMethodName: getCobraFlagMethodName(typ),
@@ -91,10 +92,12 @@ func hydrateFlagsFromSchema(args []schema.Field, cmdConfig config.Command) []lan
 			Description:    arg.Description,
 			VariableName:   variableName,
 			VariableType:   variableType,
-			Required:       arg.Type.Kind == "NON_NULL",
-			IsInputType:    arg.Type.OfType.Kind == schema.KindInputObject,
-			ClientType:     cmdConfig.ClientPackageName + "." + typ,
-		})
+			Required:       isRequired,
+			IsInputType:    isInputType,
+			ClientType:     clientType,
+		}
+
+		flags = append(flags, flag)
 	}
 
 	fmt.Printf("\n FLAGS:  %+v \n", flags)
@@ -160,14 +163,44 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 	return nil
 }
 
+// const templateURL = "https://raw.githubusercontent.com/newrelic/tutone/master/templates/command/command.go.tmpl"
+
+func getRemoteTemplateAsString(url string) (string, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	var respString string
+	if resp.StatusCode == http.StatusOK {
+		respBytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return "", err
+		}
+		respString = string(respBytes)
+	}
+
+	return respString, nil
+}
+
 func (g *Generator) Execute(genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig) error {
 	log.Debugf("Execute...")
 
+	var templateStr string
 	var err error
 
 	destinationPath := GetDestinationPath(pkgConfig)
 	if err = MakeDir(destinationPath); err != nil {
 		return err
+	}
+
+	hasTemplateURL := genConfig.TemplateURL != ""
+	hasTemplateDir := genConfig.TemplateDir != ""
+
+	if hasTemplateURL {
+		// TODO: handle error and optimize
+		templateStr, _ = getRemoteTemplateAsString(genConfig.TemplateURL)
 	}
 
 	for _, command := range pkgConfig.Commands {
@@ -185,8 +218,12 @@ func (g *Generator) Execute(genConfig *config.GeneratorConfig, pkgConfig *config
 			return err
 		}
 
+		if hasTemplateURL && hasTemplateDir {
+			return fmt.Errorf("generator configuration error: please set `templateDir` or `templateURL`, but not both")
+		}
+
 		templateDir := "templates/command"
-		if genConfig.TemplateDir != "" {
+		if hasTemplateDir {
 			templateDir, err = codegen.RenderStringFromGenerator(genConfig.TemplateDir, g)
 			if err != nil {
 				return err
@@ -200,8 +237,16 @@ func (g *Generator) Execute(genConfig *config.GeneratorConfig, pkgConfig *config
 			DestinationDir:  destinationPath,
 		}
 
-		if err := c.WriteFile(g); err != nil {
-			return err
+		// TODO: Provide a default template URL
+
+		if templateStr != "" {
+			if err := c.WriteFileFromTemplateString(g, templateStr); err != nil {
+				return err
+			}
+		} else {
+			if err := c.WriteFile(g); err != nil {
+				return err
+			}
 		}
 
 		printSuccessMessage(pkgConfig, destinationFile)
