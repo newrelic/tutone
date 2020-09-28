@@ -126,7 +126,9 @@ func ExpandTypes(s *Schema, pkgConfig *config.PackageConfig) (*[]*Type, error) {
 
 			queries := []string{}
 			for _, pkgQuery := range pkgConfig.Queries {
-				queries = append(queries, pkgQuery.Endpoints...)
+				for _, q := range pkgQuery.Endpoints {
+					queries = append(queries, q.Name)
+				}
 			}
 
 			for _, field := range schemaType.Fields {
