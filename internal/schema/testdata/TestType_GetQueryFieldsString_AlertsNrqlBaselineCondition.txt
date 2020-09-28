@@ -1,0 +1,30 @@
+baselineDirection
+description
+enabled
+expiration {
+	closeViolationsOnExpiration
+	expirationDuration
+	openViolationOnExpiration
+}
+id
+name
+nrql {
+	evaluationOffset
+	query
+}
+policyId
+runbookUrl
+signal {
+	evaluationOffset
+	fillOption
+	fillValue
+}
+terms {
+	operator
+	priority
+	threshold
+	thresholdDuration
+	thresholdOccurrences
+}
+type
+violationTimeLimit

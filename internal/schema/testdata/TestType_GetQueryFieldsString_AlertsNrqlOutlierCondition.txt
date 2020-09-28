@@ -1,0 +1,31 @@
+description
+enabled
+expectedGroups
+expiration {
+	closeViolationsOnExpiration
+	expirationDuration
+	openViolationOnExpiration
+}
+id
+name
+nrql {
+	evaluationOffset
+	query
+}
+openViolationOnGroupOverlap
+policyId
+runbookUrl
+signal {
+	evaluationOffset
+	fillOption
+	fillValue
+}
+terms {
+	operator
+	priority
+	threshold
+	thresholdDuration
+	thresholdOccurrences
+}
+type
+violationTimeLimit

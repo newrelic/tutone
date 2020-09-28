@@ -171,7 +171,7 @@ func TestSchema_GetQueryStringForEndpoint(t *testing.T) {
 		require.NoError(t, err)
 
 		result := s.GetQueryStringForEndpoint(typePath, tc.Path, tc.Field, tc.Depth)
-		saveFixture(t, n, result)
+		// saveFixture(t, n, result)
 		expected := loadFixture(t, n)
 		assert.Equal(t, expected, result)
 	}
