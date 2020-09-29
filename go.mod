@@ -3,7 +3,7 @@ module github.com/newrelic/tutone
 go 1.14
 
 require (
-	github.com/Masterminds/sprig v2.22.0+incompatible
+	github.com/Masterminds/sprig/v3 v3.1.0
 	github.com/Masterminds/sprig/v3 v3.1.0
 	github.com/client9/misspell v0.3.4
 	github.com/git-chglog/git-chglog v0.0.0-20200414013904-db796966b373
