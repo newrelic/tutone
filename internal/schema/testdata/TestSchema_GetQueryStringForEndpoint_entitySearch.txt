@@ -1,0 +1,115 @@
+query(
+	$query: String,
+	$queryBuilder: EntitySearchQueryBuilder,
+	$sortBy: [EntitySearchSortCriteria],
+) { actor { entitySearch(
+	query: $query,
+	queryBuilder: $queryBuilder,
+	sortBy: $sortBy,
+) {
+	count
+	counts {
+		count
+		facet
+	}
+	query
+	results {
+		entities {
+			__typename
+			account {
+				id
+				name
+				reportingEventTypes
+			}
+			accountId
+			domain
+			entityType
+			guid
+			indexedAt
+			name
+			permalink
+			reporting
+			tags {
+				key
+				values
+			}
+			type
+			... on ApmApplicationEntityOutline {
+				__typename
+				alertSeverity
+				applicationId
+				language
+			}
+			... on ApmDatabaseInstanceEntityOutline {
+				__typename
+				host
+				portOrPath
+				vendor
+			}
+			... on ApmExternalServiceEntityOutline {
+				__typename
+				host
+			}
+			... on BrowserApplicationEntityOutline {
+				__typename
+				alertSeverity
+				applicationId
+				servingApmApplicationId
+			}
+			... on DashboardEntityOutline {
+				__typename
+				dashboardParentGuid
+			}
+			... on GenericEntityOutline {
+				__typename
+			}
+			... on GenericInfrastructureEntityOutline {
+				__typename
+				alertSeverity
+				integrationTypeCode
+			}
+			... on InfrastructureAwsLambdaFunctionEntityOutline {
+				__typename
+				alertSeverity
+				integrationTypeCode
+				runtime
+			}
+			... on InfrastructureHostEntityOutline {
+				__typename
+				alertSeverity
+			}
+			... on MobileApplicationEntityOutline {
+				__typename
+				alertSeverity
+				applicationId
+			}
+			... on SyntheticMonitorEntityOutline {
+				__typename
+				alertSeverity
+				monitorId
+				monitorType
+				monitoredUrl
+				period
+			}
+			... on ThirdPartyServiceEntityOutline {
+				__typename
+			}
+			... on UnavailableEntityOutline {
+				__typename
+			}
+			... on WorkloadEntityOutline {
+				__typename
+				alertSeverity
+				createdAt
+				updatedAt
+			}
+		}
+		nextCursor
+	}
+	types {
+		count
+		domain
+		entityType
+		type
+	}
+} } }

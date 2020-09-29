@@ -71,11 +71,5 @@ func (f *Field) GetTags() string {
 
 	jsonTag := "`json:\"" + f.Name
 
-	// Overrides
-	// if strings.EqualFold(f.Name, "id") {
-	// BUG for values that have been overridden in the config, this should not be assumed.
-	// 	jsonTag += ",string"
-	// }
-
 	return jsonTag + "\"`"
 }

@@ -123,6 +123,23 @@ func ExpandTypes(s *Schema, pkgConfig *config.PackageConfig) (*[]*Type, error) {
 					log.Error(err)
 				}
 			}
+
+			queries := []string{}
+			for _, pkgQuery := range pkgConfig.Queries {
+				for _, q := range pkgQuery.Endpoints {
+					queries = append(queries, q.Name)
+				}
+			}
+
+			for _, field := range schemaType.Fields {
+				if stringInStrings(field.Name, queries) {
+					err = expander.ExpandTypeFromName(field.Type.GetTypeName())
+					if err != nil {
+						log.Error(err)
+					}
+				}
+			}
+
 		}
 	}
 
@@ -142,17 +159,16 @@ func ExpandTypes(s *Schema, pkgConfig *config.PackageConfig) (*[]*Type, error) {
 			}
 
 			for _, mutationArg := range field.Args {
-				if mutationArg.Type.OfType != nil {
-					err := expander.ExpandTypeFromName(mutationArg.Type.OfType.GetTypeName())
-					if err != nil {
-						log.WithFields(log.Fields{
-							"name": mutationArg.Name,
-							"type": mutationArg.Type,
-						}).Errorf("failed to expand mutation argument: %s", err)
-					}
+				err := expander.ExpandTypeFromName(mutationArg.Type.GetTypeName())
+				if err != nil {
+					log.WithFields(log.Fields{
+						"name": mutationArg.Name,
+						"type": mutationArg.Type,
+					}).Errorf("failed to expand mutation argument: %s", err)
 				}
 			}
 		}
+
 	}
 
 	return expander.ExpandedTypes(), nil

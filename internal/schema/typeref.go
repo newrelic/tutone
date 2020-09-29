@@ -31,7 +31,7 @@ func (r *TypeRef) IsList() bool {
 func (r *TypeRef) GetKinds() []Kind {
 	tree := []Kind{}
 
-	if r.Kind != "" && r.Kind != KindNonNull {
+	if r.Kind != "" {
 		tree = append(tree, r.Kind)
 	}
 

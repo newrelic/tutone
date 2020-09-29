@@ -3,13 +3,40 @@
 package schema
 
 import (
+	"fmt"
+	"io/ioutil"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tj/assert"
 )
 
-func TestQueryArgs(t *testing.T) {
+func saveFixture(t *testing.T, n, s string) {
+	wd, _ := os.Getwd()
+	fileName := fmt.Sprintf("testdata/%s_%s.txt", t.Name(), n)
+	t.Logf("saving fixture to %s/%s", wd, fileName)
+
+	os.Mkdir("testdata", 0750)
+
+	f, err := os.Create(fileName)
+	require.NoError(t, err)
+	f.WriteString(s)
+	defer f.Close()
+}
+
+func loadFixture(t *testing.T, n string) string {
+	fileName := fmt.Sprintf("testdata/%s_%s.txt", t.Name(), n)
+	t.Logf("loading fixture %s", strings.TrimPrefix(fileName, "testdata/"))
+
+	content, err := ioutil.ReadFile(fileName)
+	require.NoError(t, err)
+
+	return string(content)
+}
+
+func TestSchema_QueryArgs(t *testing.T) {
 	t.Parallel()
 
 	// schema cached by 'make test-prep'
@@ -59,6 +86,13 @@ func TestQueryArgs(t *testing.T) {
 				{Key: "timeWindow", Value: "TimeWindowInput"},
 			},
 		},
+		"linkedAccounts": {
+			Name:   "CloudActorFields",
+			Fields: []string{"linkedAccounts"},
+			Results: []QueryArg{
+				{Key: "provider", Value: "String"},
+			},
+		},
 	}
 
 	for _, tc := range cases {
@@ -70,36 +104,44 @@ func TestQueryArgs(t *testing.T) {
 	}
 }
 
-func TestGetQueryStringForEndpoint(t *testing.T) {
+func TestSchema_LookupTypesByFieldPath(t *testing.T) {
 	t.Parallel()
 
 	// schema cached by 'make test-prep'
 	s, err := Load("../../testdata/schema.json")
 	require.NoError(t, err)
 
+	actorType, err := s.LookupTypeByName("Actor")
+	require.NoError(t, err)
+	cloudType, err := s.LookupTypeByName("CloudActorFields")
+	require.NoError(t, err)
+
 	cases := map[string]struct {
-		TypeName string
-		Field    string
-		Result   string
+		FieldPath []string
+		Result    []*Type
 	}{
-		"entities": {
-			TypeName: "Actor",
-			Field:    "entitySearch",
-			Result:   entitiesQuery,
-			// entityQuery,
-			// entitySearchQuery,
+		"cloud": {
+			FieldPath: []string{"actor", "cloud"},
+			Result:    []*Type{actorType, cloudType},
 		},
 	}
 
 	for n, tc := range cases {
 		t.Logf("TestCase: %s", n)
 
-		result := s.GetQueryStringForEndpoint(tc.TypeName, tc.Field)
-		assert.Equal(t, tc.Result, result)
+		result, err := s.LookupQueryTypesByFieldPath(tc.FieldPath)
+		require.NoError(t, err)
+
+		require.Equal(t, len(tc.Result), len(result))
+
+		for i := range tc.Result {
+			assert.Equal(t, tc.Result[i], result[i])
+		}
 	}
+
 }
 
-func TestTypeQueryFields(t *testing.T) {
+func TestSchema_GetQueryStringForEndpoint(t *testing.T) {
 	t.Parallel()
 
 	// schema cached by 'make test-prep'
@@ -107,195 +149,59 @@ func TestTypeQueryFields(t *testing.T) {
 	require.NoError(t, err)
 
 	cases := map[string]struct {
-		TypeName string
-		Result   string
+		Path  []string
+		Field string
+		Depth int
 	}{
-		"AlertsNrqlCondition": {
-			TypeName: "AlertsNrqlCondition",
-			Result: alertsNrqlCondition + `
-... on AlertsNrqlBaselineCondition {
-` + PrefixLineTab(alertsNrqlBaselineCondition) + `
-}
-... on AlertsNrqlOutlierCondition {
-` + PrefixLineTab(alertsNrqlOutlierCondition) + `
-}
-... on AlertsNrqlStaticCondition {
-` + PrefixLineTab(alertsNrqlStaticCondition) + `
-}`,
+		"entitySearch": {
+			Path:  []string{"actor"},
+			Field: "entitySearch",
+			Depth: 3,
 		},
-		"AlertsNrqlBaselineCondition": {
-			TypeName: "AlertsNrqlBaselineCondition",
-			Result:   alertsNrqlBaselineCondition,
-		},
-		"AlertsNrqlOutlierCondition": {
-			TypeName: "AlertsNrqlOutlierCondition",
-			Result:   alertsNrqlOutlierCondition,
-		},
-		"AlertsNrqlStaticCondition": {
-			TypeName: "AlertsNrqlStaticCondition",
-			Result:   alertsNrqlStaticCondition,
+		"linkedAccounts": {
+			Path:  []string{"actor", "cloud"},
+			Field: "linkedAccounts",
+			Depth: 2,
 		},
 	}
 
-	for _, tc := range cases {
-		x, err := s.LookupTypeByName(tc.TypeName)
+	for n, tc := range cases {
+		t.Logf("TestCase: %s", n)
+		typePath, err := s.LookupQueryTypesByFieldPath(tc.Path)
 		require.NoError(t, err)
 
-		xx := s.QueryFields(x)
-		assert.Equal(t, tc.Result, xx)
+		result := s.GetQueryStringForEndpoint(typePath, tc.Path, tc.Field, tc.Depth)
+		// saveFixture(t, n, result)
+		expected := loadFixture(t, n)
+		assert.Equal(t, expected, result)
+	}
+}
+
+func TestSchema_GetQueryStringForMutation(t *testing.T) {
+	t.Parallel()
+
+	// schema cached by 'make test-prep'
+	s, err := Load("../../testdata/schema.json")
+	require.NoError(t, err)
+
+	cases := map[string]struct {
+		Mutation string
+		Depth    int
+	}{
+		"alertsMutingRuleCreate": {
+			Mutation: "alertsMutingRuleCreate",
+			Depth:    3,
+		},
 	}
 
-}
+	for n, tc := range cases {
+		t.Logf("TestCase: %s", n)
+		field, err := s.LookupMutationByName(tc.Mutation)
+		require.NoError(t, err)
 
-var (
-	alertsNrqlCondition = `description
-enabled
-expiration {
-	closeViolationsOnExpiration
-	expirationDuration
-	openViolationOnExpiration
-}
-id
-name
-nrql {
-	evaluationOffset
-	query
-}
-policyId
-runbookUrl
-signal {
-	evaluationOffset
-	fillOption
-	fillValue
-}
-terms {
-	operator
-	priority
-	threshold
-	thresholdDuration
-	thresholdOccurrences
-}
-type
-violationTimeLimit`
-
-	alertsNrqlBaselineCondition = `baselineDirection
-description
-enabled
-expiration {
-	closeViolationsOnExpiration
-	expirationDuration
-	openViolationOnExpiration
-}
-id
-name
-nrql {
-	evaluationOffset
-	query
-}
-policyId
-runbookUrl
-signal {
-	evaluationOffset
-	fillOption
-	fillValue
-}
-terms {
-	operator
-	priority
-	threshold
-	thresholdDuration
-	thresholdOccurrences
-}
-type
-violationTimeLimit`
-
-	alertsNrqlOutlierCondition = `description
-enabled
-expectedGroups
-expiration {
-	closeViolationsOnExpiration
-	expirationDuration
-	openViolationOnExpiration
-}
-id
-name
-nrql {
-	evaluationOffset
-	query
-}
-openViolationOnGroupOverlap
-policyId
-runbookUrl
-signal {
-	evaluationOffset
-	fillOption
-	fillValue
-}
-terms {
-	operator
-	priority
-	threshold
-	thresholdDuration
-	thresholdOccurrences
-}
-type
-violationTimeLimit`
-
-	alertsNrqlStaticCondition = `description
-enabled
-expiration {
-	closeViolationsOnExpiration
-	expirationDuration
-	openViolationOnExpiration
-}
-id
-name
-nrql {
-	evaluationOffset
-	query
-}
-policyId
-runbookUrl
-signal {
-	evaluationOffset
-	fillOption
-	fillValue
-}
-terms {
-	operator
-	priority
-	threshold
-	thresholdDuration
-	thresholdOccurrences
-}
-type
-valueFunction
-violationTimeLimit`
-
-	entitiesQuery = `query(
-	$query: String,
-	$queryBuilder: EntitySearchQueryBuilder,
-	$sortBy: [EntitySearchSortCriteria],
-) { actor { entitySearch(
-	query: $query,
-	queryBuilder: $queryBuilder,
-	sortBy: $sortBy,
-) {
-	count
-	counts {
-		count
-		facet
+		result := s.GetQueryStringForMutation(field, tc.Depth)
+		// saveFixture(t, n, result)
+		expected := loadFixture(t, n)
+		assert.Equal(t, expected, result)
 	}
-	query
-	results {
-		entities
-		nextCursor
-	}
-	types {
-		count
-		domain
-		entityType
-		type
-	}
-} } }`
-)
+}

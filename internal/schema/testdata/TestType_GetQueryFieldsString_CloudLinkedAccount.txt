@@ -1,0 +1,3502 @@
+authLabel
+createdAt
+disabled
+externalId
+id
+integrations {
+	__typename
+	createdAt
+	id
+	linkedAccount {
+		authLabel
+		createdAt
+		disabled
+		externalId
+		id
+		integrations {
+			__typename
+			createdAt
+			id
+			name
+			nrAccountId
+			updatedAt
+			... on CloudAlbIntegration {
+				__typename
+				awsRegions
+				fetchExtendedInventory
+				fetchTags
+				inventoryPollingInterval
+				loadBalancerPrefixes
+				metricsPollingInterval
+				tagKey
+				tagValue
+			}
+			... on CloudApigatewayIntegration {
+				__typename
+				awsRegions
+				inventoryPollingInterval
+				metricsPollingInterval
+				stagePrefixes
+				tagKey
+				tagValue
+			}
+			... on CloudAutoscalingIntegration {
+				__typename
+				awsRegions
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudAwsAppsyncIntegration {
+				__typename
+				awsRegions
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudAwsAthenaIntegration {
+				__typename
+				awsRegions
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudAwsCognitoIntegration {
+				__typename
+				awsRegions
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudAwsConnectIntegration {
+				__typename
+				awsRegions
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudAwsDirectconnectIntegration {
+				__typename
+				awsRegions
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudAwsDocdbIntegration {
+				__typename
+				awsRegions
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudAwsFsxIntegration {
+				__typename
+				awsRegions
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudAwsGlueIntegration {
+				__typename
+				awsRegions
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudAwsKinesisanalyticsIntegration {
+				__typename
+				awsRegions
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudAwsMediaconvertIntegration {
+				__typename
+				awsRegions
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudAwsMediapackagevodIntegration {
+				__typename
+				awsRegions
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudAwsMqIntegration {
+				__typename
+				awsRegions
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudAwsMskIntegration {
+				__typename
+				awsRegions
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudAwsNeptuneIntegration {
+				__typename
+				awsRegions
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudAwsQldbIntegration {
+				__typename
+				awsRegions
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudAwsRoute53resolverIntegration {
+				__typename
+				awsRegions
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudAwsStatesIntegration {
+				__typename
+				awsRegions
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudAwsTransitgatewayIntegration {
+				__typename
+				awsRegions
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudAwsWafIntegration {
+				__typename
+				awsRegions
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudAwsWafv2Integration {
+				__typename
+				awsRegions
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudAwsXrayIntegration {
+				__typename
+				awsRegions
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudAzureApimanagementIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudAzureAppgatewayIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudAzureAppserviceIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudAzureContainersIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudAzureCosmosdbIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudAzureCostmanagementIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				tagKeys
+			}
+			... on CloudAzureDatafactoryIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudAzureEventhubIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudAzureExpressrouteIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudAzureFirewallsIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudAzureFrontdoorIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudAzureFunctionsIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudAzureKeyvaultIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudAzureLoadbalancerIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudAzureLogicappsIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudAzureMachinelearningIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudAzureMariadbIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudAzureMysqlIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudAzurePostgresqlIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudAzurePowerbidedicatedIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudAzureRediscacheIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudAzureServicebusIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudAzureServicefabricIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudAzureSqlIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudAzureSqlmanagedIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudAzureStorageIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudAzureVirtualmachineIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudAzureVirtualnetworksIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudAzureVmsIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudAzureVpngatewaysIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudBaseIntegration {
+				__typename
+			}
+			... on CloudBillingIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudCloudfrontIntegration {
+				__typename
+				fetchLambdasAtEdge
+				fetchTags
+				inventoryPollingInterval
+				metricsPollingInterval
+				tagKey
+				tagValue
+			}
+			... on CloudCloudtrailIntegration {
+				__typename
+				awsRegions
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudDynamodbIntegration {
+				__typename
+				awsRegions
+				fetchExtendedInventory
+				fetchTags
+				inventoryPollingInterval
+				metricsPollingInterval
+				tagKey
+				tagValue
+			}
+			... on CloudEbsIntegration {
+				__typename
+				awsRegions
+				fetchExtendedInventory
+				inventoryPollingInterval
+				metricsPollingInterval
+				tagKey
+				tagValue
+			}
+			... on CloudEc2Integration {
+				__typename
+				awsRegions
+				fetchIpAddresses
+				inventoryPollingInterval
+				metricsPollingInterval
+				tagKey
+				tagValue
+			}
+			... on CloudEcsIntegration {
+				__typename
+				awsRegions
+				fetchTags
+				inventoryPollingInterval
+				metricsPollingInterval
+				tagKey
+				tagValue
+			}
+			... on CloudEfsIntegration {
+				__typename
+				awsRegions
+				fetchTags
+				inventoryPollingInterval
+				metricsPollingInterval
+				tagKey
+				tagValue
+			}
+			... on CloudElasticacheIntegration {
+				__typename
+				awsRegions
+				fetchTags
+				inventoryPollingInterval
+				metricsPollingInterval
+				tagKey
+				tagValue
+			}
+			... on CloudElasticbeanstalkIntegration {
+				__typename
+				awsRegions
+				fetchExtendedInventory
+				fetchTags
+				inventoryPollingInterval
+				metricsPollingInterval
+				tagKey
+				tagValue
+			}
+			... on CloudElasticsearchIntegration {
+				__typename
+				awsRegions
+				fetchNodes
+				inventoryPollingInterval
+				metricsPollingInterval
+				tagKey
+				tagValue
+			}
+			... on CloudElbIntegration {
+				__typename
+				awsRegions
+				fetchExtendedInventory
+				fetchTags
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudEmrIntegration {
+				__typename
+				awsRegions
+				fetchTags
+				inventoryPollingInterval
+				metricsPollingInterval
+				tagKey
+				tagValue
+			}
+			... on CloudGcpAppengineIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudGcpBigqueryIntegration {
+				__typename
+				fetchTags
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudGcpDataflowIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudGcpDataprocIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudGcpDatastoreIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudGcpFirebasedatabaseIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudGcpFirebasehostingIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudGcpFirebasestorageIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudGcpFirestoreIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudGcpFunctionsIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudGcpInterconnectIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudGcpKubernetesIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudGcpLoadbalancingIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudGcpPubsubIntegration {
+				__typename
+				fetchTags
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudGcpRouterIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudGcpRunIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudGcpSpannerIntegration {
+				__typename
+				fetchTags
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudGcpSqlIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudGcpStorageIntegration {
+				__typename
+				fetchTags
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudGcpVmsIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudGcpVpcaccessIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudHealthIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudIamIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				tagKey
+				tagValue
+			}
+			... on CloudIotIntegration {
+				__typename
+				awsRegions
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudKinesisFirehoseIntegration {
+				__typename
+				awsRegions
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudKinesisIntegration {
+				__typename
+				awsRegions
+				fetchShards
+				fetchTags
+				inventoryPollingInterval
+				metricsPollingInterval
+				tagKey
+				tagValue
+			}
+			... on CloudLambdaIntegration {
+				__typename
+				awsRegions
+				fetchTags
+				inventoryPollingInterval
+				metricsPollingInterval
+				tagKey
+				tagValue
+			}
+			... on CloudRdsIntegration {
+				__typename
+				awsRegions
+				fetchTags
+				inventoryPollingInterval
+				metricsPollingInterval
+				tagKey
+				tagValue
+			}
+			... on CloudRedshiftIntegration {
+				__typename
+				awsRegions
+				inventoryPollingInterval
+				metricsPollingInterval
+				tagKey
+				tagValue
+			}
+			... on CloudRoute53Integration {
+				__typename
+				fetchExtendedInventory
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudS3Integration {
+				__typename
+				fetchExtendedInventory
+				fetchTags
+				inventoryPollingInterval
+				metricsPollingInterval
+				tagKey
+				tagValue
+			}
+			... on CloudSesIntegration {
+				__typename
+				awsRegions
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudSnsIntegration {
+				__typename
+				awsRegions
+				fetchExtendedInventory
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudSqsIntegration {
+				__typename
+				awsRegions
+				fetchExtendedInventory
+				fetchTags
+				inventoryPollingInterval
+				metricsPollingInterval
+				queuePrefixes
+				tagKey
+				tagValue
+			}
+			... on CloudTrustedadvisorIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudVpcIntegration {
+				__typename
+				awsRegions
+				fetchNatGateway
+				fetchVpn
+				inventoryPollingInterval
+				metricsPollingInterval
+				tagKey
+				tagValue
+			}
+		}
+		name
+		nrAccountId
+		provider {
+			__typename
+			createdAt
+			icon
+			id
+			name
+			slug
+			updatedAt
+			... on CloudAwsGovCloudProvider {
+				__typename
+				awsAccountId
+			}
+			... on CloudAwsProvider {
+				__typename
+				roleAccountId
+				roleExternalId
+			}
+			... on CloudBaseProvider {
+				__typename
+			}
+			... on CloudGcpProvider {
+				__typename
+				serviceAccountId
+			}
+		}
+		updatedAt
+	}
+	name
+	nrAccountId
+	service {
+		createdAt
+		icon
+		id
+		isEnabled
+		name
+		provider {
+			__typename
+			createdAt
+			icon
+			id
+			name
+			slug
+			updatedAt
+			... on CloudAwsGovCloudProvider {
+				__typename
+				awsAccountId
+			}
+			... on CloudAwsProvider {
+				__typename
+				roleAccountId
+				roleExternalId
+			}
+			... on CloudBaseProvider {
+				__typename
+			}
+			... on CloudGcpProvider {
+				__typename
+				serviceAccountId
+			}
+		}
+		slug
+		updatedAt
+	}
+	updatedAt
+	... on CloudAlbIntegration {
+		__typename
+		awsRegions
+		fetchExtendedInventory
+		fetchTags
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		loadBalancerPrefixes
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+		tagKey
+		tagValue
+	}
+	... on CloudApigatewayIntegration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+		stagePrefixes
+		tagKey
+		tagValue
+	}
+	... on CloudAutoscalingIntegration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAwsAppsyncIntegration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAwsAthenaIntegration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAwsCognitoIntegration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAwsConnectIntegration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAwsDirectconnectIntegration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAwsDocdbIntegration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAwsFsxIntegration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAwsGlueIntegration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAwsKinesisanalyticsIntegration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAwsMediaconvertIntegration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAwsMediapackagevodIntegration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAwsMqIntegration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAwsMskIntegration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAwsNeptuneIntegration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAwsQldbIntegration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAwsRoute53resolverIntegration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAwsStatesIntegration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAwsTransitgatewayIntegration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAwsWafIntegration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAwsWafv2Integration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAwsXrayIntegration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzureApimanagementIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzureAppgatewayIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzureAppserviceIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzureContainersIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzureCosmosdbIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzureCostmanagementIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+		tagKeys
+	}
+	... on CloudAzureDatafactoryIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzureEventhubIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzureExpressrouteIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzureFirewallsIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzureFrontdoorIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzureFunctionsIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzureKeyvaultIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzureLoadbalancerIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzureLogicappsIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzureMachinelearningIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzureMariadbIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzureMysqlIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzurePostgresqlIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzurePowerbidedicatedIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzureRediscacheIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzureServicebusIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzureServicefabricIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzureSqlIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzureSqlmanagedIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzureStorageIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzureVirtualmachineIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzureVirtualnetworksIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzureVmsIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzureVpngatewaysIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudBaseIntegration {
+		__typename
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudBillingIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudCloudfrontIntegration {
+		__typename
+		fetchLambdasAtEdge
+		fetchTags
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+		tagKey
+		tagValue
+	}
+	... on CloudCloudtrailIntegration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudDynamodbIntegration {
+		__typename
+		awsRegions
+		fetchExtendedInventory
+		fetchTags
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+		tagKey
+		tagValue
+	}
+	... on CloudEbsIntegration {
+		__typename
+		awsRegions
+		fetchExtendedInventory
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+		tagKey
+		tagValue
+	}
+	... on CloudEc2Integration {
+		__typename
+		awsRegions
+		fetchIpAddresses
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+		tagKey
+		tagValue
+	}
+	... on CloudEcsIntegration {
+		__typename
+		awsRegions
+		fetchTags
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+		tagKey
+		tagValue
+	}
+	... on CloudEfsIntegration {
+		__typename
+		awsRegions
+		fetchTags
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+		tagKey
+		tagValue
+	}
+	... on CloudElasticacheIntegration {
+		__typename
+		awsRegions
+		fetchTags
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+		tagKey
+		tagValue
+	}
+	... on CloudElasticbeanstalkIntegration {
+		__typename
+		awsRegions
+		fetchExtendedInventory
+		fetchTags
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+		tagKey
+		tagValue
+	}
+	... on CloudElasticsearchIntegration {
+		__typename
+		awsRegions
+		fetchNodes
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+		tagKey
+		tagValue
+	}
+	... on CloudElbIntegration {
+		__typename
+		awsRegions
+		fetchExtendedInventory
+		fetchTags
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudEmrIntegration {
+		__typename
+		awsRegions
+		fetchTags
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+		tagKey
+		tagValue
+	}
+	... on CloudGcpAppengineIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudGcpBigqueryIntegration {
+		__typename
+		fetchTags
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudGcpDataflowIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudGcpDataprocIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudGcpDatastoreIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudGcpFirebasedatabaseIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudGcpFirebasehostingIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudGcpFirebasestorageIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudGcpFirestoreIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudGcpFunctionsIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudGcpInterconnectIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudGcpKubernetesIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudGcpLoadbalancingIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudGcpPubsubIntegration {
+		__typename
+		fetchTags
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudGcpRouterIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudGcpRunIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudGcpSpannerIntegration {
+		__typename
+		fetchTags
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudGcpSqlIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudGcpStorageIntegration {
+		__typename
+		fetchTags
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudGcpVmsIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudGcpVpcaccessIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudHealthIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudIamIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+		tagKey
+		tagValue
+	}
+	... on CloudIotIntegration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudKinesisFirehoseIntegration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudKinesisIntegration {
+		__typename
+		awsRegions
+		fetchShards
+		fetchTags
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+		tagKey
+		tagValue
+	}
+	... on CloudLambdaIntegration {
+		__typename
+		awsRegions
+		fetchTags
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+		tagKey
+		tagValue
+	}
+	... on CloudRdsIntegration {
+		__typename
+		awsRegions
+		fetchTags
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+		tagKey
+		tagValue
+	}
+	... on CloudRedshiftIntegration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+		tagKey
+		tagValue
+	}
+	... on CloudRoute53Integration {
+		__typename
+		fetchExtendedInventory
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudS3Integration {
+		__typename
+		fetchExtendedInventory
+		fetchTags
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+		tagKey
+		tagValue
+	}
+	... on CloudSesIntegration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudSnsIntegration {
+		__typename
+		awsRegions
+		fetchExtendedInventory
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudSqsIntegration {
+		__typename
+		awsRegions
+		fetchExtendedInventory
+		fetchTags
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		queuePrefixes
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+		tagKey
+		tagValue
+	}
+	... on CloudTrustedadvisorIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudVpcIntegration {
+		__typename
+		awsRegions
+		fetchNatGateway
+		fetchVpn
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+		tagKey
+		tagValue
+	}
+}
+name
+nrAccountId
+provider {
+	__typename
+	createdAt
+	icon
+	id
+	name
+	services {
+		createdAt
+		icon
+		id
+		isEnabled
+		name
+		provider {
+			__typename
+			createdAt
+			icon
+			id
+			name
+			slug
+			updatedAt
+			... on CloudAwsGovCloudProvider {
+				__typename
+				awsAccountId
+			}
+			... on CloudAwsProvider {
+				__typename
+				roleAccountId
+				roleExternalId
+			}
+			... on CloudBaseProvider {
+				__typename
+			}
+			... on CloudGcpProvider {
+				__typename
+				serviceAccountId
+			}
+		}
+		slug
+		updatedAt
+	}
+	slug
+	updatedAt
+	... on CloudAwsGovCloudProvider {
+		__typename
+		awsAccountId
+		services {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAwsProvider {
+		__typename
+		roleAccountId
+		roleExternalId
+		services {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudBaseProvider {
+		__typename
+		services {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudGcpProvider {
+		__typename
+		serviceAccountId
+		services {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+}
+updatedAt

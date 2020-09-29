@@ -1,0 +1,43 @@
+mutation(
+	$accountId: Int!,
+	$rule: AlertsMutingRuleInput!,
+) { AlertsMutingRuleCreate(
+	accountId: $accountId,
+	rule: $rule,
+) {
+	accountId
+	condition {
+		conditions {
+			attribute
+			operator
+			values
+		}
+		operator
+	}
+	createdAt
+	createdBy
+	createdByUser {
+		email
+		gravatar
+		id
+		name
+	}
+	description
+	enabled
+	id
+	name
+	schedule {
+		endTime
+		startTime
+		timeZone
+	}
+	status
+	updatedAt
+	updatedBy
+	updatedByUser {
+		email
+		gravatar
+		id
+		name
+	}
+} }

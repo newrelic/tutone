@@ -1,0 +1,105 @@
+description
+enabled
+expiration {
+	closeViolationsOnExpiration
+	expirationDuration
+	openViolationOnExpiration
+}
+id
+name
+nrql {
+	evaluationOffset
+	query
+}
+policyId
+runbookUrl
+signal {
+	evaluationOffset
+	fillOption
+	fillValue
+}
+terms {
+	operator
+	priority
+	threshold
+	thresholdDuration
+	thresholdOccurrences
+}
+type
+violationTimeLimit
+... on AlertsNrqlBaselineCondition {
+	__typename
+	baselineDirection
+	expiration {
+		closeViolationsOnExpiration
+		expirationDuration
+		openViolationOnExpiration
+	}
+	nrql {
+		evaluationOffset
+		query
+	}
+	signal {
+		evaluationOffset
+		fillOption
+		fillValue
+	}
+	terms {
+		operator
+		priority
+		threshold
+		thresholdDuration
+		thresholdOccurrences
+	}
+}
+... on AlertsNrqlOutlierCondition {
+	__typename
+	expectedGroups
+	expiration {
+		closeViolationsOnExpiration
+		expirationDuration
+		openViolationOnExpiration
+	}
+	nrql {
+		evaluationOffset
+		query
+	}
+	openViolationOnGroupOverlap
+	signal {
+		evaluationOffset
+		fillOption
+		fillValue
+	}
+	terms {
+		operator
+		priority
+		threshold
+		thresholdDuration
+		thresholdOccurrences
+	}
+}
+... on AlertsNrqlStaticCondition {
+	__typename
+	expiration {
+		closeViolationsOnExpiration
+		expirationDuration
+		openViolationOnExpiration
+	}
+	nrql {
+		evaluationOffset
+		query
+	}
+	signal {
+		evaluationOffset
+		fillOption
+		fillValue
+	}
+	terms {
+		operator
+		priority
+		threshold
+		thresholdDuration
+		thresholdOccurrences
+	}
+	valueFunction
+}
