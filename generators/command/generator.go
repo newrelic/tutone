@@ -60,17 +60,22 @@ func hydrateCommand(s *schema.Schema, command config.Command, pkgConfig *config.
 			Flags:       subcommand.Flags,
 		}
 
-		log.Print("\n\n **************************** \n")
+		// log.Print("\n\n **************************** \n")
 
-		sCmdExample, err := generateCommandExample(cmdType, exampleData)
-		if err != nil {
-			log.Printf("\n ERROR:  %+v \n", err)
+		if subCmdConfig.Example != "" {
+			subcommand.Example = subCmdConfig.Example
+		} else {
+			sCmdExample, err := generateCommandExample(cmdType, exampleData)
+			if err != nil {
+				log.Printf("\n ERROR:  %+v \n", err) // TODO: do something with this
+			}
+
+			// log.Printf("\n exampleString:  %+v \n", sCmdExample)
+			// log.Print("\n **************************** \n\n")
+
+			subcommand.Example = sCmdExample
 		}
 
-		log.Printf("\n exampleString:  %+v \n", sCmdExample)
-		log.Print("\n **************************** \n\n")
-
-		subcommand.Example = sCmdExample
 		cmd.Subcommands[i] = *subcommand
 	}
 
