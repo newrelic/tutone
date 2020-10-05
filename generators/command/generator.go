@@ -1,14 +1,11 @@
 package command
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"text/template"
 
-	"github.com/Masterminds/sprig"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/newrelic/tutone/internal/codegen"
@@ -36,23 +33,36 @@ func hydrateCommand(s *schema.Schema, command config.Command, pkgConfig *config.
 	}
 
 	if len(command.Subcommands) == 0 {
-		return lang.Command{} // TODO: Return an error instead
+		return lang.Command{}
 	}
 
 	cmd.Subcommands = make([]lang.Command, len(command.Subcommands))
 
 	for i, subCmdConfig := range command.Subcommands {
-		cmdType, err := s.LookupRootMutationTypeFieldByName(subCmdConfig.Name)
+		var err error
+		var mutationCmdData *schema.Field
+		// var queryCmdData []*schema.Type
+
+		// Check to see if the commands CRUD action is a mutation.
+		// If it's not a mutation, then it's a query (read) request.
+		mutationCmdData, err = s.LookupMutationByName(subCmdConfig.Name)
 		if err != nil {
 			log.Fatal(err)
+			// TODO: Handle query/read command scenario
+			// queryCmdData, err = s.LookupQueryTypesByFieldPath([]string{"actor", "account", "alerts"})
+			// if err != nil {
+			// 	log.Fatalf("could not find subcommand with name %s: %s", err)
+			// }
 		}
 
-		// TODO: set a "mutation" or "query" type on the subcommand tutone config
-		// or maybe just a boolean "isMutation" or something like that
+		var subcommand *lang.Command
+		// Reference the parent command to ensure
+		// TODO: Come up with a more robust way to handle this logic
+		if command.Name == "mutation" {
+			subcommand = hydrateMutationSubcommand(s, mutationCmdData, subCmdConfig, pkgConfig)
+		}
 
-		subcommand := hydrateMutationSubcommand(s, cmdType, subCmdConfig, pkgConfig)
-
-		exampleData := CommandExampleData{
+		exampleData := lang.CommandExampleData{
 			CLIName:     "newrelic",
 			PackageName: pkgConfig.Name,
 			Command:     cmd.Name,
@@ -60,18 +70,13 @@ func hydrateCommand(s *schema.Schema, command config.Command, pkgConfig *config.
 			Flags:       subcommand.Flags,
 		}
 
-		// log.Print("\n\n **************************** \n")
-
 		if subCmdConfig.Example != "" {
 			subcommand.Example = subCmdConfig.Example
 		} else {
-			sCmdExample, err := generateCommandExample(cmdType, exampleData)
+			sCmdExample, err := generateCommandExample(mutationCmdData, exampleData)
 			if err != nil {
-				log.Printf("\n ERROR:  %+v \n", err) // TODO: do something with this
+				log.Fatal(err)
 			}
-
-			// log.Printf("\n exampleString:  %+v \n", sCmdExample)
-			// log.Print("\n **************************** \n\n")
 
 			subcommand.Example = sCmdExample
 		}
@@ -82,32 +87,11 @@ func hydrateCommand(s *schema.Schema, command config.Command, pkgConfig *config.
 	return cmd
 }
 
-type CommandExampleData struct {
-	CLIName     string
-	PackageName string
-	Command     string
-	Subcommand  string
-	Flags       []lang.CommandFlag
-}
-
-func generateCommandExample(sCmd *schema.Field, data CommandExampleData) (string, error) {
+func generateCommandExample(sCmd *schema.Field, data lang.CommandExampleData) (string, error) {
 	t := `{{ .CLIName }} {{ .PackageName }} {{ .Command }} {{ .Subcommand }}{{- range .Flags }} --{{ .Name }}{{ end }}`
 
-	tmpl, err := template.New("commandExample").Funcs(sprig.TxtFuncMap()).Parse(t)
-	if err != nil {
-		return "", err
-	}
-
-	var buffer bytes.Buffer
-	err = tmpl.Execute(&buffer, data)
-	if err != nil {
-		return "", err
-	}
-
-	return buffer.String(), nil
+	return codegen.RenderTemplate("commandExample", t, data)
 }
-
-// newrelic nerdgraph mutation alertsPolicyCreate --policy='{\"name\": \"foo\",\"incidentPreference\": \"PER_CONDITION\"}' --accountId=$NEW_RELIC_ACCOUNT_ID\n"
 
 func hydrateMutationSubcommand(
 	s *schema.Schema,
@@ -121,7 +105,7 @@ func hydrateMutationSubcommand(
 	for _, f := range flags {
 		varName := f.VariableName
 		// If the client method argument is an `INPUT_OBJECT`,
-		// we need the regular name for use with unmarshallig.
+		// we need the regular name to unmarshal.
 		if f.IsInputType {
 			varName = f.Name
 		}

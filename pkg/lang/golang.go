@@ -49,6 +49,14 @@ type CommandFlag struct {
 	IsInputType    bool
 }
 
+type CommandExampleData struct {
+	CLIName     string
+	PackageName string
+	Command     string
+	Subcommand  string
+	Flags       []CommandFlag
+}
+
 // GolangGenerator is enough information to generate Go code for a single package.
 type GolangGenerator struct {
 	Types       []GoStruct
