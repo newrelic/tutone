@@ -1,11 +1,14 @@
 package command
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"text/template"
 
+	"github.com/Masterminds/sprig"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/newrelic/tutone/internal/codegen"
@@ -24,7 +27,7 @@ var goTypesToCobraFlagMethodMap = map[string]string{
 	"string": "StringVar",
 }
 
-func hydrateCommand(s *schema.Schema, command config.Command) lang.Command {
+func hydrateCommand(s *schema.Schema, command config.Command, pkgConfig *config.PackageConfig) lang.Command {
 	cmd := lang.Command{
 		Name:             command.Name,
 		ShortDescription: command.ShortDescription,
@@ -47,11 +50,96 @@ func hydrateCommand(s *schema.Schema, command config.Command) lang.Command {
 		// TODO: set a "mutation" or "query" type on the subcommand tutone config
 		// or maybe just a boolean "isMutation" or something like that
 
-		subCommand := hydrateMutationSubcommand(s, cmdType, subCmdConfig)
-		cmd.Subcommands[i] = *subCommand
+		subcommand := hydrateMutationSubcommand(s, cmdType, subCmdConfig, pkgConfig)
+
+		exampleData := CommandExampleData{
+			CLIName:     "newrelic",
+			PackageName: pkgConfig.Name,
+			Command:     cmd.Name,
+			Subcommand:  subcommand.Name,
+			Flags:       subcommand.Flags,
+		}
+
+		log.Print("\n\n **************************** \n")
+
+		sCmdExample, err := generateCommandExample(cmdType, exampleData)
+		if err != nil {
+			log.Printf("\n ERROR:  %+v \n", err)
+		}
+
+		log.Printf("\n exampleString:  %+v \n", sCmdExample)
+		log.Print("\n **************************** \n\n")
+
+		subcommand.Example = sCmdExample
+		cmd.Subcommands[i] = *subcommand
 	}
 
 	return cmd
+}
+
+type CommandExampleData struct {
+	CLIName     string
+	PackageName string
+	Command     string
+	Subcommand  string
+	Flags       []lang.CommandFlag
+}
+
+func generateCommandExample(sCmd *schema.Field, data CommandExampleData) (string, error) {
+	t := `{{ .CLIName }} {{ .PackageName }} {{ .Command }} {{ .Subcommand }}{{- range .Flags }} --{{ .Name }}{{ end }}`
+
+	tmpl, err := template.New("commandExample").Funcs(sprig.TxtFuncMap()).Parse(t)
+	if err != nil {
+		return "", err
+	}
+
+	var buffer bytes.Buffer
+	err = tmpl.Execute(&buffer, data)
+	if err != nil {
+		return "", err
+	}
+
+	return buffer.String(), nil
+}
+
+// newrelic nerdgraph mutation alertsPolicyCreate --policy='{\"name\": \"foo\",\"incidentPreference\": \"PER_CONDITION\"}' --accountId=$NEW_RELIC_ACCOUNT_ID\n"
+
+func hydrateMutationSubcommand(
+	s *schema.Schema,
+	sCmd *schema.Field,
+	cmdConfig config.Command,
+	pkgConfig *config.PackageConfig,
+) *lang.Command {
+	flags := hydrateFlagsFromSchema(sCmd.Args, cmdConfig)
+
+	var clientMethodArgs []string
+	for _, f := range flags {
+		varName := f.VariableName
+		// If the client method argument is an `INPUT_OBJECT`,
+		// we need the regular name for use with unmarshallig.
+		if f.IsInputType {
+			varName = f.Name
+		}
+		clientMethodArgs = append(clientMethodArgs, varName)
+	}
+
+	shortDescription := sCmd.Description
+	// Allow configuration to override the description that comes from NerdGraph
+	if cmdConfig.ShortDescription != "" {
+		shortDescription = cmdConfig.ShortDescription
+	}
+
+	cmdResult := lang.Command{
+		Name:             sCmd.Name,
+		ShortDescription: shortDescription,
+		LongDescription:  cmdConfig.LongDescription,
+		ClientMethod:     cmdConfig.ClientMethod,
+		ClientMethodArgs: clientMethodArgs,
+		Example:          cmdConfig.Example,
+		Flags:            flags,
+	}
+
+	return &cmdResult
 }
 
 func hydrateFlagsFromSchema(args []schema.Field, cmdConfig config.Command) []lang.CommandFlag {
@@ -100,42 +188,7 @@ func hydrateFlagsFromSchema(args []schema.Field, cmdConfig config.Command) []lan
 		flags = append(flags, flag)
 	}
 
-	fmt.Printf("\n FLAGS:  %+v \n", flags)
-
 	return flags
-}
-
-func hydrateMutationSubcommand(s *schema.Schema, sCmd *schema.Field, cmdConfig config.Command) *lang.Command {
-	flags := hydrateFlagsFromSchema(sCmd.Args, cmdConfig)
-
-	var clientMethodArgs []string
-	for _, f := range flags {
-		varName := f.VariableName
-		// If the client method argument is an `INPUT_OBJECT`,
-		// we need the regular name for use with unmarshallig.
-		if f.IsInputType {
-			varName = f.Name
-		}
-		clientMethodArgs = append(clientMethodArgs, varName)
-	}
-
-	shortDescription := sCmd.Description
-	// Allow configuration to override the description that comes from NerdGraph
-	if cmdConfig.ShortDescription != "" {
-		shortDescription = cmdConfig.ShortDescription
-	}
-
-	cmdResult := lang.Command{
-		Name:             sCmd.Name,
-		ShortDescription: shortDescription,
-		LongDescription:  cmdConfig.LongDescription,
-		ClientMethod:     cmdConfig.ClientMethod,
-		ClientMethodArgs: clientMethodArgs,
-		Example:          cmdConfig.Example,
-		Flags:            flags,
-	}
-
-	return &cmdResult
 }
 
 func getCobraFlagMethodName(typeString string) string {
@@ -155,7 +208,7 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 
 	cmds := make([]lang.Command, len(pkgConfig.Commands))
 	for i, c := range pkgConfig.Commands {
-		cmds[i] = hydrateCommand(s, c)
+		cmds[i] = hydrateCommand(s, c, pkgConfig)
 	}
 
 	g.Commands = cmds
