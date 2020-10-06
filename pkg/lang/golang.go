@@ -34,6 +34,8 @@ type Command struct {
 	InputObjects     []InputObject
 	Flags            []CommandFlag
 	Subcommands      []Command
+
+	GraphQLPath []string // Should mutations also use this? Probably
 }
 
 type CommandFlag struct {

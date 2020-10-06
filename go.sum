@@ -540,7 +540,6 @@ github.com/kyoh86/exportloopref v0.1.7 h1:u+iHuTbkbTS2D/JP7fCuZDo/t3rBVGo3Hf58Rc
 github.com/kyoh86/exportloopref v0.1.7/go.mod h1:h1rDl2Kdj97+Kwh4gdz3ujE7XHmH51Q0lUiZ1z4NLj8=
 github.com/lib/pq v1.0.0/go.mod h1:5WUZQaWbwv1U+lTReE5YruASi9Al49XbQIvNi/34Woo=
 github.com/lib/pq v1.1.1/go.mod h1:5WUZQaWbwv1U+lTReE5YruASi9Al49XbQIvNi/34Woo=
-github.com/llorllale/go-gitlint v0.0.0-20190914155841-58c0b8cef0e5 h1:1r+x6vT60ps+5yWPYbhJ/GOG56fBpbjPo9Rv0ipzy/Q=
 github.com/llorllale/go-gitlint v0.0.0-20190914155841-58c0b8cef0e5/go.mod h1:omoASPlaaf3ECEhTMfLZVS6o550eBWI2YsM/saGEbVA=
 github.com/llorllale/go-gitlint v0.0.0-20200802191503-5984945d4b80 h1:mF1NCuC1TenQ/GDjwwQ1lquPYIfgoudjpZKCecoHXFs=
 github.com/llorllale/go-gitlint v0.0.0-20200802191503-5984945d4b80/go.mod h1:omoASPlaaf3ECEhTMfLZVS6o550eBWI2YsM/saGEbVA=
@@ -620,8 +619,8 @@ github.com/nbutton23/zxcvbn-go v0.0.0-20180912185939-ae427f1e4c1d/go.mod h1:o96d
 github.com/newrelic/newrelic-cli v0.14.0 h1:p/2x5gsKqDW5Sauo1rscLPC5ocRmmOct/CIODeEw/d0=
 github.com/newrelic/newrelic-cli v0.14.0/go.mod h1:d6Dr1xtrIYxLckXwaYFI/L5A4SAlr9EB6gIO7H0cMSs=
 github.com/newrelic/newrelic-client-go v0.42.1/go.mod h1:+Cyma1K2JrCBaOg+X4Qg1RFMdZwh8wqyZotYFwxyxfg=
-github.com/newrelic/newrelic-client-go v0.44.0 h1:GvZf7iDMVuH1HDSTcoOGOEtU4shPGZBtN5NSyvnGyUo=
-github.com/newrelic/newrelic-client-go v0.44.0/go.mod h1:+Cyma1K2JrCBaOg+X4Qg1RFMdZwh8wqyZotYFwxyxfg=
+github.com/newrelic/newrelic-client-go v0.45.0 h1:uPMmvx9bR+KvANE1sj7TaeMcL4mAEOzEX4lvsgzsOwY=
+github.com/newrelic/newrelic-client-go v0.45.0/go.mod h1:+Cyma1K2JrCBaOg+X4Qg1RFMdZwh8wqyZotYFwxyxfg=
 github.com/newrelic/tutone v0.2.3/go.mod h1:tfWM773ZGUHqQu70NV3DPjrFmxQ9+p8/++7UJ1J1gmE=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e h1:fD57ERR4JtEqsWbfPhv4DMiApHyliiK5xCTNVSPiaAs=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=

@@ -30,6 +30,7 @@ func hydrateCommand(s *schema.Schema, command config.Command, pkgConfig *config.
 		ShortDescription: command.ShortDescription,
 		LongDescription:  command.LongDescription,
 		Example:          command.Example,
+		GraphQLPath:      command.GraphQLPath,
 	}
 
 	if len(command.Subcommands) == 0 {
@@ -40,27 +41,43 @@ func hydrateCommand(s *schema.Schema, command config.Command, pkgConfig *config.
 
 	for i, subCmdConfig := range command.Subcommands {
 		var err error
-		var mutationCmdData *schema.Field
-		// var queryCmdData []*schema.Type
+		// var mutationCmdData *schema.Field
+		// var queryCmdData *schema.Field
+		var queryPathTypes []*schema.Type
+		var subcommandMetadata *schema.Field
 
 		// Check to see if the commands CRUD action is a mutation.
 		// If it's not a mutation, then it's a query (read) request.
-		mutationCmdData, err = s.LookupMutationByName(subCmdConfig.Name)
+		subcommandMetadata, err = s.LookupMutationByName(subCmdConfig.Name)
+
+		// If the command is not a mutation, move forward with
+		// generating a command to perform a query request.
 		if err != nil {
-			log.Fatal(err)
-			// TODO: Handle query/read command scenario
-			// queryCmdData, err = s.LookupQueryTypesByFieldPath([]string{"actor", "account", "alerts"})
-			// if err != nil {
-			// 	log.Fatalf("could not find subcommand with name %s: %s", err)
-			// }
+			// TODO: This works for now, but schema.LookupQueryTypesByFieldPath is optimized
+			// for generating types in the client. In the case of the CLI we only need the last
+			// part of the path (the endpoint). A DFS lookup could be quicker, although the
+			// performance hit might be negligible.
+			queryPathTypes, err = s.LookupQueryTypesByFieldPath(subCmdConfig.GraphQLPath)
+			if err != nil {
+				log.Fatalf("query endpoint not found: %s", err)
+			}
+
+			graphQLEndpoint := subCmdConfig.GraphQLPath[len(subCmdConfig.GraphQLPath)-1]
+
+			for _, queryStep := range queryPathTypes {
+				for _, field := range queryStep.Fields {
+					if field.Name == graphQLEndpoint {
+						subcommandMetadata = &field
+					}
+				}
+			}
 		}
 
-		var subcommand *lang.Command
-		// Reference the parent command to ensure
-		// TODO: Come up with a more robust way to handle this logic
-		if command.Name == "mutation" {
-			subcommand = hydrateMutationSubcommand(s, mutationCmdData, subCmdConfig, pkgConfig)
-		}
+		// fmt.Print("\n\n **************************** \n")
+		// fmt.Printf("\n subcommandMetadata:  %+v \n", subcommandMetadata.Name)
+		// fmt.Print("\n **************************** \n\n")
+
+		subcommand := hydrateSubcommand(s, subcommandMetadata, subCmdConfig)
 
 		exampleData := lang.CommandExampleData{
 			CLIName:     "newrelic",
@@ -70,10 +87,9 @@ func hydrateCommand(s *schema.Schema, command config.Command, pkgConfig *config.
 			Flags:       subcommand.Flags,
 		}
 
-		if subCmdConfig.Example != "" {
-			subcommand.Example = subCmdConfig.Example
-		} else {
-			sCmdExample, err := generateCommandExample(mutationCmdData, exampleData)
+		subcommand.Example = subCmdConfig.Example
+		if subCmdConfig.Example == "" {
+			sCmdExample, err := generateCommandExample(subcommandMetadata, exampleData)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -91,44 +107,6 @@ func generateCommandExample(sCmd *schema.Field, data lang.CommandExampleData) (s
 	t := `{{ .CLIName }} {{ .PackageName }} {{ .Command }} {{ .Subcommand }}{{- range .Flags }} --{{ .Name }}{{ end }}`
 
 	return codegen.RenderTemplate("commandExample", t, data)
-}
-
-func hydrateMutationSubcommand(
-	s *schema.Schema,
-	sCmd *schema.Field,
-	cmdConfig config.Command,
-	pkgConfig *config.PackageConfig,
-) *lang.Command {
-	flags := hydrateFlagsFromSchema(sCmd.Args, cmdConfig)
-
-	var clientMethodArgs []string
-	for _, f := range flags {
-		varName := f.VariableName
-		// If the client method argument is an `INPUT_OBJECT`,
-		// we need the regular name to unmarshal.
-		if f.IsInputType {
-			varName = f.Name
-		}
-		clientMethodArgs = append(clientMethodArgs, varName)
-	}
-
-	shortDescription := sCmd.Description
-	// Allow configuration to override the description that comes from NerdGraph
-	if cmdConfig.ShortDescription != "" {
-		shortDescription = cmdConfig.ShortDescription
-	}
-
-	cmdResult := lang.Command{
-		Name:             sCmd.Name,
-		ShortDescription: shortDescription,
-		LongDescription:  cmdConfig.LongDescription,
-		ClientMethod:     cmdConfig.ClientMethod,
-		ClientMethodArgs: clientMethodArgs,
-		Example:          cmdConfig.Example,
-		Flags:            flags,
-	}
-
-	return &cmdResult
 }
 
 func hydrateFlagsFromSchema(args []schema.Field, cmdConfig config.Command) []lang.CommandFlag {

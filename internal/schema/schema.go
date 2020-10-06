@@ -164,7 +164,6 @@ func (s *Schema) LookupQueryTypesByFieldPath(fieldPath []string) ([]*Type, error
 	}
 
 	found := 0
-
 	t := startingT
 
 	for _, fieldName := range fieldPath {

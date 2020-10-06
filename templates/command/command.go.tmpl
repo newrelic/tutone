@@ -40,8 +40,8 @@ var {{$cmdVarName}} = &cobra.Command{
 
       var {{ .Name }} {{ .ClientType }}
 
-			err := json.Unmarshal([]byte({{.VariableName}}), &{{.Name}})
-			utils.LogIfFatal(err)
+      err := json.Unmarshal([]byte({{.VariableName}}), &{{.Name}})
+      utils.LogIfFatal(err)
       {{- end -}}
       {{end}}
 

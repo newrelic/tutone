@@ -14,7 +14,7 @@ require (
 	github.com/goreleaser/goreleaser v0.143.0
 	github.com/llorllale/go-gitlint v0.0.0-20200802191503-5984945d4b80
 	github.com/newrelic/newrelic-cli v0.14.0
-	github.com/newrelic/newrelic-client-go v0.44.0
+	github.com/newrelic/newrelic-client-go v0.45.0
 	github.com/psampaz/go-mod-outdated v0.7.0
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/cobra v1.0.0
