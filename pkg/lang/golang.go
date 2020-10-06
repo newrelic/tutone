@@ -369,18 +369,23 @@ func getStructField(f schema.Field, pkgConfig *config.PackageConfig) GoStructFie
 		log.Error(err)
 	}
 
-	if f.Type.IsList() {
-		typeNamePrefix = "[]"
+	kinds := f.Type.GetKinds()
+
+	// In the case we have a LIST type, we need to prefix the type with the slice
+	// descriptor.  This can appear pretty much anywhere in a list of kinds, but
+	// we ignore the order here.
+	for _, k := range kinds {
+		if k == schema.KindList {
+			typeNamePrefix = "[]"
+			break
+		}
 	}
 
 	// In the case a field type is of type Interface, we need to ensure we
 	// append the term "Interface" to it, as is done in the "Implements"
 	// below.
-	if f.Type.OfType != nil {
-		kinds := f.Type.OfType.GetKinds()
-		if kinds[len(kinds)-1] == schema.KindInterface {
-			typeNameSuffix = "Interface"
-		}
+	if kinds[len(kinds)-1] == schema.KindInterface {
+		typeNameSuffix = "Interface"
 	}
 
 	return GoStructField{
