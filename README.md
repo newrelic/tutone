@@ -16,10 +16,10 @@ Generate code from GraphQL schema introspection.
 
 ## Summary
 
-At a high level, the following workflow is used.
+At a high level, the following workflow is used to generate code.
 
--   `tutone fetch` calls the nerdgraph api to introspect the schema.
--   The schema is cached in `schema.json`.  This is information about the graphql schema
+-   `tutone fetch` calls the NerdGraph API to introspect the schema.
+-   The schema is cached in `schema.json`.  This is information about the GraphQL schema
 -   `tutone generate` uses the `schema.json` + the configuration + the templates to output generated text.
 
 ## Getting Started
@@ -86,7 +86,7 @@ types and mutations to include from the schema, and where the package is located
 | name       | Yes      | The name of the package                                                 |
 | path       | Yes      | Name of the package the output file will be part of (see `-p` flag)     |
 | generators | Yes      | A list of generator names from the `generators` field                   |
-| mutations  | No       | A list of mutations from which to infer types                             |
+| mutations  | No       | A list of mutations from which to infer types                           |
 | types      | No       | A list of types from which to start expanding the inferred set of types |
 
 ### Generators
