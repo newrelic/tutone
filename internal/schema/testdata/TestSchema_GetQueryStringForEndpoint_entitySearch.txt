@@ -83,6 +83,12 @@ query(
 				alertSeverity
 				applicationId
 			}
+			... on SecureCredentialEntityOutline {
+				__typename
+				description
+				secureCredentialId
+				updatedAt
+			}
 			... on SyntheticMonitorEntityOutline {
 				__typename
 				alertSeverity
