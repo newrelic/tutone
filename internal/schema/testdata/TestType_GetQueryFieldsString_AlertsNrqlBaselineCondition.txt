@@ -15,6 +15,7 @@ nrql {
 policyId
 runbookUrl
 signal {
+	aggregationWindow
 	evaluationOffset
 	fillOption
 	fillValue
@@ -28,3 +29,4 @@ terms {
 }
 type
 violationTimeLimit
+violationTimeLimitSeconds
