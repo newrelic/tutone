@@ -35,7 +35,8 @@ func (f *Field) GetTypeNameWithOverride(pkgConfig *config.PackageConfig) (string
 	var err error
 
 	// Discover any FieldTypeOverride override for the current field.
-	nameToMatch := f.GetName()
+	nameToMatch := f.Type.GetTypeName()
+
 	for _, p := range pkgConfig.Types {
 		if p.Name == nameToMatch {
 			if p.FieldTypeOverride != "" {
