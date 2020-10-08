@@ -1,15 +1,12 @@
 package typegen
 
 import (
-	"bytes"
 	"fmt"
-	"go/format"
 	"os"
-	"path"
-	"text/template"
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/newrelic/tutone/internal/codegen"
 	"github.com/newrelic/tutone/internal/config"
 	"github.com/newrelic/tutone/internal/schema"
 	"github.com/newrelic/tutone/pkg/lang"
@@ -101,30 +98,12 @@ func (g *Generator) Execute(genConfig *config.GeneratorConfig, pkgConfig *config
 		templateDir = genConfig.TemplateDir
 	}
 
-	templatePath := path.Join(templateDir, templateName)
-
-	tmpl, err := template.ParseFiles(templatePath)
-	if err != nil {
-		return err
+	c := codegen.CodeGen{
+		TemplateDir:     templateDir,
+		TemplateName:    templateName,
+		DestinationFile: filePath,
+		DestinationDir:  destinationPath,
 	}
 
-	var resultBuf bytes.Buffer
-
-	err = tmpl.Execute(&resultBuf, g)
-	if err != nil {
-		return err
-	}
-
-	formatted, err := format.Source(resultBuf.Bytes())
-	if err != nil {
-		return err
-	}
-
-	// Rewrite the file with the formatted output
-	_, err = file.WriteAt(formatted, 0)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return c.WriteFile(g)
 }

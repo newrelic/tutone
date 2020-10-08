@@ -51,17 +51,22 @@ type GolangGenerator struct {
 }
 
 type GoStruct struct {
-	Name        string
-	Description string
-	Fields      []GoStructField
-	Implements  []string
+	Name             string
+	Description      string
+	Fields           []GoStructField
+	Implements       []string
+	SpecialUnmarshal bool
 }
 
 type GoStructField struct {
 	Name        string
 	Type        string
+	TypeName    string
 	Tags        string
+	TagKey      string
 	Description string
+	IsInterface bool
+	IsList      bool
 }
 
 type GoEnum struct {
@@ -82,9 +87,15 @@ type GoScalar struct {
 }
 
 type GoInterface struct {
-	Name        string
-	Description string
-	Type        string
+	Name          string
+	Description   string
+	Type          string
+	PossibleTypes []GoInterfacePossibleType
+}
+
+type GoInterfacePossibleType struct {
+	GoName      string
+	GraphQLName string
 }
 
 type GoMethod struct {
@@ -156,11 +167,8 @@ func GenerateGoMethodQueriesForPackage(s *schema.Schema, genConfig *config.Gener
 
 					methods = append(methods, method)
 				}
-
 			}
-
 		}
-
 	}
 
 	if len(methods) > 0 {
@@ -237,6 +245,16 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 
 			fieldErrs := []error{}
 			for _, f := range fields {
+
+				// If any of the fields for this type are an interface type, then we
+				// need to signal to the template an UnmarshalJSON() should be
+				// rendered.
+				for _, k := range f.Type.GetKinds() {
+					if k == schema.KindInterface {
+						xxx.SpecialUnmarshal = true
+					}
+				}
+
 				xxx.Fields = append(xxx.Fields, getStructField(f, pkgConfig))
 			}
 
@@ -262,6 +280,19 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 				yyy := GoInterface{
 					Description: t.GetDescription(),
 					Name:        t.GetName(),
+				}
+
+				// Inform the template about which possible implementations exist for
+				// this interface.  We need to know about both the name that GraphQL
+				// uses and the name that Go uses.  This is to allow some flexibility
+				// in the template for how to reference the implementation information.
+				for _, x := range t.PossibleTypes {
+					ttt := GoInterfacePossibleType{
+						GraphQLName: x.Name,
+						GoName:      x.GetName(),
+					}
+
+					yyy.PossibleTypes = append(yyy.PossibleTypes, ttt)
 				}
 
 				interfacesForGen = append(interfacesForGen, yyy)
@@ -371,28 +402,39 @@ func getStructField(f schema.Field, pkgConfig *config.PackageConfig) GoStructFie
 
 	kinds := f.Type.GetKinds()
 
+	var isList bool
+
 	// In the case we have a LIST type, we need to prefix the type with the slice
 	// descriptor.  This can appear pretty much anywhere in a list of kinds, but
 	// we ignore the order here.
 	for _, k := range kinds {
 		if k == schema.KindList {
 			typeNamePrefix = "[]"
+			isList = true
 			break
 		}
 	}
+
+	// Used to signal the template that the UnmarshalJSON should handle this field as an Interface.
+	var isInterface bool
 
 	// In the case a field type is of type Interface, we need to ensure we
 	// append the term "Interface" to it, as is done in the "Implements"
 	// below.
 	if kinds[len(kinds)-1] == schema.KindInterface {
 		typeNameSuffix = "Interface"
+		isInterface = true
 	}
 
 	return GoStructField{
 		Description: f.GetDescription(),
 		Name:        f.GetName(),
+		TagKey:      f.Name,
 		Tags:        f.GetTags(),
+		IsInterface: isInterface,
+		IsList:      isList,
 		Type:        fmt.Sprintf("%s%s%s", typeNamePrefix, typeName, typeNameSuffix),
+		TypeName:    typeName,
 	}
 }
 
@@ -449,6 +491,7 @@ func constrainedResponseStructs(s *schema.Schema, pkgConfig *config.PackageConfi
 
 			for _, f := range t.Fields {
 				if isExpanded(expandedTypes, f.Type.GetTypeName()) || isInPath(pathTypes, f.Type.GetName()) {
+
 					xxx.Fields = append(xxx.Fields, getStructField(f, pkgConfig))
 				}
 			}
