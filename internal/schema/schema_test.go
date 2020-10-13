@@ -48,6 +48,14 @@ func TestSchema_QueryArgs(t *testing.T) {
 		Fields  []string
 		Results []QueryArg
 	}{
+		"accountEntities": {
+			Name:   "Actor",
+			Fields: []string{"account", "entities"},
+			Results: []QueryArg{
+				{Key: "id", Value: "Int!"},
+				{Key: "guids", Value: "[EntityGuid]!"},
+			},
+		},
 		"entities": {
 			Name:   "Actor",
 			Fields: []string{"entities"},
@@ -203,5 +211,48 @@ func TestSchema_GetQueryStringForMutation(t *testing.T) {
 		// saveFixture(t, n, result)
 		expected := loadFixture(t, n)
 		assert.Equal(t, expected, result)
+	}
+}
+
+func TestSchema_GetInputFieldsForQueryPath(t *testing.T) {
+	t.Parallel()
+
+	// schema cached by 'make test-prep'
+	s, err := Load("../../testdata/schema.json")
+	require.NoError(t, err)
+
+	cases := map[string]struct {
+		QueryPath []string
+		Fields    map[string][]string
+	}{
+		"accountCloud": {
+			QueryPath: []string{"actor", "account", "cloud"},
+			Fields: map[string][]string{
+				"account": {"id"},
+			},
+		},
+		"entities": {
+			QueryPath: []string{"actor", "entities"},
+			Fields: map[string][]string{
+				"entities": {"guids"},
+			},
+		},
+		"apiAccessKey": {
+			QueryPath: []string{"actor", "apiAccess", "key"},
+			Fields: map[string][]string{
+				"key": {"id", "keyType"},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		result := s.GetInputFieldsForQueryPath(tc.QueryPath)
+		assert.Equal(t, len(tc.Fields), len(result))
+		for pathName, fields := range tc.Fields {
+
+			for i, name := range fields {
+				assert.Equal(t, name, result[pathName][i].Name)
+			}
+		}
 	}
 }

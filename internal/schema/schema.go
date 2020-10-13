@@ -170,6 +170,36 @@ func (s *Schema) LookupQueryTypesByFieldPath(fieldPath []string) ([]*Type, error
 	return types, nil
 }
 
+// GetInputFieldsForQueryPath is intended to return the fields that are
+// available as input arguments when performing a query using the received
+// query path.  For example, a []string{"actor", "account"} would look at the
+// representivate types at those schema levels and determine collect the
+// available arguments for return.
+func (s *Schema) GetInputFieldsForQueryPath(queryPath []string) map[string][]Field {
+	fields := make(map[string][]Field)
+
+	pathTypes, err := s.LookupQueryTypesByFieldPath(queryPath)
+	if err != nil {
+		log.Error(err)
+	}
+
+	for i, t := range pathTypes {
+		for _, f := range t.Fields {
+			// before the last element
+			if i+1 < len(queryPath) {
+				pathName := queryPath[i+1]
+				if f.Name == pathName {
+					if len(f.Args) > 0 {
+						fields[pathName] = append(fields[pathName], f.Args...)
+					}
+				}
+			}
+		}
+	}
+
+	return fields
+}
+
 // QueryFieldsForTypeName will lookup a type by the received name, and return
 // the query fields for that type, or log an error and return and empty string.
 // The returned string is used in a mutation, so that the relevant fields are
