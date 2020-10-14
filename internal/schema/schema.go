@@ -29,6 +29,23 @@ type Schema struct {
 	Types            []*Type `json:"types,omitempty"`
 }
 
+type queryStringData struct {
+	Endpoint string
+	TypeName string
+	// Args for the specific endpoint
+	EndpointArgs []QueryArg
+	// Variables for the query
+	QueryVars []QueryArg
+	Fields    string
+	FieldPath []string
+}
+
+type mutationStringData struct {
+	MutationName string
+	Args         []QueryArg
+	Fields       string
+}
+
 func ParseResponse(resp *http.Response) (*QueryResponse, error) {
 	if resp == nil {
 		return nil, errors.New("unable to parse nil HTTP response")
@@ -221,7 +238,6 @@ func (s *Schema) QueryArgs(t *Type, fields []string) []QueryArg {
 
 	for _, f := range t.Fields {
 		if stringInStrings(f.Name, fields) {
-
 			for _, a := range f.Args {
 				queryArg := QueryArg{
 					Key: a.Name,
@@ -261,30 +277,58 @@ func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string,
 	t := typePath[len(typePath)-1]
 	args := s.QueryArgs(t, []string{endpoint})
 
-	data := struct {
-		TypeName  string
-		Endpoint  string
-		Args      []QueryArg
-		Fields    string
-		FieldPath []string
-	}{}
+	data := queryStringData{}
 
 	data.TypeName = t.GetName()
 	data.Endpoint = endpoint
-	data.Args = args
-	data.FieldPath = fieldPath
+
+	// Format the path arguments for the query.
+	inputFields := s.GetInputFieldsForQueryPath(fieldPath)
+	for _, pathName := range fieldPath {
+		if fields, ok := inputFields[pathName]; ok {
+			for _, f := range fields {
+				kinds := f.Type.GetKinds()
+
+				// TODO implement optional arguments.
+				if kinds[0] == KindNonNull {
+					inputTypeName := fmt.Sprintf("%s%s", pathName, f.GetName())
+
+					fieldSpec := fmt.Sprintf("%s(%s: $%s)", pathName, f.Name, inputTypeName)
+					data.FieldPath = append(data.FieldPath, fieldSpec)
+
+					queryArg := QueryArg{
+						Key:   inputTypeName,
+						Value: fmt.Sprintf("%s!", f.Type.GetTypeName()),
+					}
+
+					data.QueryVars = append(data.QueryVars, queryArg)
+				}
+			}
+
+		} else {
+			data.FieldPath = append(data.FieldPath, pathName)
+		}
+	}
+
+	data.QueryVars = append(data.QueryVars, args...)
+	data.EndpointArgs = append(data.EndpointArgs, args...)
 
 	// Match the type field to the endpoint.
 	for _, f := range t.Fields {
-		if f.Name == endpoint {
-			fieldType, lookupErr := s.LookupTypeByName(f.Type.GetTypeName())
-			if lookupErr != nil {
-				log.Error(lookupErr)
-				return ""
-			}
+		kinds := f.Type.GetKinds()
+		// TODO implement optional arguments.
+		if kinds[0] == KindNonNull {
 
-			data.Fields = PrefixLineTab(fieldType.GetQueryStringFields(s, 0, depth))
-			break
+			if f.Name == endpoint {
+				fieldType, lookupErr := s.LookupTypeByName(f.Type.GetTypeName())
+				if lookupErr != nil {
+					log.Error(lookupErr)
+					return ""
+				}
+
+				data.Fields = PrefixLineTab(fieldType.GetQueryStringFields(s, 0, depth))
+				break
+			}
 		}
 	}
 
@@ -310,13 +354,7 @@ func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string,
 // GetQueryStringForMutation packs a nerdgraph query header and footer around the set of query fields GraphQL mutation name.
 func (s *Schema) GetQueryStringForMutation(mutation *Field, depth int) string {
 
-	// t := typePath[len(typePath)-1]
-	data := struct {
-		// TypeName string
-		MutationName string
-		Args         []QueryArg
-		Fields       string
-	}{}
+	data := mutationStringData{}
 
 	data.MutationName = mutation.GetName()
 
@@ -372,11 +410,11 @@ func (s *Schema) GetQueryStringForMutation(mutation *Field, depth int) string {
 }
 
 var queryHeaderTemplate = `query(
-	{{- range .Args}}
+	{{- range .QueryVars}}
 	${{.Key}}: {{.Value}},
 	{{- end}}
 ) { {{ .FieldPath | join " { " }} { {{.Endpoint}}(
-	{{- range .Args}}
+	{{- range .EndpointArgs}}
 	{{.Key}}: ${{.Key}},
 	{{- end}}
 ) {
@@ -384,9 +422,9 @@ var queryHeaderTemplate = `query(
 `
 
 var mutationHeaderTemplate = `mutation(
-  {{- range .Args}}
+	{{- range .Args}}
 	${{.Key}}: {{.Value}},
-  {{- end}}
+	{{- end}}
 ) { {{.MutationName}}(
 	{{- range .Args}}
 	{{.Key}}: ${{.Key}},

@@ -529,7 +529,7 @@ func constrainedResponseStructs(s *schema.Schema, pkgConfig *config.PackageConfi
 //
 // The received inputFields are to seed the initial objet.  This allows the
 // caller to pass additional context about the received field's place in the
-// schema that are used as a starting place for input vairables, since the
+// schema that are used as a starting place for input variables, since the
 // parent objects may require those inputs.
 func goMethodForField(field schema.Field, pkgConfig *config.PackageConfig, inputFields map[string][]schema.Field) GoMethod {
 
