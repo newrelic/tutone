@@ -93,3 +93,8 @@ func (f *Field) IsGoType() bool {
 
 	return false
 }
+
+// Convenience method that proxies to TypeRef method
+func (f *Field) IsScalarID() bool {
+	return f.Type.IsScalarID()
+}
