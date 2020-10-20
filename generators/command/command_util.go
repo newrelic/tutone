@@ -1,6 +1,9 @@
 package command
 
 import (
+	"fmt"
+
+	"github.com/huandu/xstrings"
 	"github.com/newrelic/tutone/internal/config"
 	"github.com/newrelic/tutone/internal/schema"
 	"github.com/newrelic/tutone/pkg/lang"
@@ -32,6 +35,7 @@ func hydrateSubcommand(
 
 	cmdResult := lang.Command{
 		Name:             sCmd.Name,
+		CmdVariableName:  fmt.Sprintf("cmd%s", xstrings.FirstRuneToUpper(sCmd.Name)),
 		ShortDescription: shortDescription,
 		LongDescription:  cmdConfig.LongDescription,
 		ClientMethod:     cmdConfig.ClientMethod,

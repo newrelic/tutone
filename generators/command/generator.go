@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/huandu/xstrings"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/newrelic/tutone/internal/codegen"
@@ -25,8 +26,18 @@ var goTypesToCobraFlagMethodMap = map[string]string{
 }
 
 func hydrateCommand(s *schema.Schema, command config.Command, pkgConfig *config.PackageConfig) lang.Command {
+	isBaseCommand := true
+	cmdVarName := "Command"
+
+	// Handle case where this command is a subcommand of a parent entry point
+	// Note: this doesn't do anything yet,
+	if !isBaseCommand {
+		cmdVarName = fmt.Sprintf("cmd%s", xstrings.ToCamelCase(command.Name))
+	}
+
 	cmd := lang.Command{
 		Name:             command.Name,
+		CmdVariableName:  cmdVarName,
 		ShortDescription: command.ShortDescription,
 		LongDescription:  command.LongDescription,
 		Example:          command.Example,
@@ -73,10 +84,6 @@ func hydrateCommand(s *schema.Schema, command config.Command, pkgConfig *config.
 			}
 		}
 
-		// fmt.Print("\n\n **************************** \n")
-		// fmt.Printf("\n subcommandMetadata:  %+v \n", subcommandMetadata.Name)
-		// fmt.Print("\n **************************** \n\n")
-
 		subcommand := hydrateSubcommand(s, subcommandMetadata, subCmdConfig)
 
 		exampleData := lang.CommandExampleData{
@@ -114,7 +121,9 @@ func hydrateFlagsFromSchema(args []schema.Field, cmdConfig config.Command) []lan
 
 	for _, arg := range args {
 		var variableName string
-		if arg.Type.OfType.Kind == schema.KindInputObject {
+
+		isInputObject := arg.Type.IsInputObject()
+		if isInputObject {
 			// Add 'Input' suffix to the input variable name
 			variableName = fmt.Sprintf("%sInput", cmdConfig.Name)
 		} else {
@@ -125,7 +134,7 @@ func hydrateFlagsFromSchema(args []schema.Field, cmdConfig config.Command) []lan
 		typeName := arg.Type.GetTypeName()
 
 		// TODO: Put this into a helper method or find an existing helper method
-		isOfTypeScalarID := typeName == "ID" && arg.Type.OfType.Kind == schema.KindScalar
+		isOfTypeScalarID := typeName == "ID" && arg.Type.OfType != nil && arg.Type.OfType.Kind == schema.KindScalar
 		if isOfTypeScalarID {
 			typ = "string"
 		}
@@ -136,7 +145,7 @@ func hydrateFlagsFromSchema(args []schema.Field, cmdConfig config.Command) []lan
 		}
 
 		isRequired := arg.Type.Kind == schema.KindNonNull
-		isInputType := arg.Type.OfType.Kind == schema.KindInputObject
+		// isInputObject := arg.Type.OfType.Kind == schema.KindInputObject
 		clientType := fmt.Sprintf("%s.%s", cmdConfig.ClientPackageName, typ)
 
 		flag := lang.CommandFlag{
@@ -148,7 +157,7 @@ func hydrateFlagsFromSchema(args []schema.Field, cmdConfig config.Command) []lan
 			VariableName:   variableName,
 			VariableType:   variableType,
 			Required:       isRequired,
-			IsInputType:    isInputType,
+			IsInputType:    isInputObject,
 			ClientType:     clientType,
 		}
 

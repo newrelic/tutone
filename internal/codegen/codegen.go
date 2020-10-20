@@ -3,13 +3,13 @@ package codegen
 import (
 	"bytes"
 	"fmt"
-	"go/format"
 	"os"
 	"path"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/tools/imports"
 )
 
 type CodeGen struct {
@@ -60,7 +60,7 @@ func (c *CodeGen) WriteFile(g Generator) error {
 		return err
 	}
 
-	formatted, err := format.Source(resultBuf.Bytes())
+	formatted, err := imports.Process(file.Name(), resultBuf.Bytes(), nil)
 	if err != nil {
 		log.Error(resultBuf.String())
 		return fmt.Errorf("failed to format buffer: %s", err)
@@ -105,7 +105,7 @@ func (c *CodeGen) WriteFileFromTemplateString(g Generator, templateString string
 		return err
 	}
 
-	formatted, err := format.Source(resultBuf.Bytes())
+	formatted, err := imports.Process(file.Name(), resultBuf.Bytes(), nil)
 	if err != nil {
 		log.Error(resultBuf.String())
 		return fmt.Errorf("failed to format buffer: %s", err)

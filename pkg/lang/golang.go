@@ -25,6 +25,7 @@ type InputObject struct {
 
 type Command struct {
 	Name             string
+	CmdVariableName  string
 	ShortDescription string
 	LongDescription  string
 	Example          string
