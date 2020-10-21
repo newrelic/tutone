@@ -98,3 +98,8 @@ func (f *Field) IsGoType() bool {
 func (f *Field) IsScalarID() bool {
 	return f.Type.IsScalarID()
 }
+
+// Convenience method that proxies to TypeRef method
+func (f *Field) IsRequired() bool {
+	return f.Type.IsNonNull()
+}

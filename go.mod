@@ -11,9 +11,10 @@ require (
 	github.com/client9/misspell v0.3.4
 	github.com/git-chglog/git-chglog v0.0.0-20200414013904-db796966b373
 	github.com/golangci/golangci-lint v1.31.0
+	github.com/google/uuid v1.1.2 // indirect
 	github.com/goreleaser/goreleaser v0.143.0
+	github.com/huandu/xstrings v1.3.2
 	github.com/llorllale/go-gitlint v0.0.0-20200802191503-5984945d4b80
-	github.com/newrelic/newrelic-cli v0.14.0
 	github.com/newrelic/newrelic-client-go v0.45.0
 	github.com/psampaz/go-mod-outdated v0.7.0
 	github.com/sirupsen/logrus v1.7.0

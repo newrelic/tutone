@@ -203,7 +203,6 @@ func hydrateFlagsFromSchema(args []schema.Field, cmdConfig config.Command) []lan
 			variableType = typ
 		}
 
-		isRequired := arg.Type.Kind == schema.KindNonNull
 		clientType := fmt.Sprintf("%s.%s", cmdConfig.ClientPackageName, typ)
 
 		flag := lang.CommandFlag{
@@ -214,7 +213,7 @@ func hydrateFlagsFromSchema(args []schema.Field, cmdConfig config.Command) []lan
 			Description:    arg.Description,
 			VariableName:   variableName,
 			VariableType:   variableType,
-			Required:       isRequired,
+			Required:       arg.IsRequired(),
 			IsInputType:    isInputObject,
 			ClientType:     clientType,
 		}
