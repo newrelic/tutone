@@ -548,11 +548,16 @@ func goMethodForField(field schema.Field, pkgConfig *config.PackageConfig, input
 					continue
 				}
 
+				var prefix string
+				if kinds[1] == schema.KindList {
+					prefix = "[]"
+				}
+
 				inputType := GoMethodInputType{
 					// Flavor the name of the input object with the field from the path
 					// in which we were found.
 					Name: fmt.Sprintf("%s%s", pathName, f.GetName()),
-					Type: typeName,
+					Type: fmt.Sprintf("%s%s", prefix, typeName),
 				}
 
 				method.Signature.Input = append(method.Signature.Input, inputType)
@@ -585,9 +590,16 @@ func goMethodForField(field schema.Field, pkgConfig *config.PackageConfig, input
 			continue
 		}
 
+		methodArgKinds := methodArg.Type.GetKinds()
+
+		var methodArgPrefix string
+		if methodArgKinds[0] == schema.KindList {
+			methodArgPrefix = "[]"
+		}
+
 		inputType := GoMethodInputType{
 			Name: methodArg.GetName(),
-			Type: typeName,
+			Type: fmt.Sprintf("%s%s", methodArgPrefix, typeName),
 		}
 
 		method.Signature.Input = append(method.Signature.Input, inputType)
