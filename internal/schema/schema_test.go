@@ -36,7 +36,7 @@ func loadFixture(t *testing.T, n string) string {
 	return string(content)
 }
 
-func TestSchema_QueryArgs(t *testing.T) {
+func TestSchema_BuildQueryArgsForEndpoint(t *testing.T) {
 	t.Parallel()
 
 	// schema cached by 'make test-prep'
@@ -44,9 +44,10 @@ func TestSchema_QueryArgs(t *testing.T) {
 	require.NoError(t, err)
 
 	cases := map[string]struct {
-		Name    string
-		Fields  []string
-		Results []QueryArg
+		Name            string
+		Fields          []string
+		IncludeNullable bool
+		Results         []QueryArg
 	}{
 		"accountEntities": {
 			Name:   "Actor",
@@ -71,8 +72,9 @@ func TestSchema_QueryArgs(t *testing.T) {
 			},
 		},
 		"entitySearch": {
-			Name:   "Actor",
-			Fields: []string{"entitySearch"},
+			Name:            "Actor",
+			Fields:          []string{"entitySearch"},
+			IncludeNullable: true,
 			Results: []QueryArg{
 				{Key: "query", Value: "String"},
 				{Key: "queryBuilder", Value: "EntitySearchQueryBuilder"},
@@ -87,19 +89,27 @@ func TestSchema_QueryArgs(t *testing.T) {
 			},
 		},
 		"accountOutline": {
-			Name:   "AccountOutline",
-			Fields: []string{"reportingEventTypes"},
+			Name:            "AccountOutline",
+			Fields:          []string{"reportingEventTypes"},
+			IncludeNullable: true,
 			Results: []QueryArg{
 				{Key: "filter", Value: "[String]"},
 				{Key: "timeWindow", Value: "TimeWindowInput"},
 			},
 		},
 		"linkedAccounts": {
-			Name:   "CloudActorFields",
-			Fields: []string{"linkedAccounts"},
+			Name:            "CloudActorFields",
+			Fields:          []string{"linkedAccounts"},
+			IncludeNullable: true,
 			Results: []QueryArg{
 				{Key: "provider", Value: "String"},
 			},
+		},
+		"linkedAccountsWithoutNullable": {
+			Name:            "CloudActorFields",
+			Fields:          []string{"linkedAccounts"},
+			IncludeNullable: false,
+			Results:         []QueryArg{},
 		},
 	}
 
@@ -107,7 +117,7 @@ func TestSchema_QueryArgs(t *testing.T) {
 		x, err := s.LookupTypeByName(tc.Name)
 		require.NoError(t, err)
 
-		result := s.QueryArgs(x, tc.Fields)
+		result := s.BuildQueryArgsForEndpoint(x, tc.Fields, tc.IncludeNullable)
 		assert.Equal(t, tc.Results, result)
 	}
 }
@@ -165,6 +175,12 @@ func TestSchema_GetQueryStringForEndpoint(t *testing.T) {
 			Path:  []string{"actor"},
 			Field: "entitySearch",
 			Depth: 3,
+		},
+		"entities": {
+			Path:  []string{"actor"},
+			Field: "entities",
+			// Zero set here because we have the field coverage above with greater depth.  Here we want to ensure that required arguments on the entities endpoint has the correct syntax.
+			Depth: 0,
 		},
 		"linkedAccounts": {
 			Path:  []string{"actor", "cloud"},
