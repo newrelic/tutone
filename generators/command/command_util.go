@@ -1,6 +1,7 @@
 package command
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -17,6 +18,138 @@ import (
 var goTypesToCobraFlagMethodMap = map[string]string{
 	"int":    "IntVar",
 	"string": "StringVar",
+}
+
+// NOTE: Maybe move this as a more generic method on Schema struct
+func getReadCommandMetadata(s *schema.Schema, queryPath []string) (*schema.Field, error) {
+	if len(queryPath) == 0 {
+		return nil, fmt.Errorf("query path is empty")
+	}
+
+	rootQuery, err := s.LookupRootQueryTypeFieldByName(queryPath[0])
+	if err != nil {
+		return nil, fmt.Errorf("root query field not found: %s", err)
+	}
+
+	rootQueryType, err := s.LookupTypeByName(rootQuery.GetName())
+	if err != nil {
+		return nil, fmt.Errorf("%s", err) // TODO: Do better
+	}
+
+	// fmt.Printf("\n rootQueryType.Name:     %+v \n", rootQueryType.Name)
+
+	log.Print("\n\n **************************** \n")
+
+	queryPath = queryPath[1:]
+
+	match := findField(s, queryPath, rootQueryType)
+
+	fmt.Printf(" FOUND match??:   %+v \n", match)
+
+	log.Print("\n\n **************************** \n")
+
+	if match != nil {
+		return match, nil
+	}
+
+	// fmt.Printf(" rootQueryType.Fields:   %+v \n", rootQueryType.Fields)
+
+	// Start from index 1 instead of 0 because we directly
+	// accessed the root query via index 0.
+	// queryFieldNamesPath := queryPath[1:]
+
+	// TODO: We need to handle this recursively!!
+	// for _, q := range queryFieldNamesPath {
+	// 	field, err := rootQueryType.GetField(q)
+	// 	if err != nil {
+	// 		continue
+	// 		// return nil, err
+	// 	}
+
+	// 	fmt.Printf(" rootQueryType Field:   %+v \n", field.Name)
+	// 	fmt.Printf(" field.Type.GetTypeName():   %+v \n", field.Type.GetTypeName())
+
+	// 	fld, _ := s.LookupTypeByName(field.Type.GetTypeName())
+
+	// 	fmt.Printf(" Next Field:   %+v \n", fld.Name)
+
+	// 	if len(field.Args) > 0 {
+
+	// 	}
+	// }
+
+	return nil, fmt.Errorf("could not find matching introspection data for provided query path")
+}
+
+func toJSON(data interface{}) string {
+	c, _ := json.MarshalIndent(data, "", "  ")
+
+	return string(c)
+}
+
+func findField(s *schema.Schema, queryFieldNames []string, obj *schema.Type) *schema.Field {
+
+	fmt.Printf("\n\n findField queryFieldNames:     %+v \n", queryFieldNames)
+	// fmt.Printf(" findField obj.Name:              %+v \n", toJSON(obj))
+
+	// if len(queryFieldNames) ==  {
+	// 	f, err := obj.GetField(queryFieldNames[0])
+	// 	if err != nil {
+	// 		// could not find what we're looking for
+	// 		return nil
+	// 	}
+	// 	return f
+	// }
+
+	for _, q := range queryFieldNames {
+		// fmt.Printf(" findField node name:            %+v \n", q)
+
+		field, _ := obj.GetField(q)
+
+		// fmt.Printf(" findField field.Name:           %+v \n\n", field)
+
+		if len(queryFieldNames) == 1 && queryFieldNames[0] == q {
+			return field
+		}
+
+		theField, _ := s.LookupTypeByName(field.Type.GetTypeName())
+
+		// fmt.Printf(" findField theField:             %+v \n", toJSON(theField))
+
+		remainingFields := queryFieldNames[1:]
+
+		// fmt.Printf(" findField remainingFields:      %+v \n", remainingFields)
+
+		found := findField(s, remainingFields, theField)
+
+		// fmt.Printf(" findField found:                %+v \n", toJSON(found))
+
+		// time.Sleep(10 * time.Second)
+
+		if found != nil && len(remainingFields) == 1 {
+			return found
+		}
+
+		// queryFieldNames = queryFieldNames[1:]
+
+		// nextField, _ := s.LookupTypeByName(field.Type.GetTypeName())
+		// // if err != nil {
+		// // 	return field
+		// // }
+
+		// fmt.Printf(" findField nextField.name:         %+v \n", nextField.Name)
+		// // fmt.Printf(" findField nextField.Args:         %+v \n", nextField)
+
+		// result := findField(s, queryFieldNames, nextField)
+
+		// fmt.Printf(" findField result:         %+v \n", result)
+
+		// if result == nil {
+		// 	return field
+		// }
+	}
+
+	return nil
 }
 
 func hydrateCommand(s *schema.Schema, command config.Command, pkgConfig *config.PackageConfig) lang.Command {
@@ -72,43 +205,11 @@ func hydrateCommand(s *schema.Schema, command config.Command, pkgConfig *config.
 			// }
 
 			// graphQLParentScope := subCmdConfig.GraphQLPath[len(subCmdConfig.GraphQLPath)-2]
-			graphQLEndpoint := subCmdConfig.GraphQLPath[len(subCmdConfig.GraphQLPath)-1]
+			// graphQLEndpoint := subCmdConfig.GraphQLPath[len(subCmdConfig.GraphQLPath)-1]
 
-			fmt.Print("\n\n **************************** \n")
-
-			rootQueryName := subCmdConfig.GraphQLPath[0]
-
-			rootQuery, err := s.LookupRootQueryTypeFieldByName(rootQueryName)
-			if err != nil {
-				log.Fatalf("root query endpoint not found: %s", err)
-			}
-
-			rootQueryType, err := s.LookupTypeByName(rootQuery.GetName())
+			subcommandMetadata, err = getReadCommandMetadata(s, subCmdConfig.GraphQLPath)
 			if err != nil {
 				log.Fatal(err)
-			}
-
-			steps := subCmdConfig.GraphQLPath[1:]
-
-			for _, step := range steps {
-				field, err := rootQueryType.GetField(step)
-				if err != nil {
-					// TODO: Better error handling and grace
-					fmt.Println(err)
-					continue
-				}
-
-				fieldType, err := s.LookupTypeByName(field.Type.GetTypeName())
-				if err != nil {
-					log.Fatal(err)
-				}
-
-				for _, fld := range fieldType.Fields {
-					if fld.Name == graphQLEndpoint {
-						subcommandMetadata = &fld
-						break
-					}
-				}
 			}
 
 			// for _, queryStep := range queryPathTypes {
@@ -134,10 +235,10 @@ func hydrateCommand(s *schema.Schema, command config.Command, pkgConfig *config.
 			// 	}
 			// }
 
-			fmt.Printf("\n subcommandMetadata:         %+v \n", *subcommandMetadata)
+			// fmt.Printf("\n subcommandMetadata:         %+v \n", *subcommandMetadata)
 
-			fmt.Print("\n **************************** \n\n")
-			time.Sleep(3 * time.Second)
+			// fmt.Print("\n **************************** \n\n")
+			// time.Sleep(3 * time.Second)
 		}
 
 		subcommand := hydrateSubcommand(s, subcommandMetadata, subCmdConfig)
