@@ -103,3 +103,11 @@ func (f *Field) IsScalarID() bool {
 func (f *Field) IsRequired() bool {
 	return f.Type.IsNonNull()
 }
+
+func (f *Field) IsEnum() bool {
+	if f.Type.Kind == KindENUM {
+		return true
+	}
+
+	return f.Type.OfType != nil && f.Type.OfType.Kind == KindENUM
+}

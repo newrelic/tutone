@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"time"
 
 	"github.com/huandu/xstrings"
 	"github.com/newrelic/tutone/internal/codegen"
@@ -119,11 +118,11 @@ func hydrateCommand(s *schema.Schema, command config.Command, pkgConfig *config.
 	return cmd
 }
 
-// TODO: Consolidate shared parts of
-// hydrateCommand, hydrateSubcommand, hydrateQuerySubcommand
+// TODO: Consolidate common parts of hydrateCommand, hydrateSubcommand
 func hydrateSubcommand(s *schema.Schema, sCmd *schema.Field, cmdConfig config.Command) *lang.Command {
 	flags := hydrateFlagsFromSchema(sCmd.Args, cmdConfig)
 
+	var err error
 	var clientMethodArgs []string
 	for _, f := range flags {
 		varName := f.VariableName
@@ -132,6 +131,14 @@ func hydrateSubcommand(s *schema.Schema, sCmd *schema.Field, cmdConfig config.Co
 		if f.IsInputType {
 			varName = f.Name
 		}
+
+		if f.IsEnumType {
+			varName, err = wrapEnumTypeVariable(varName, f.ClientType)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+
 		clientMethodArgs = append(clientMethodArgs, varName)
 	}
 
@@ -141,8 +148,13 @@ func hydrateSubcommand(s *schema.Schema, sCmd *schema.Field, cmdConfig config.Co
 		shortDescription = cmdConfig.ShortDescription
 	}
 
+	cmdName := sCmd.Name
+	if cmdConfig.Name != "" {
+		cmdName = cmdConfig.Name
+	}
+
 	cmdResult := lang.Command{
-		Name:             sCmd.Name,
+		Name:             cmdName,
 		CmdVariableName:  fmt.Sprintf("cmd%s", xstrings.FirstRuneToUpper(sCmd.Name)),
 		ShortDescription: shortDescription,
 		LongDescription:  cmdConfig.LongDescription,
@@ -155,48 +167,21 @@ func hydrateSubcommand(s *schema.Schema, sCmd *schema.Field, cmdConfig config.Co
 	return &cmdResult
 }
 
-func hydrateQuerySubcommand(s *schema.Schema, sCmd *schema.Field, cmdConfig config.Command) lang.Command {
-	log.Print("\n\n **************************** \n")
-	log.Printf("\n hydrateQuerySubcommand - Args:  %+v \n", sCmd.Args)
-	log.Print("\n **************************** \n\n")
-	time.Sleep(3 * time.Second)
-
-	flags := hydrateFlagsFromSchema(sCmd.Args, cmdConfig)
-
-	var clientMethodArgs []string
-	for _, f := range flags {
-		varName := f.VariableName
-		// If the client method argument is an `INPUT_OBJECT`,
-		// we need the regular name to unmarshal.
-		if f.IsInputType {
-			varName = f.Name
-		}
-		clientMethodArgs = append(clientMethodArgs, varName)
+// Returns a string representation of a variable wrapped/typed with an enum type ref
+//
+// e.g apiaccess.APIAccessKeyType("KEY_TYPE")
+func wrapEnumTypeVariable(varName string, clientTypeRefString string) (string, error) {
+	data := struct {
+		VarName string
+		TypeRef string
+	}{
+		VarName: varName,
+		TypeRef: clientTypeRefString,
 	}
 
-	shortDescription := sCmd.Description
-	// Allow configuration to override the description that comes from NerdGraph
-	if cmdConfig.ShortDescription != "" {
-		shortDescription = cmdConfig.ShortDescription
-	}
+	t := `{{ .TypeRef }}({{ .VarName }})`
 
-	cmdResult := lang.Command{
-		Name:             sCmd.Name,
-		ShortDescription: shortDescription,
-		LongDescription:  cmdConfig.LongDescription,
-		ClientMethod:     cmdConfig.ClientMethod,
-		ClientMethodArgs: clientMethodArgs,
-		Example:          cmdConfig.Example,
-		Flags:            flags,
-	}
-
-	return cmdResult
-}
-
-func generateCommandExample(sCmd *schema.Field, data lang.CommandExampleData) (string, error) {
-	t := `{{ .CLIName }} {{ .Command }} {{ .Subcommand }}{{- range .Flags }} --{{ .Name }}{{ end }}`
-
-	return codegen.RenderTemplate("commandExample", t, data)
+	return codegen.RenderTemplate(varName, t, data)
 }
 
 func hydrateFlagsFromSchema(args []schema.Field, cmdConfig config.Command) []lang.CommandFlag {
@@ -215,6 +200,12 @@ func hydrateFlagsFromSchema(args []schema.Field, cmdConfig config.Command) []lan
 
 		typ, _, _ := arg.Type.GetType()
 
+		// fmt.Print("\n\n **************************** \n")
+		// fmt.Printf("\n ARG befpre:      %+v \n", arg)
+		// fmt.Printf("\n ARG typ:         %+v \n", typ)
+		// fmt.Printf("\n arg.IsScalarID:  %+v \n", arg.IsScalarID())
+		// fmt.Printf("\n arg.IsEnum():    %+v \n", arg.IsEnum())
+
 		if arg.IsScalarID() {
 			typ = "string"
 		}
@@ -225,6 +216,10 @@ func hydrateFlagsFromSchema(args []schema.Field, cmdConfig config.Command) []lan
 		}
 
 		clientType := fmt.Sprintf("%s.%s", cmdConfig.ClientPackageName, typ)
+
+		// fmt.Printf("\n ARG:        %+v - %+v \n", arg.Name, typ)
+		// fmt.Print("\n **************************** \n\n")
+		// time.Sleep(3 * time.Second)
 
 		flag := lang.CommandFlag{
 			Name:           arg.Name,
@@ -237,6 +232,7 @@ func hydrateFlagsFromSchema(args []schema.Field, cmdConfig config.Command) []lan
 			Required:       arg.IsRequired(),
 			IsInputType:    isInputObject,
 			ClientType:     clientType,
+			IsEnumType:     arg.IsEnum(),
 		}
 
 		flags = append(flags, flag)
@@ -271,4 +267,10 @@ func getCobraFlagMethodName(typeString string) string {
 
 	// Almost all CRUD inputs will be a JSON string
 	return "StringVar"
+}
+
+func generateCommandExample(sCmd *schema.Field, data lang.CommandExampleData) (string, error) {
+	t := `{{ .CLIName }} {{ .Command }} {{ .Subcommand }}{{- range .Flags }} --{{ .Name }}{{ end }}`
+
+	return codegen.RenderTemplate("commandExample", t, data)
 }

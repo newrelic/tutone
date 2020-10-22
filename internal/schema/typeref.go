@@ -117,7 +117,7 @@ func (r *TypeRef) IsInputObject() bool {
 }
 
 func (r *TypeRef) IsScalarID() bool {
-	return r.GetTypeName() != "ID" && r.OfType != nil && r.OfType.Kind == KindScalar
+	return r.OfType != nil && r.OfType.Kind == KindScalar && r.GetTypeName() == "ID"
 }
 
 func (r *TypeRef) IsNonNull() bool {

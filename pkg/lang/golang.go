@@ -50,6 +50,7 @@ type CommandFlag struct {
 	ClientType     string
 	Required       bool
 	IsInputType    bool
+	IsEnumType     bool
 }
 
 type CommandExampleData struct {
