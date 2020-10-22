@@ -69,6 +69,14 @@ func (e *Endpoint) Fetch() (*schema.Schema, error) {
 		s.MutationType = m
 	}
 
+	if s.QueryType != nil {
+		m, mErr := e.FetchType(s.QueryType.Name)
+		if mErr != nil {
+			return nil, mErr
+		}
+		s.QueryType = m
+	}
+
 	// Fetch all of the other data types
 	t, err := e.FetchSchemaTypes()
 	if err != nil {
