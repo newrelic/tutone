@@ -70,7 +70,8 @@ func init() {
   {{- if .Required }}
   utils.LogIfError({{- $cmdVarName -}}.MarkFlagRequired({{ .Name | quote }}))
   {{ end }}
-{{- end }}
-{{- end }}
+
+{{ end }}
+{{ end }}
 {{- end }}
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/huandu/xstrings"
 	"github.com/newrelic/tutone/internal/codegen"
@@ -47,12 +48,16 @@ func hydrateCommand(s *schema.Schema, command config.Command, pkgConfig *config.
 		var err error
 		// var mutationCmdData *schema.Field
 		// var queryCmdData *schema.Field
-		var queryPathTypes []*schema.Type
+		// var queryPathTypes []*schema.Type
 		var subcommandMetadata *schema.Field
 
 		// Check to see if the commands CRUD action is a mutation.
 		// If it's not a mutation, then it's a query (read) request.
 		subcommandMetadata, err = s.LookupMutationByName(subCmdConfig.Name)
+
+		if subcommandMetadata == nil {
+			log.Debugf("no mutation reference found, assuming query request type")
+		}
 
 		// If the command is not a mutation, move forward with
 		// generating a command to perform a query request.
@@ -61,20 +66,78 @@ func hydrateCommand(s *schema.Schema, command config.Command, pkgConfig *config.
 			// for generating types in the client. In the case of the CLI we only need the last
 			// part of the path (the endpoint). A DFS lookup could be quicker, although the
 			// performance hit might be negligible.
-			queryPathTypes, err = s.LookupQueryTypesByFieldPath(subCmdConfig.GraphQLPath)
-			if err != nil {
-				log.Fatalf("query endpoint not found: %s", err)
-			}
+			// queryPathTypes, err = s.LookupQueryTypesByFieldPath(subCmdConfig.GraphQLPath)
+			// if err != nil {
+			// 	log.Fatalf("query endpoint not found: %s", err)
+			// }
 
+			// graphQLParentScope := subCmdConfig.GraphQLPath[len(subCmdConfig.GraphQLPath)-2]
 			graphQLEndpoint := subCmdConfig.GraphQLPath[len(subCmdConfig.GraphQLPath)-1]
 
-			for _, queryStep := range queryPathTypes {
-				for _, field := range queryStep.Fields {
-					if field.Name == graphQLEndpoint {
-						subcommandMetadata = &field
+			fmt.Print("\n\n **************************** \n")
+
+			rootQueryName := subCmdConfig.GraphQLPath[0]
+
+			rootQuery, err := s.LookupRootQueryTypeFieldByName(rootQueryName)
+			if err != nil {
+				log.Fatalf("root query endpoint not found: %s", err)
+			}
+
+			rootQueryType, err := s.LookupTypeByName(rootQuery.GetName())
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			steps := subCmdConfig.GraphQLPath[1:]
+
+			for _, step := range steps {
+				field, err := rootQueryType.GetField(step)
+				if err != nil {
+					// TODO: Better error handling and grace
+					fmt.Println(err)
+					continue
+				}
+
+				fieldType, err := s.LookupTypeByName(field.Type.GetTypeName())
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				for _, fld := range fieldType.Fields {
+					if fld.Name == graphQLEndpoint {
+						subcommandMetadata = &fld
+						break
 					}
 				}
 			}
+
+			// for _, queryStep := range queryPathTypes {
+
+			// 	s.LookupRootQueryTypeFieldByName("actor")
+
+			// 	fmt.Printf("\n queryStep.Name:           %+v \n", queryStep.Name)
+			// 	fmt.Printf(" queryStep.Kind:           %+v \n", queryStep.Kind)
+			// 	// fmt.Printf("\n queryStep.Args:           %+v \n", queryStep)
+			// 	// fmt.Printf(" queryStep.InputFields:      %+v \n", queryStep.InputFields)
+			// 	fmt.Printf(" queryStep.PossibleTypes:    %+v \n", queryStep.PossibleTypes)
+
+			// 	for _, field := range queryStep.Fields {
+			// 		if field.Name == "key" {
+			// 			fmt.Printf(" queryStep.field.Name:       %+v \n", field.Name)
+			// 			fmt.Printf(" queryStep IsRequired:       %+v \n", field.IsRequired())
+			// 			// fmt.Printf("\n graphQLEndpoint:  %+v \n", graphQLEndpoint)
+			// 		}
+
+			// 		if field.Name == graphQLEndpoint {
+			// 			subcommandMetadata = &field
+			// 		}
+			// 	}
+			// }
+
+			fmt.Printf("\n subcommandMetadata:         %+v \n", *subcommandMetadata)
+
+			fmt.Print("\n **************************** \n\n")
+			time.Sleep(3 * time.Second)
 		}
 
 		subcommand := hydrateSubcommand(s, subcommandMetadata, subCmdConfig)
@@ -140,6 +203,11 @@ func hydrateSubcommand(s *schema.Schema, sCmd *schema.Field, cmdConfig config.Co
 }
 
 func hydrateQuerySubcommand(s *schema.Schema, sCmd *schema.Field, cmdConfig config.Command) lang.Command {
+	log.Print("\n\n **************************** \n")
+	log.Printf("\n hydrateQuerySubcommand - Args:  %+v \n", sCmd.Args)
+	log.Print("\n **************************** \n\n")
+	time.Sleep(3 * time.Second)
+
 	flags := hydrateFlagsFromSchema(sCmd.Args, cmdConfig)
 
 	var clientMethodArgs []string

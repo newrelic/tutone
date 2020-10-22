@@ -63,7 +63,13 @@ func (c *CodeGen) WriteFile(g Generator) error {
 	formatted, err := imports.Process(file.Name(), resultBuf.Bytes(), nil)
 	if err != nil {
 		log.Error(resultBuf.String())
-		return fmt.Errorf("failed to format buffer: %s", err)
+
+		_, err = file.WriteAt(resultBuf.Bytes(), 0)
+		if err != nil {
+			log.Error(err)
+		}
+
+		// return fmt.Errorf("failed to format buffer: %s", err)
 	}
 
 	_, err = file.WriteAt(formatted, 0)
