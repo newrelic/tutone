@@ -178,7 +178,7 @@ func (t *Type) GetQueryStringFields(s *Schema, depth, maxDepth int) string {
 	return strings.Join(lines, "\n")
 }
 
-func (t *Type) FindField(name string) (*Field, error) {
+func (t *Type) GetField(name string) (*Field, error) {
 	for _, f := range t.Fields {
 		if f.Name == name {
 			return &f, nil

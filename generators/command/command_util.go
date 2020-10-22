@@ -179,6 +179,11 @@ func wrapEnumTypeVariable(varName string, clientTypeRefString string) (string, e
 		TypeRef: clientTypeRefString,
 	}
 
+	// TODO: Consider passing in `pkgName` instead of a previously constructed
+	// string so functionality is bit more usable/portable.
+	// i.e. TypeRef in this case will look like this: `apiaccess.SomeType`
+	//      But we shouldn't make the dependent function create that string
+	//      and thne pass it to this function.
 	t := `{{ .TypeRef }}({{ .VarName }})`
 
 	return codegen.RenderTemplate(varName, t, data)
@@ -195,16 +200,11 @@ func hydrateFlagsFromSchema(args []schema.Field, cmdConfig config.Command) []lan
 			// Add 'Input' suffix to the input variable name
 			variableName = fmt.Sprintf("%sInput", cmdConfig.Name)
 		} else {
+			// TODO: Use helper mthod arg.GetName() to format this properly?
 			variableName = fmt.Sprintf("%s%s", cmdConfig.Name, arg.Name)
 		}
 
 		typ, _, _ := arg.Type.GetType()
-
-		// fmt.Print("\n\n **************************** \n")
-		// fmt.Printf("\n ARG befpre:      %+v \n", arg)
-		// fmt.Printf("\n ARG typ:         %+v \n", typ)
-		// fmt.Printf("\n arg.IsScalarID:  %+v \n", arg.IsScalarID())
-		// fmt.Printf("\n arg.IsEnum():    %+v \n", arg.IsEnum())
 
 		if arg.IsScalarID() {
 			typ = "string"
@@ -216,10 +216,6 @@ func hydrateFlagsFromSchema(args []schema.Field, cmdConfig config.Command) []lan
 		}
 
 		clientType := fmt.Sprintf("%s.%s", cmdConfig.ClientPackageName, typ)
-
-		// fmt.Printf("\n ARG:        %+v - %+v \n", arg.Name, typ)
-		// fmt.Print("\n **************************** \n\n")
-		// time.Sleep(3 * time.Second)
 
 		flag := lang.CommandFlag{
 			Name:           arg.Name,

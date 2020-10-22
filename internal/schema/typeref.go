@@ -108,7 +108,6 @@ func (r *TypeRef) IsInputObject() bool {
 		return true
 	}
 
-	// Not sure if we need this check yet...
 	if r.OfType != nil && r.OfType.Kind == KindInputObject {
 		return true
 	}

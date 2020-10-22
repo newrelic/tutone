@@ -369,7 +369,7 @@ func (s *Schema) GetQueryStringForMutation(mutation *Field, depth int) string {
 // e.g. `query { actor { apiAccess { key }}}` would have a path of ["actor", "apiAccess", "key"]
 func (s *Schema) RecursiveLookupFieldByPath(queryFieldPath []string, obj *Type) *Field {
 	for _, q := range queryFieldPath {
-		field, _ := obj.FindField(q)
+		field, _ := obj.GetField(q)
 
 		// If we've reached the end of the graphQL query branch
 		// and the last query field name matches the one we're
