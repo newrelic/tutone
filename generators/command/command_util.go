@@ -183,7 +183,7 @@ func wrapEnumTypeVariable(varName string, clientTypeRefString string) (string, e
 	// string so functionality is bit more usable/portable.
 	// i.e. TypeRef in this case will look like this: `apiaccess.SomeType`
 	//      But we shouldn't make the dependent function create that string
-	//      and thne pass it to this function.
+	//      and then pass it to this function.
 	t := `{{ .TypeRef }}({{ .VarName }})`
 
 	return codegen.RenderTemplate(varName, t, data)
