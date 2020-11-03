@@ -29,6 +29,24 @@ type Schema struct {
 	Types            []*Type `json:"types,omitempty"`
 }
 
+type queryStringData struct {
+	Endpoint string
+	// TypeName is used to identify the name of the type for use in a template if its needed..
+	TypeName string
+	// Arguments that are specific to an endpoint.
+	EndpointArgs []QueryArg
+	// The complete set of arguments for this query.
+	QueryArgs []QueryArg
+	Fields    string
+	FieldPath []string
+}
+
+type mutationStringData struct {
+	MutationName string
+	Args         []QueryArg
+	Fields       string
+}
+
 func ParseResponse(resp *http.Response) (*QueryResponse, error) {
 	if resp == nil {
 		return nil, errors.New("unable to parse nil HTTP response")
@@ -170,6 +188,36 @@ func (s *Schema) LookupQueryTypesByFieldPath(fieldPath []string) ([]*Type, error
 	return types, nil
 }
 
+// GetInputFieldsForQueryPath is intended to return the fields that are
+// available as input arguments when performing a query using the received
+// query path.  For example, a []string{"actor", "account"} would look at
+// `actor { account { ...` for the representivate types at those schema levels
+// and determine collect the available arguments for return.
+func (s *Schema) GetInputFieldsForQueryPath(queryPath []string) map[string][]Field {
+	fields := make(map[string][]Field)
+
+	pathTypes, err := s.LookupQueryTypesByFieldPath(queryPath)
+	if err != nil {
+		log.Error(err)
+	}
+
+	for i, t := range pathTypes {
+		for _, f := range t.Fields {
+			// before the last element
+			if i+1 < len(queryPath) {
+				pathName := queryPath[i+1]
+				if f.Name == pathName {
+					if len(f.Args) > 0 {
+						fields[pathName] = append(fields[pathName], f.Args...)
+					}
+				}
+			}
+		}
+	}
+
+	return fields
+}
+
 // QueryFieldsForTypeName will lookup a type by the received name, and return
 // the query fields for that type, or log an error and return and empty string.
 // The returned string is used in a mutation, so that the relevant fields are
@@ -184,21 +232,27 @@ func (s *Schema) QueryFieldsForTypeName(name string, maxDepth int) string {
 	return t.GetQueryStringFields(s, 0, maxDepth)
 }
 
-// QueryArgs is meant to fill in the data necessary for a query(<args_go_here>)
-// string.  For example, query($guids: [String]!) { actor ...
-func (s *Schema) QueryArgs(t *Type, fields []string) []QueryArg {
+// BuildQueryArgsForEndpoint is meant to fill in the data necessary for a query(<args_go_here>)
+// string.  i.e: query($guids: [String]!) { actor ...
+func (s *Schema) BuildQueryArgsForEndpoint(t *Type, fields []string, includeNullable bool) []QueryArg {
 	args := []QueryArg{}
 
 	for _, f := range t.Fields {
 		if stringInStrings(f.Name, fields) {
-
 			for _, a := range f.Args {
+				kinds := a.Type.GetKinds()
+
+				// TODO implement optional arguments.
+				if kinds[0] != KindNonNull && !includeNullable {
+					continue
+				}
+
 				queryArg := QueryArg{
 					Key: a.Name,
 				}
 
 				var typeName = a.Type.GetTypeName()
-				kinds := a.Type.GetKinds()
+
 				var next Kind
 				left := kinds
 				remain := len(left)
@@ -228,23 +282,55 @@ func (s *Schema) QueryArgs(t *Type, fields []string) []QueryArg {
 // GetQueryStringForEndpoint packs a nerdgraph query header and footer around the set of query fields for a given type name and endpoint.
 func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string, endpoint string, depth int) string {
 
+	// We use the final type in the type path so that we can locate the field on
+	// this type by the same name of the receveid endpoint.  Without this
+	// information, we've no idea where to look for the endpoint, since the name
+	// could be located in several places in the schema.
 	t := typePath[len(typePath)-1]
-	args := s.QueryArgs(t, []string{endpoint})
 
-	data := struct {
-		TypeName  string
-		Endpoint  string
-		Args      []QueryArg
-		Fields    string
-		FieldPath []string
-	}{}
+	data := queryStringData{}
 
+	// Set the TypeName so that we can create a special UnmarshalJSON where we need it.
 	data.TypeName = t.GetName()
 	data.Endpoint = endpoint
-	data.Args = args
-	data.FieldPath = fieldPath
 
-	// Match the type field to the endpoint.
+	// Format the path arguments for the query.
+	inputFields := s.GetInputFieldsForQueryPath(fieldPath)
+	for _, pathName := range fieldPath {
+		// Match the field paths we received with the input fields.
+		if fields, ok := inputFields[pathName]; ok {
+
+			for _, f := range fields {
+				inputTypeName := fmt.Sprintf("%s%s", pathName, f.GetName())
+
+				fieldSpec := fmt.Sprintf("%s(%s: $%s)", pathName, f.Name, inputTypeName)
+				data.FieldPath = append(data.FieldPath, fieldSpec)
+
+				queryArg := QueryArg{
+					Key:   inputTypeName,
+					Value: fmt.Sprintf("%s!", f.Type.GetTypeName()),
+				}
+
+				kinds := f.Type.GetKinds()
+				// TODO implement optional arguments.
+				if kinds[0] == KindNonNull {
+					data.QueryArgs = append(data.QueryArgs, queryArg)
+				}
+			}
+
+		} else {
+			data.FieldPath = append(data.FieldPath, pathName)
+		}
+	}
+
+	// Append to QueryArgs and EndpointArgs only after the parent field
+	// requirements have been added so that they are last.
+	args := s.BuildQueryArgsForEndpoint(t, []string{endpoint}, false)
+	data.EndpointArgs = append(data.EndpointArgs, args...)
+	// Append all the endpoint args to the query args
+	data.QueryArgs = append(data.QueryArgs, data.EndpointArgs...)
+
+	// Match the endpoint field
 	for _, f := range t.Fields {
 		if f.Name == endpoint {
 			fieldType, lookupErr := s.LookupTypeByName(f.Type.GetTypeName())
@@ -253,7 +339,9 @@ func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string,
 				return ""
 			}
 
-			data.Fields = PrefixLineTab(fieldType.GetQueryStringFields(s, 0, depth))
+			if depth > 0 {
+				data.Fields = PrefixLineTab(fieldType.GetQueryStringFields(s, 0, depth))
+			}
 			break
 		}
 	}
@@ -280,13 +368,7 @@ func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string,
 // GetQueryStringForMutation packs a nerdgraph query header and footer around the set of query fields GraphQL mutation name.
 func (s *Schema) GetQueryStringForMutation(mutation *Field, depth int) string {
 
-	// t := typePath[len(typePath)-1]
-	data := struct {
-		// TypeName string
-		MutationName string
-		Args         []QueryArg
-		Fields       string
-	}{}
+	data := mutationStringData{}
 
 	data.MutationName = mutation.GetName()
 
@@ -342,11 +424,11 @@ func (s *Schema) GetQueryStringForMutation(mutation *Field, depth int) string {
 }
 
 var queryHeaderTemplate = `query(
-	{{- range .Args}}
+	{{- range .QueryArgs}}
 	${{.Key}}: {{.Value}},
 	{{- end}}
 ) { {{ .FieldPath | join " { " }} { {{.Endpoint}}(
-	{{- range .Args}}
+	{{- range .EndpointArgs}}
 	{{.Key}}: ${{.Key}},
 	{{- end}}
 ) {
@@ -354,9 +436,9 @@ var queryHeaderTemplate = `query(
 `
 
 var mutationHeaderTemplate = `mutation(
-  {{- range .Args}}
+	{{- range .Args}}
 	${{.Key}}: {{.Value}},
-  {{- end}}
+	{{- end}}
 ) { {{.MutationName}}(
 	{{- range .Args}}
 	{{.Key}}: ${{.Key}},

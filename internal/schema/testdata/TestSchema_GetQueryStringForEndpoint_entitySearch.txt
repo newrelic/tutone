@@ -1,11 +1,5 @@
 query(
-	$query: String,
-	$queryBuilder: EntitySearchQueryBuilder,
-	$sortBy: [EntitySearchSortCriteria],
 ) { actor { entitySearch(
-	query: $query,
-	queryBuilder: $queryBuilder,
-	sortBy: $sortBy,
 ) {
 	count
 	counts {
@@ -52,6 +46,7 @@ query(
 			}
 			... on BrowserApplicationEntityOutline {
 				__typename
+				agentInstallType
 				alertSeverity
 				applicationId
 				servingApmApplicationId

@@ -148,6 +148,8 @@ func GenerateGoMethodQueriesForPackage(s *schema.Schema, genConfig *config.Gener
 			returnPath = append(returnPath, strings.Title(t))
 		}
 
+		inputFields := s.GetInputFieldsForQueryPath(pkgQuery.Path)
+
 		// The endpoint we care about will always be on the last of the path elements specified.
 		t := typePath[len(typePath)-1]
 
@@ -159,7 +161,7 @@ func GenerateGoMethodQueriesForPackage(s *schema.Schema, genConfig *config.Gener
 			for _, field := range t.Fields {
 				if field.Name == endpoint.Name {
 
-					method := goMethodForField(s, field, pkgConfig)
+					method := goMethodForField(field, pkgConfig, inputFields)
 
 					method.QueryString = s.GetQueryStringForEndpoint(typePath, pkgQuery.Path, endpoint.Name, endpoint.MaxQueryFieldDepth)
 					method.ResponseObjectType = fmt.Sprintf("%sResponse", endpoint.Name)
@@ -202,15 +204,11 @@ func GenerateGoMethodMutationsForPackage(s *schema.Schema, genConfig *config.Gen
 			continue
 		}
 
-		// if field.Name == pkgMutation.Name {
-		method := goMethodForField(s, *field, pkgConfig)
-		// method.QueryString = schema.PrefixLineTab(s.QueryFieldsForTypeName(field.Type.GetTypeName(), pkgMutation.MaxQueryFieldDepth))
+		method := goMethodForField(*field, pkgConfig, nil)
 		method.QueryString = s.GetQueryStringForMutation(field, pkgMutation.MaxQueryFieldDepth)
 
 		methods = append(methods, method)
-		// }
 	}
-	// }
 
 	if len(methods) > 0 {
 		sort.SliceStable(methods, func(i, j int) bool {
@@ -506,7 +504,8 @@ func constrainedResponseStructs(s *schema.Schema, pkgConfig *config.PackageConfi
 				Name: fmt.Sprintf("%sResponse", endpoint.Name),
 			}
 
-			// For the top level response object, we only use the first field path that is received from the user.
+			// For the top level response object, we only use the first field path
+			// that is received from the user.
 			firstType := pathTypes[0]
 
 			field := GoStructField{
@@ -527,11 +526,51 @@ func constrainedResponseStructs(s *schema.Schema, pkgConfig *config.PackageConfi
 // goMethodForField creates a new GoMethod based on a field.  Note that the
 // implementation specific information like QueryString are not added to the
 // method, and it is up to the caller to flavor the method accordingly.
-func goMethodForField(s *schema.Schema, field schema.Field, pkgConfig *config.PackageConfig) GoMethod {
+//
+// The received inputFields are to seed the initial objet.  This allows the
+// caller to pass additional context about the received field's place in the
+// schema that are used as a starting place for input variables, since the
+// parent objects may require those inputs.
+func goMethodForField(field schema.Field, pkgConfig *config.PackageConfig, inputFields map[string][]schema.Field) GoMethod {
 
 	method := GoMethod{
 		Name:        field.GetName(),
 		Description: field.GetDescription(),
+	}
+
+	for pathName, fields := range inputFields {
+		for _, f := range fields {
+			kinds := f.Type.GetKinds()
+			if kinds[0] == schema.KindNonNull {
+				typeName, err := f.GetTypeNameWithOverride(pkgConfig)
+				if err != nil {
+					log.Error(err)
+					continue
+				}
+
+				var prefix string
+				if kinds[1] == schema.KindList {
+					prefix = "[]"
+				}
+
+				inputType := GoMethodInputType{
+					// Flavor the name of the input object with the field from the path
+					// in which we were found.
+					Name: fmt.Sprintf("%s%s", pathName, f.GetName()),
+					Type: fmt.Sprintf("%s%s", prefix, typeName),
+				}
+
+				method.Signature.Input = append(method.Signature.Input, inputType)
+
+				queryVar := QueryVar{
+					Key:   inputType.Name,
+					Value: inputType.Name,
+					Type:  f.Type.GetTypeName(),
+				}
+
+				method.QueryVars = append(method.QueryVars, queryVar)
+			}
+		}
 	}
 
 	var prefix string
@@ -551,10 +590,19 @@ func goMethodForField(s *schema.Schema, field schema.Field, pkgConfig *config.Pa
 			continue
 		}
 
+		methodArgKinds := methodArg.Type.GetKinds()
+
+		var methodArgPrefix string
+		if methodArgKinds[0] == schema.KindList {
+			methodArgPrefix = "[]"
+		}
+
 		inputType := GoMethodInputType{
 			Name: methodArg.GetName(),
-			Type: typeName,
+			Type: fmt.Sprintf("%s%s", methodArgPrefix, typeName),
 		}
+
+		method.Signature.Input = append(method.Signature.Input, inputType)
 
 		queryVar := QueryVar{
 			Key:   methodArg.Name,
@@ -564,7 +612,6 @@ func goMethodForField(s *schema.Schema, field schema.Field, pkgConfig *config.Pa
 
 		method.QueryVars = append(method.QueryVars, queryVar)
 
-		method.Signature.Input = append(method.Signature.Input, inputType)
 	}
 
 	return method

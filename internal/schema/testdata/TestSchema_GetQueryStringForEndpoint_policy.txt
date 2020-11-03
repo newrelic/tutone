@@ -1,0 +1,11 @@
+query(
+	$accountID: Int!,
+	$id: ID!,
+) { actor { account(id: $accountID) { alerts { policy(
+	id: $id,
+) {
+	accountId
+	id
+	incidentPreference
+	name
+} } } } }

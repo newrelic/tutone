@@ -1,0 +1,7 @@
+query(
+	$guids: [EntityGuid]!,
+) { actor { entities(
+	guids: $guids,
+) {
+
+} } }
