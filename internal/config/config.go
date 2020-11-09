@@ -81,7 +81,7 @@ type Command struct {
 	ClientMethod      string        `yaml:"clientMethod,omitempty"`
 	Flags             []CommandFlag `yaml:"flags,omitempty"`
 	Subcommands       []Command     `yaml:"subcommands,omitempty"`
-	GraphQLPath       []string      `yaml:"path,omitempty"` // Should mutations also use this? Probably
+	GraphQLPath       []string      `yaml:"path,omitempty"`
 }
 
 type CommandFlag struct {
