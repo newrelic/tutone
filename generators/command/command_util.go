@@ -51,7 +51,6 @@ func hydrateCommand(s *schema.Schema, command config.Command, pkgConfig *config.
 	cmdVarName := "Command"
 
 	// Handle case where this command is a subcommand of a parent entry point
-	// Note: this doesn't do anything yet
 	if !isBaseCommand {
 		cmdVarName = fmt.Sprintf("cmd%s", xstrings.ToCamelCase(command.Name))
 	}
@@ -201,7 +200,7 @@ func hydrateFlagsFromSchema(args []schema.Field, cmdConfig config.Command) []lan
 			variableName = fmt.Sprintf("%sInput", cmdConfig.Name)
 		} else {
 			// TODO: Use helper mthod arg.GetName() to format this properly?
-			variableName = fmt.Sprintf("%s%s", cmdConfig.Name, arg.Name)
+			variableName = fmt.Sprintf("%s%s", cmdConfig.Name, xstrings.FirstRuneToUpper(arg.Name))
 		}
 
 		typ, _, _ := arg.Type.GetType()

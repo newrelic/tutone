@@ -40,7 +40,7 @@ func (g *Generator) Execute(genConfig *config.GeneratorConfig, pkgConfig *config
 	var err error
 
 	destinationPath := pkgConfig.GetDestinationPath()
-	if err = filesystem.MakeDir(destinationPath, 0755); err != nil {
+	if err = filesystem.MakeDir(destinationPath, 0775); err != nil {
 		return err
 	}
 

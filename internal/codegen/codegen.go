@@ -68,8 +68,6 @@ func (c *CodeGen) WriteFile(g Generator) error {
 		if err != nil {
 			log.Error(err)
 		}
-
-		// return fmt.Errorf("failed to format buffer: %s", err)
 	}
 
 	_, err = file.WriteAt(formatted, 0)

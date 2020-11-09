@@ -33,7 +33,7 @@ var {{ $cmdVarName }} = &cobra.Command{
   Run: func(cmd *cobra.Command, args []string) {
     client.WithClient(func(nrClient *newrelic.NewRelic) {
       {{- range .Flags }}
-      {{ if .IsInputType }}
+      {{- if .IsInputType }}
       var {{ .Name }} {{ .ClientType }}
 
       err := json.Unmarshal([]byte({{ .VariableName }}), &{{ .Name }})
@@ -48,7 +48,7 @@ var {{ $cmdVarName }} = &cobra.Command{
     })
   },
 }
-{{- end }}
+{{ end }}
 {{- end }}
 
 func init() {
@@ -59,14 +59,11 @@ func init() {
 {{- $cmdVarName := .CmdVariableName -}}
 
   {{ $parentCmdVarName }}.AddCommand({{ $cmdVarName }})
-
 {{ range .Flags}}
   {{- $defaultVal := .DefaultValue | quote -}}
-  {{- if (eq .Type "int") -}}
-    {{- $defaultVal = 0 -}}
-  {{- end }}
-
+  {{- if (eq .Type "int") -}}{{- $defaultVal = 0 -}}{{- end -}}
   {{ $cmdVarName }}.Flags().{{- .FlagMethodName -}}(&{{ .VariableName }}, {{ .Name | quote }}, {{ $defaultVal }}, {{ .Description | quote }})
+
   {{- if .Required }}
   utils.LogIfError({{- $cmdVarName -}}.MarkFlagRequired({{ .Name | quote }}))
   {{ end }}
