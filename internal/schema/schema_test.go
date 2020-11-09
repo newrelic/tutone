@@ -221,6 +221,10 @@ func TestSchema_GetQueryStringForMutation(t *testing.T) {
 			Mutation: "alertsMutingRuleCreate",
 			Depth:    3,
 		},
+		"cloudRenameAccount": {
+			Mutation: "cloudRenameAccount",
+			Depth:    1,
+		},
 	}
 
 	for n, tc := range cases {

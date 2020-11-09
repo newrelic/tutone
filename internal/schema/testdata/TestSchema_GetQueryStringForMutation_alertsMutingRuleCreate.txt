@@ -1,7 +1,7 @@
 mutation(
 	$accountId: Int!,
 	$rule: AlertsMutingRuleInput!,
-) { AlertsMutingRuleCreate(
+) { alertsMutingRuleCreate(
 	accountId: $accountId,
 	rule: $rule,
 ) {
