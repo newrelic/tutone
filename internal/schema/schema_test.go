@@ -36,7 +36,7 @@ func loadFixture(t *testing.T, n string) string {
 	return string(content)
 }
 
-func TestSchema_QueryArgs(t *testing.T) {
+func TestSchema_BuildQueryArgsForEndpoint(t *testing.T) {
 	t.Parallel()
 
 	// schema cached by 'make test-prep'
@@ -44,10 +44,19 @@ func TestSchema_QueryArgs(t *testing.T) {
 	require.NoError(t, err)
 
 	cases := map[string]struct {
-		Name    string
-		Fields  []string
-		Results []QueryArg
+		Name            string
+		Fields          []string
+		IncludeNullable bool
+		Results         []QueryArg
 	}{
+		"accountEntities": {
+			Name:   "Actor",
+			Fields: []string{"account", "entities"},
+			Results: []QueryArg{
+				{Key: "id", Value: "Int!"},
+				{Key: "guids", Value: "[EntityGuid]!"},
+			},
+		},
 		"entities": {
 			Name:   "Actor",
 			Fields: []string{"entities"},
@@ -63,8 +72,9 @@ func TestSchema_QueryArgs(t *testing.T) {
 			},
 		},
 		"entitySearch": {
-			Name:   "Actor",
-			Fields: []string{"entitySearch"},
+			Name:            "Actor",
+			Fields:          []string{"entitySearch"},
+			IncludeNullable: true,
 			Results: []QueryArg{
 				{Key: "query", Value: "String"},
 				{Key: "queryBuilder", Value: "EntitySearchQueryBuilder"},
@@ -79,19 +89,27 @@ func TestSchema_QueryArgs(t *testing.T) {
 			},
 		},
 		"accountOutline": {
-			Name:   "AccountOutline",
-			Fields: []string{"reportingEventTypes"},
+			Name:            "AccountOutline",
+			Fields:          []string{"reportingEventTypes"},
+			IncludeNullable: true,
 			Results: []QueryArg{
 				{Key: "filter", Value: "[String]"},
 				{Key: "timeWindow", Value: "TimeWindowInput"},
 			},
 		},
 		"linkedAccounts": {
-			Name:   "CloudActorFields",
-			Fields: []string{"linkedAccounts"},
+			Name:            "CloudActorFields",
+			Fields:          []string{"linkedAccounts"},
+			IncludeNullable: true,
 			Results: []QueryArg{
 				{Key: "provider", Value: "String"},
 			},
+		},
+		"linkedAccountsWithoutNullable": {
+			Name:            "CloudActorFields",
+			Fields:          []string{"linkedAccounts"},
+			IncludeNullable: false,
+			Results:         []QueryArg{},
 		},
 	}
 
@@ -99,7 +117,7 @@ func TestSchema_QueryArgs(t *testing.T) {
 		x, err := s.LookupTypeByName(tc.Name)
 		require.NoError(t, err)
 
-		result := s.QueryArgs(x, tc.Fields)
+		result := s.BuildQueryArgsForEndpoint(x, tc.Fields, tc.IncludeNullable)
 		assert.Equal(t, tc.Results, result)
 	}
 }
@@ -158,9 +176,20 @@ func TestSchema_GetQueryStringForEndpoint(t *testing.T) {
 			Field: "entitySearch",
 			Depth: 3,
 		},
+		"entities": {
+			Path:  []string{"actor"},
+			Field: "entities",
+			// Zero set here because we have the field coverage above with greater depth.  Here we want to ensure that required arguments on the entities endpoint has the correct syntax.
+			Depth: 0,
+		},
 		"linkedAccounts": {
 			Path:  []string{"actor", "cloud"},
 			Field: "linkedAccounts",
+			Depth: 2,
+		},
+		"policy": {
+			Path:  []string{"actor", "account", "alerts"},
+			Field: "policy",
 			Depth: 2,
 		},
 	}
@@ -203,5 +232,48 @@ func TestSchema_GetQueryStringForMutation(t *testing.T) {
 		// saveFixture(t, n, result)
 		expected := loadFixture(t, n)
 		assert.Equal(t, expected, result)
+	}
+}
+
+func TestSchema_GetInputFieldsForQueryPath(t *testing.T) {
+	t.Parallel()
+
+	// schema cached by 'make test-prep'
+	s, err := Load("../../testdata/schema.json")
+	require.NoError(t, err)
+
+	cases := map[string]struct {
+		QueryPath []string
+		Fields    map[string][]string
+	}{
+		"accountCloud": {
+			QueryPath: []string{"actor", "account", "cloud"},
+			Fields: map[string][]string{
+				"account": {"id"},
+			},
+		},
+		"entities": {
+			QueryPath: []string{"actor", "entities"},
+			Fields: map[string][]string{
+				"entities": {"guids"},
+			},
+		},
+		"apiAccessKey": {
+			QueryPath: []string{"actor", "apiAccess", "key"},
+			Fields: map[string][]string{
+				"key": {"id", "keyType"},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		result := s.GetInputFieldsForQueryPath(tc.QueryPath)
+		assert.Equal(t, len(tc.Fields), len(result))
+		for pathName, fields := range tc.Fields {
+
+			for i, name := range fields {
+				assert.Equal(t, name, result[pathName][i].Name)
+			}
+		}
 	}
 }
