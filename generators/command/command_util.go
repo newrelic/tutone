@@ -6,11 +6,12 @@ import (
 	"net/http"
 
 	"github.com/huandu/xstrings"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/newrelic/tutone/internal/codegen"
 	"github.com/newrelic/tutone/internal/config"
 	"github.com/newrelic/tutone/internal/schema"
 	"github.com/newrelic/tutone/pkg/lang"
-	log "github.com/sirupsen/logrus"
 )
 
 var goTypesToCobraFlagMethodMap = map[string]string{
