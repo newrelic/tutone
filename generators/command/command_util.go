@@ -211,7 +211,7 @@ func hydrateFlagsFromSchema(args []schema.Field, cmdConfig config.Command) []lan
 		}
 
 		variableType := "string"
-		if arg.IsGoType() {
+		if arg.IsPrimitiveType() {
 			variableType = typ
 		}
 

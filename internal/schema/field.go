@@ -75,7 +75,7 @@ func (f *Field) GetTags() string {
 	return jsonTag + "\"`"
 }
 
-func (f *Field) IsGoType() bool {
+func (f *Field) IsPrimitiveType() bool {
 	goTypes := []string{
 		"int",
 		"string",
