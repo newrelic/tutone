@@ -69,15 +69,19 @@ type Query struct {
 	// Names is a list of TypeName entries that will be found at the above Path.
 	Endpoints []EndpointConfig `yaml:"endpoints,omitempty"`
 }
+
 type Command struct {
-	Name             string        `yaml:"name,omitempty"`
-	ShortDescription string        `yaml:"shortDescription,omitempty"`
-	LongDescription  string        `yaml:"longDescription,omitempty"`
-	Example          string        `yaml:"example,omitempty"`
-	InputType        string        `yaml:"inputType,omitempty"`
-	ClientMethod     string        `yaml:"clientMethod,omitempty"`
-	Flags            []CommandFlag `yaml:"flags,omitempty"`
-	Subcommands      []Command     `yaml:"subcommands,omitempty"`
+	Name              string        `yaml:"name,omitempty"`
+	FileName          string        `yaml:"fileName,omitempty"`
+	ShortDescription  string        `yaml:"shortDescription,omitempty"`
+	LongDescription   string        `yaml:"longDescription,omitempty"`
+	Example           string        `yaml:"example,omitempty"`
+	InputType         string        `yaml:"inputType,omitempty"`
+	ClientPackageName string        `yaml:"clientPackageName,omitempty"`
+	ClientMethod      string        `yaml:"clientMethod,omitempty"`
+	Flags             []CommandFlag `yaml:"flags,omitempty"`
+	Subcommands       []Command     `yaml:"subcommands,omitempty"`
+	GraphQLPath       []string      `yaml:"path,omitempty"`
 }
 
 type CommandFlag struct {
@@ -99,6 +103,8 @@ type GeneratorConfig struct {
 	FileName string `yaml:"fileName,omitempty"`
 	// TemplateName is the name of the template within the TemplateDir.
 	TemplateName string `yaml:"templateName,omitempty"`
+	// TemplateURL is a URL to a downloadable file to use as a Go template
+	TemplateURL string `yaml:"templateURL,omitempty"`
 }
 
 // MutationConfig is the information about the GraphQL mutations.
@@ -154,4 +160,12 @@ func LoadConfig(file string) (*Config, error) {
 	log.Tracef("definition: %+v", config)
 
 	return &config, nil
+}
+
+func (c *PackageConfig) GetDestinationPath() string {
+	if c.Path != "" {
+		return c.Path
+	}
+
+	return "./"
 }

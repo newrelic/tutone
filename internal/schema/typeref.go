@@ -100,3 +100,25 @@ func (r *TypeRef) GetDescription() string {
 
 	return formatDescription("", r.Description)
 }
+
+func (r *TypeRef) IsInputObject() bool {
+	kinds := r.GetKinds()
+
+	if len(kinds) > 0 && kinds[0] == KindInputObject {
+		return true
+	}
+
+	if r.OfType != nil && r.OfType.Kind == KindInputObject {
+		return true
+	}
+
+	return false
+}
+
+func (r *TypeRef) IsScalarID() bool {
+	return r.OfType != nil && r.OfType.Kind == KindScalar && r.GetTypeName() == "ID"
+}
+
+func (r *TypeRef) IsNonNull() bool {
+	return r.Kind == KindNonNull
+}

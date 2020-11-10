@@ -74,3 +74,40 @@ func (f *Field) GetTags() string {
 
 	return jsonTag + "\"`"
 }
+
+func (f *Field) IsPrimitiveType() bool {
+	goTypes := []string{
+		"int",
+		"string",
+		"bool",
+		"boolean",
+	}
+
+	name := strings.ToLower(f.Type.GetTypeName())
+
+	for _, x := range goTypes {
+		if x == name {
+			return true
+		}
+	}
+
+	return false
+}
+
+// Convenience method that proxies to TypeRef method
+func (f *Field) IsScalarID() bool {
+	return f.Type.IsScalarID()
+}
+
+// Convenience method that proxies to TypeRef method
+func (f *Field) IsRequired() bool {
+	return f.Type.IsNonNull()
+}
+
+func (f *Field) IsEnum() bool {
+	if f.Type.Kind == KindENUM {
+		return true
+	}
+
+	return f.Type.OfType != nil && f.Type.OfType.Kind == KindENUM
+}

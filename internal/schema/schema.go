@@ -127,6 +127,26 @@ func (s *Schema) Save(file string) error {
 	return ioutil.WriteFile(file, schemaFile, 0644)
 }
 
+func (s *Schema) LookupRootMutationTypeFieldByName(name string) (*Field, error) {
+	for _, f := range s.MutationType.Fields {
+		if f.Name == name {
+			return &f, nil
+		}
+	}
+
+	return nil, fmt.Errorf("`RootMutationType.Field` by name %s not found", name)
+}
+
+func (s *Schema) LookupRootQueryTypeFieldByName(name string) (*Field, error) {
+	for _, f := range s.QueryType.Fields {
+		if f.Name == name {
+			return &f, nil
+		}
+	}
+
+	return nil, fmt.Errorf("`RootQueryType.Field` by name %s not found", name)
+}
+
 // LookupTypeByName digs in the schema for a type that matches the given name.
 // This is commonly used for retrieving the Type of a TypeRef, since the name
 // is the only piece of data to go on.
@@ -172,7 +192,6 @@ func (s *Schema) LookupQueryTypesByFieldPath(fieldPath []string) ([]*Type, error
 	}
 
 	found := 0
-
 	t := startingT
 
 	for _, fieldName := range fieldPath {
@@ -421,6 +440,39 @@ func (s *Schema) GetQueryStringForMutation(mutation *Field, depth int) string {
 	final := result.String() + mutationFooter
 
 	return final
+}
+
+// RecursiveLookupFieldByPath traverses the GraphQL query types
+// based on the provided query fields path which represents a
+// GraphQL query. This method returns the last field of the last "node"
+// of the query tree "branch" - i.e. actor.apiAccess.key where `key`
+// is the primary target "leaf".
+//
+// e.g. `query { actor { apiAccess { key }}}` would have a path of ["actor", "apiAccess", "key"]
+func (s *Schema) RecursiveLookupFieldByPath(queryFieldPath []string, obj *Type) *Field {
+	for _, q := range queryFieldPath {
+		field, _ := obj.GetField(q)
+
+		// If we've reached the end of the graphQL query branch
+		// and the last query field name matches the one we're
+		// searching for, we can return it here.
+		if len(queryFieldPath) == 1 && queryFieldPath[0] == q {
+			return field
+		}
+
+		matchingFieldType, _ := s.LookupTypeByName(field.Type.GetTypeName())
+
+		// Reduce the slice of fields as we traverse and find matching data
+		// so we can eventually stop the recursion when we reach the end.
+		remainingFields := queryFieldPath[1:]
+
+		found := s.RecursiveLookupFieldByPath(remainingFields, matchingFieldType)
+		if found != nil && len(remainingFields) == 1 {
+			return found
+		}
+	}
+
+	return nil
 }
 
 var queryHeaderTemplate = `query(
