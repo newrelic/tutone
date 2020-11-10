@@ -387,9 +387,9 @@ func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string,
 // GetQueryStringForMutation packs a nerdgraph query header and footer around the set of query fields GraphQL mutation name.
 func (s *Schema) GetQueryStringForMutation(mutation *Field, depth int) string {
 
-	data := mutationStringData{}
-
-	data.MutationName = mutation.GetName()
+	data := mutationStringData{
+		MutationName: mutation.Name,
+	}
 
 	fieldType, lookupErr := s.LookupTypeByName(mutation.Type.GetTypeName())
 	if lookupErr != nil {

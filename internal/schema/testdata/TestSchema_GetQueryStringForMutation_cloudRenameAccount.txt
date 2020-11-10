@@ -1,0 +1,25 @@
+mutation(
+	$accountId: Int,
+	$accounts: [CloudRenameAccountsInput],
+) { cloudRenameAccount(
+	accountId: $accountId,
+	accounts: $accounts,
+) {
+	errors {
+		linkedAccountId
+		message
+		nrAccountId
+		providerSlug
+		type
+	}
+	linkedAccounts {
+		authLabel
+		createdAt
+		disabled
+		externalId
+		id
+		name
+		nrAccountId
+		updatedAt
+	}
+} }
