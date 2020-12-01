@@ -6,8 +6,8 @@ require (
 	github.com/Masterminds/sprig/v3 v3.1.0
 	github.com/client9/misspell v0.3.4
 	github.com/git-chglog/git-chglog v0.0.0-20200414013904-db796966b373
-	github.com/golangci/golangci-lint v1.32.2
-	github.com/goreleaser/goreleaser v0.147.1
+	github.com/golangci/golangci-lint v1.33.0
+	github.com/goreleaser/goreleaser v0.149.0
 	github.com/hashicorp/go-retryablehttp v0.6.8 // indirect
 	github.com/huandu/xstrings v1.3.2
 	github.com/llorllale/go-gitlint v0.0.0-20190914155841-58c0b8cef0e5
@@ -22,5 +22,5 @@ require (
 	golang.org/x/tools v0.0.0-20201013201025-64a9e34f3752
 	gopkg.in/AlecAivazis/survey.v1 v1.8.7 // indirect
 	gopkg.in/kyokomi/emoji.v1 v1.5.1 // indirect
-	gopkg.in/yaml.v2 v2.3.0
+	gopkg.in/yaml.v2 v2.4.0
 )
