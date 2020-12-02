@@ -65,7 +65,7 @@ func TestExpandTypes(t *testing.T) {
 			Mutations: []config.MutationConfig{{
 				Name: "apiAccessCreateKeys",
 			}},
-			ExpectedNames: []string{"ApiAccessCreateIngestKeyInput", "ApiAccessCreateInput", "ApiAccessCreateKeyResponse", "ApiAccessCreateUserKeyInput", "ApiAccessIngestKey", "ApiAccessIngestKeyError", "ApiAccessIngestKeyErrorType", "ApiAccessIngestKeyType", "ApiAccessKey", "ApiAccessKeyError", "ApiAccessKeyType", "ApiAccessUserKey", "ApiAccessUserKeyError", "ApiAccessUserKeyErrorType", "ID", "Int", "String"},
+			ExpectedNames: []string{"ApiAccessCreateIngestKeyInput", "ApiAccessCreateInput", "ApiAccessCreateKeyResponse", "ApiAccessCreateUserKeyInput", "ApiAccessIngestKey", "ApiAccessIngestKeyError", "ApiAccessIngestKeyErrorType", "ApiAccessIngestKeyType", "ApiAccessKey", "ApiAccessKeyError", "ApiAccessKeyType", "ApiAccessUserKey", "ApiAccessUserKeyError", "ApiAccessUserKeyErrorType", "EpochSeconds", "ID", "Int", "String"},
 		},
 		"complicated cloud confirms complications": {
 			Types: []config.TypeConfig{},

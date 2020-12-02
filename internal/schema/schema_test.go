@@ -76,6 +76,7 @@ func TestSchema_BuildQueryArgsForEndpoint(t *testing.T) {
 			Fields:          []string{"entitySearch"},
 			IncludeNullable: true,
 			Results: []QueryArg{
+				{Key: "options", Value: "EntitySearchOptions"},
 				{Key: "query", Value: "String"},
 				{Key: "queryBuilder", Value: "EntitySearchQueryBuilder"},
 				{Key: "sortBy", Value: "[EntitySearchSortCriteria]"},
