@@ -116,7 +116,7 @@ func ExpandTypes(s *Schema, pkgConfig *config.PackageConfig) (*[]*Type, error) {
 			if typeNameInTypes(schemaType.Name, pkgConfig.Types) {
 				log.WithFields(log.Fields{
 					"name": schemaType.GetName(),
-				}).Debugf("config type: %s", schemaType.Name)
+				}).Debug("config type")
 
 				err = expander.ExpandType(schemaType)
 				if err != nil {

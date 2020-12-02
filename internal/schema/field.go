@@ -40,7 +40,10 @@ func (f *Field) GetTypeNameWithOverride(pkgConfig *config.PackageConfig) (string
 	for _, p := range pkgConfig.Types {
 		if p.Name == nameToMatch {
 			if p.FieldTypeOverride != "" {
-				log.Debugf("overriding typeref for %s, using type %s", nameToMatch, p.FieldTypeOverride)
+				log.WithFields(log.Fields{
+					"name":                nameToMatch,
+					"field_type_override": p.FieldTypeOverride,
+				}).Debug("overriding typeref")
 				overrideType = p.FieldTypeOverride
 			}
 		}

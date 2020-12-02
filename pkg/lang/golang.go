@@ -252,7 +252,33 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 	var scalarsForGen []GoScalar
 	var interfacesForGen []GoInterface
 
+	configNames := make(map[string]config.TypeConfig, len(pkgConfig.Types))
+
+	// pivot the data
+	for _, p := range pkgConfig.Types {
+		configNames[p.Name] = p
+	}
+
 	for _, t := range *expandedTypes {
+		// Default scalars to string
+		createAs := "string"
+
+		if p, ok := configNames[t.GetName()]; ok {
+			if p.CreateAs != "" {
+				createAs = p.CreateAs
+			}
+
+			if p.SkipTypeCreate {
+				log.WithFields(log.Fields{
+					"name":                p.Name,
+					"kind":                t.Kind,
+					"create_as":           p.CreateAs,
+					"field_type_override": p.FieldTypeOverride,
+				}).Debug("skipping create for type")
+				continue
+			}
+		}
+
 		switch t.Kind {
 		case schema.KindInputObject, schema.KindObject, schema.KindInterface:
 			xxx := GoStruct{
@@ -341,31 +367,7 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 
 			enumsForGen = append(enumsForGen, xxx)
 		case schema.KindScalar:
-			// Default scalars to string
-			createAs := "string"
-			skipTypeCreate := false
-			nameToMatch := t.GetName()
-
-			var seenNames []string
-			for _, p := range pkgConfig.Types {
-				if stringInStrings(p.Name, seenNames) {
-					log.Warnf("duplicate package config name detected: %s", p.Name)
-					continue
-				}
-				seenNames = append(seenNames, p.Name)
-
-				if p.Name == nameToMatch {
-					if p.CreateAs != "" {
-						createAs = p.CreateAs
-					}
-
-					if p.SkipTypeCreate {
-						skipTypeCreate = true
-					}
-				}
-			}
-
-			if !t.IsGoType() && !skipTypeCreate {
+			if !t.IsGoType() {
 				xxx := GoScalar{
 					Description: t.GetDescription(),
 					Name:        t.GetName(),
