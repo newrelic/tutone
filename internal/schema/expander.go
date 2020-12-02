@@ -54,7 +54,6 @@ func (x *Expander) ExpandType(t *Type) (err error) {
 			log.WithFields(log.Fields{
 				"name": t.Name,
 			}).Errorf("failed to expand type: %s", err)
-
 		}
 	}
 
