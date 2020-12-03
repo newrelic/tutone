@@ -50,6 +50,21 @@ func TestLoadConfig(t *testing.T) {
 					},
 				},
 				Generators: []string{"typegen"},
+				Queries: []Query{
+					{
+						Path: []string{
+							"actor",
+							"cloud",
+						},
+						Endpoints: []EndpointConfig{
+							{
+								Name:               "linkedAccounts",
+								MaxQueryFieldDepth: 2,
+								IncludeNullable:    true,
+							},
+						},
+					},
+				},
 			},
 		},
 		Generators: []GeneratorConfig{

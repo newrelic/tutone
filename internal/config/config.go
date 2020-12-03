@@ -118,7 +118,7 @@ type MutationConfig struct {
 
 type EndpointConfig struct {
 	Name               string `yaml:"name,omitempty"`
-	MaxQueryFieldDepth int    `yaml:"maxQueryFieldDepth,omitempty"`
+	MaxQueryFieldDepth int    `yaml:"max_query_field_depth,omitempty"`
 	IncludeNullable    bool   `yaml:"include_nullable,omitempty"`
 }
 

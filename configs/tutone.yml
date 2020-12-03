@@ -36,6 +36,28 @@ packages:
         field_type_override: string
         skip_type_create: true
 
+  - name: cloud
+    path: pkg/cloud
+    imports:
+      - github.com/newrelic/newrelic-client-go/internal/serialization
+      - encoding/json
+      - fmt
+    generators:
+      - typegen
+      - nerdgraphclient
+    queries:
+      - path: ["actor", "cloud"]
+        endpoints:
+          - name: linkedAccounts
+            maxQueryFieldDepth: 2
+            include_nullable: true
+    mutations:
+      - name: cloudConfigureIntegration
+      - name: cloudDisableIntegration
+      - name: cloudLinkAccount
+      - name: cloudRenameAccount
+      - name: cloudUnlinkAccount
+
 generators:
   - name: typegen
     fileName: "types.go"
