@@ -353,7 +353,7 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 				}
 
 				// Require at least one auto-generated method, allow others
-				yyy.Methods = make([]string, len(interfaceMethods)+1)
+				yyy.Methods = make([]string, 0, len(interfaceMethods)+1)
 				yyy.Methods = append(yyy.Methods, "Implements"+t.GetName()+"()")
 				yyy.Methods = append(yyy.Methods, interfaceMethods...)
 
