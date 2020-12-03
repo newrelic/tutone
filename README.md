@@ -89,6 +89,20 @@ types and mutations to include from the schema, and where the package is located
 | mutations  | No       | A list of mutations from which to infer types                           |
 | types      | No       | A list of types from which to start expanding the inferred set of types |
 
+
+#### Type Configuration
+
+To fine-tune the types that are created, or not create them at all, the
+following options are supported:
+
+| Name                  | Required | Description |
+| --------------------- | -------- | ----------- |
+| `name`                | yes      | Name of the type to match |
+| `create_as`           | no       | Used when creating a new scalar type to determine which Go type to use. |
+| `field_type_override` | no       | Golang type to override whatever the default detected type would be for a given field. |
+| `interface_methods`   | no       | List of additional methods that are added to an interface definition. The methods are not defined in the code, so must be implemented by the user. |
+| `skip_type_create`    | no       | Allows the user to skip creating a type. |
+
 ### Generators
 
 The `generators` field is used to describe a given generator.  The generator is
