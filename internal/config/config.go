@@ -119,6 +119,7 @@ type MutationConfig struct {
 type EndpointConfig struct {
 	Name               string `yaml:"name,omitempty"`
 	MaxQueryFieldDepth int    `yaml:"maxQueryFieldDepth,omitempty"`
+	IncludeNullable    bool   `yaml:"include_nullable,omitempty"`
 }
 
 // TypeConfig is the information about which types to render and any data specific to handling of the type.
