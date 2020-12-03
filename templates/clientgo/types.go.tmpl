@@ -7,13 +7,13 @@ type {{.Name}} string
 
 var {{.Name}}Types = struct {
   {{- range .Values}}
-	{{ .Description }}
-	{{.Name}} {{$typeName}}
+  {{ .Description }}
+  {{.Name}} {{$typeName}}
   {{- end}}
 }{
   {{- range .Values}}
-	{{ .Description }}
-	{{.Name}}: "{{.Name}}",
+  {{ .Description }}
+  {{.Name}}: "{{.Name}}",
   {{- end}}
 }
 {{ end}}

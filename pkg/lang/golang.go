@@ -114,6 +114,7 @@ type GoInterface struct {
 	Description   string
 	Type          string
 	PossibleTypes []GoInterfacePossibleType
+	Methods       []string
 }
 
 type GoInterfacePossibleType struct {
@@ -260,22 +261,32 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 	}
 
 	for _, t := range *expandedTypes {
+		var interfaceMethods []string
 		// Default scalars to string
 		createAs := "string"
 
 		if p, ok := configNames[t.GetName()]; ok {
+			log.WithFields(log.Fields{
+				"create_as":           p.CreateAs,
+				"field_type_override": p.FieldTypeOverride,
+				"kind":                t.Kind,
+				"name":                p.Name,
+				"skip_type_create":    p.SkipTypeCreate,
+			}).Debug("found type config")
+
+			if p.SkipTypeCreate {
+				log.WithFields(log.Fields{
+					"name": p.Name,
+				}).Debug("skipping")
+				continue
+			}
+
 			if p.CreateAs != "" {
 				createAs = p.CreateAs
 			}
 
-			if p.SkipTypeCreate {
-				log.WithFields(log.Fields{
-					"name":                p.Name,
-					"kind":                t.Kind,
-					"create_as":           p.CreateAs,
-					"field_type_override": p.FieldTypeOverride,
-				}).Debug("skipping create for type")
-				continue
+			if len(p.InterfaceMethods) > 0 {
+				interfaceMethods = p.InterfaceMethods
 			}
 		}
 
@@ -292,7 +303,6 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 
 			fieldErrs := []error{}
 			for _, f := range fields {
-
 				// If any of the fields for this type are an interface type, then we
 				// need to signal to the template an UnmarshalJSON() should be
 				// rendered.
@@ -341,6 +351,11 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 
 					yyy.PossibleTypes = append(yyy.PossibleTypes, ttt)
 				}
+
+				// Require at least one auto-generated method, allow others
+				yyy.Methods = make([]string, 2)
+				yyy.Methods = append(yyy.Methods, "Implements"+t.GetName()+"()")
+				yyy.Methods = append(yyy.Methods, interfaceMethods...)
 
 				interfacesForGen = append(interfacesForGen, yyy)
 			}

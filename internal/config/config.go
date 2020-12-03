@@ -128,6 +128,9 @@ type TypeConfig struct {
 	CreateAs string `yaml:"create_as,omitempty"`
 	// SkipTypeCreate allows the user to skip creating a Scalar type.
 	SkipTypeCreate bool `yaml:"skip_type_create,omitempty"`
+	// InterfaceMethods is a list of additional methods that are added to an interface definition. The methods are not
+	// defined in the code, so must be implemented by the user.
+	InterfaceMethods []string `yaml:"interface_methods,omitempty"`
 }
 
 const (
