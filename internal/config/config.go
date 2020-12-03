@@ -46,6 +46,8 @@ type PackageConfig struct {
 	Name string `yaml:"name,omitempty"`
 	// Path is the relative path within the project.
 	Path string `yaml:"path,omitempty"`
+	// ImportPath is the full path used for importing this package into a Go project
+	ImportPath string `yaml:"import_path,omitempty"`
 	// Types is a list of Type configurations to include in the package.
 	Types []TypeConfig `yaml:"types,omitempty"`
 	// Mutations is a list of Method configurations to include in the package.

@@ -30,15 +30,23 @@ func TestLoadConfig(t *testing.T) {
 		},
 		Packages: []PackageConfig{
 			{
-				Name: "alerts",
-				Path: "pkg/alerts",
+				Name:       "alerts",
+				Path:       "pkg/alerts",
+				ImportPath: "github.com/newrelic/newrelic-client-go/pkg/alerts",
 				Types: []TypeConfig{
 					{
 						Name: "AlertsMutingRuleConditionInput",
-					}, {
+					},
+					{
 						Name:              "ID",
 						FieldTypeOverride: "string",
 						SkipTypeCreate:    true,
+					},
+					{
+						Name: "InterfaceImplementation",
+						InterfaceMethods: []string{
+							"Get() string",
+						},
 					},
 				},
 				Generators: []string{"typegen"},

@@ -25,6 +25,7 @@ auth:
 packages:
   - name: nerdgraph
     path: pkg/nerdgraph
+    import_path: github.com/newrelic/newrelic-client-go/pkg/nerdgraph
     generators:
       - typegen
     mutations:

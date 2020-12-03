@@ -9,6 +9,7 @@ auth:
 packages:
   - name: alerts
     path: pkg/alerts
+    import_path: "github.com/newrelic/newrelic-client-go/pkg/alerts"
     generators:
       - typegen
     types:
@@ -16,6 +17,10 @@ packages:
       - name: ID
         field_type_override: string
         skip_type_create: true
+      - name: InterfaceImplementation
+        interface_methods:
+          - "Get() string"
+
 generators:
   - name: typegen
     fileName: "types.go"
