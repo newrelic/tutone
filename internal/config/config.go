@@ -46,6 +46,8 @@ type PackageConfig struct {
 	Name string `yaml:"name,omitempty"`
 	// Path is the relative path within the project.
 	Path string `yaml:"path,omitempty"`
+	// ImportPath is the full path used for importing this package into a Go project
+	ImportPath string `yaml:"import_path,omitempty"`
 	// Types is a list of Type configurations to include in the package.
 	Types []TypeConfig `yaml:"types,omitempty"`
 	// Mutations is a list of Method configurations to include in the package.
@@ -116,7 +118,8 @@ type MutationConfig struct {
 
 type EndpointConfig struct {
 	Name               string `yaml:"name,omitempty"`
-	MaxQueryFieldDepth int    `yaml:"maxQueryFieldDepth,omitempty"`
+	MaxQueryFieldDepth int    `yaml:"max_query_field_depth,omitempty"`
+	IncludeNullable    bool   `yaml:"include_nullable,omitempty"`
 }
 
 // TypeConfig is the information about which types to render and any data specific to handling of the type.

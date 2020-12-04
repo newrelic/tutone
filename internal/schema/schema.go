@@ -299,7 +299,7 @@ func (s *Schema) BuildQueryArgsForEndpoint(t *Type, fields []string, includeNull
 }
 
 // GetQueryStringForEndpoint packs a nerdgraph query header and footer around the set of query fields for a given type name and endpoint.
-func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string, endpoint string, depth int) string {
+func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string, endpoint string, depth int, includeNullable bool) string {
 
 	// We use the final type in the type path so that we can locate the field on
 	// this type by the same name of the receveid endpoint.  Without this
@@ -344,7 +344,7 @@ func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string,
 
 	// Append to QueryArgs and EndpointArgs only after the parent field
 	// requirements have been added so that they are last.
-	args := s.BuildQueryArgsForEndpoint(t, []string{endpoint}, false)
+	args := s.BuildQueryArgsForEndpoint(t, []string{endpoint}, includeNullable)
 	data.EndpointArgs = append(data.EndpointArgs, args...)
 	// Append all the endpoint args to the query args
 	data.QueryArgs = append(data.QueryArgs, data.EndpointArgs...)
