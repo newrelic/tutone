@@ -2,10 +2,6 @@ query(
 ) { actor { entitySearch(
 ) {
 	count
-	counts {
-		count
-		facet
-	}
 	query
 	results {
 		entities {

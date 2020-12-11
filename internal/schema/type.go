@@ -88,8 +88,19 @@ func (t *Type) GetQueryStringFields(s *Schema, depth, maxDepth int) string {
 	parentFieldNames := []string{}
 
 	for _, field := range t.Fields {
-		kinds := field.Type.GetKinds()
+		// If any of the arguments for a given field are required, then we
+		// currently skip the field in the query since we are not handling the
+		// parameters necessary to fill that out.  TODO is perhaps to ensure that
+		// all the query field arguments are available for each of the nested
+		// fields.
+		if field.HasRequiredArg() {
+			log.WithFields(log.Fields{
+				"name": field.Name,
+			}).Trace("skipping, field has at least one required arg")
+			continue
+		}
 
+		kinds := field.Type.GetKinds()
 		lastKind := kinds[len(kinds)-1]
 
 		switch lastKind {
@@ -106,41 +117,30 @@ func (t *Type) GetQueryStringFields(s *Schema, depth, maxDepth int) string {
 				continue
 			}
 
-			hasRequiredArg := func(Args []Field) bool {
-				for _, a := range field.Args {
-					kinds := a.Type.GetKinds()
-					if len(kinds) > 0 {
-						if kinds[0] == KindNonNull {
-							return true
-						}
-					}
-				}
-
-				return false
-			}
-
-			// If any of the arguments for a given field are required, then we
-			// currently skip the field in the query since we are not handling the
-			// parameters necessary to fill that out.  TODO is perhaps to ensure that
-			// all the query field arguments are available for each of the nested
-			// fields.
-			if hasRequiredArg(field.Args) {
+			// Recurse first so if we have no children, we skip completely
+			// and don't end up with `field { }` (invalid)
+			subTContent := subT.GetQueryStringFields(s, depth, maxDepth)
+			subTLines := strings.Split(subTContent, "\n")
+			if subTContent == "" || len(subTLines) < 1 {
+				log.WithFields(log.Fields{
+					"name": field.Name,
+				}).Trace("skipping, all sub-fields require arguments")
 				continue
 			}
 
-			line := fmt.Sprintf("%s {", field.Name)
-			lines = append(lines, line)
+			// Add the field
+			lines = append(lines, field.Name+" {")
 			if lastKind == KindInterface {
 				lines = append(lines, "\t__typename")
 			}
 
-			subTContent := subT.GetQueryStringFields(s, depth, maxDepth)
-			subTLines := strings.Split(subTContent, "\n")
+			// Add the sub-fields
 			for _, b := range subTLines {
 				lines = append(lines, fmt.Sprintf("\t%s", b))
 			}
 
 			lines = append(lines, "}")
+
 		default:
 			lines = append(lines, field.Name)
 			parentFieldNames = append(parentFieldNames, field.Name)
