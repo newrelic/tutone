@@ -114,3 +114,13 @@ func (f *Field) IsEnum() bool {
 
 	return f.Type.OfType != nil && f.Type.OfType.Kind == KindENUM
 }
+
+func (f *Field) HasRequiredArg() bool {
+	for _, a := range f.Args {
+		if a.IsRequired() {
+			return true
+		}
+	}
+
+	return false
+}
