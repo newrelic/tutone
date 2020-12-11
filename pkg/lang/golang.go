@@ -257,7 +257,7 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 
 	// pivot the data
 	for _, p := range pkgConfig.Types {
-		configNames[p.Name] = p
+		configNames[strings.ToLower(p.Name)] = p
 	}
 
 	for _, t := range *expandedTypes {
@@ -265,7 +265,7 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 		// Default scalars to string
 		createAs := "string"
 
-		if p, ok := configNames[t.GetName()]; ok {
+		if p, ok := configNames[strings.ToLower(t.GetName())]; ok {
 			log.WithFields(log.Fields{
 				"create_as":           p.CreateAs,
 				"field_type_override": p.FieldTypeOverride,
@@ -605,7 +605,7 @@ func goMethodForField(field schema.Field, pkgConfig *config.PackageConfig, input
 				queryVar := QueryVar{
 					Key:   inputType.Name,
 					Value: inputType.Name,
-					Type:  f.Type.GetTypeName(),
+					Type:  inputType.Type,
 				}
 
 				method.QueryVars = append(method.QueryVars, queryVar)
@@ -613,14 +613,21 @@ func goMethodForField(field schema.Field, pkgConfig *config.PackageConfig, input
 		}
 	}
 
-	var prefix string
+	var prefix, postfix string
 	kinds := field.Type.GetKinds()
-	if kinds[0] == schema.KindList {
+	switch kinds[0] {
+	case schema.KindList:
 		prefix = "[]"
 		method.Signature.ReturnSlice = true
+	case schema.KindInterface:
+		postfix = "Interface"
+	default:
+	}
+	if len(kinds) > 1 && kinds[1] == schema.KindInterface {
+		postfix = "Interface"
 	}
 
-	pointerReturn := fmt.Sprintf("%s%s", prefix, field.Type.GetTypeName())
+	pointerReturn := fmt.Sprintf("%s%s%s", prefix, field.Type.GetTypeName(), postfix)
 	method.Signature.Return = []string{pointerReturn, "error"}
 
 	for _, methodArg := range field.Args {
