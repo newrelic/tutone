@@ -306,10 +306,8 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 				// If any of the fields for this type are an interface type, then we
 				// need to signal to the template an UnmarshalJSON() should be
 				// rendered.
-				for _, k := range f.Type.GetKinds() {
-					if k == schema.KindInterface {
-						xxx.SpecialUnmarshal = true
-					}
+				if f.Type.IsInterface() {
+					xxx.SpecialUnmarshal = true
 				}
 
 				xxx.Fields = append(xxx.Fields, getStructField(f, pkgConfig))
@@ -431,6 +429,7 @@ func getStructField(f schema.Field, pkgConfig *config.PackageConfig) GoStructFie
 	var typeName string
 	var typeNamePrefix string
 	var typeNameSuffix string
+	var isList bool
 	var err error
 
 	typeName, err = f.GetTypeNameWithOverride(pkgConfig)
@@ -438,19 +437,11 @@ func getStructField(f schema.Field, pkgConfig *config.PackageConfig) GoStructFie
 		log.Error(err)
 	}
 
-	kinds := f.Type.GetKinds()
-
-	var isList bool
-
 	// In the case we have a LIST type, we need to prefix the type with the slice
-	// descriptor.  This can appear pretty much anywhere in a list of kinds, but
-	// we ignore the order here.
-	for _, k := range kinds {
-		if k == schema.KindList {
-			typeNamePrefix = "[]"
-			isList = true
-			break
-		}
+	// descriptor.
+	if f.Type.IsList() {
+		typeNamePrefix = "[]"
+		isList = true
 	}
 
 	// Used to signal the template that the UnmarshalJSON should handle this field as an Interface.
@@ -459,7 +450,7 @@ func getStructField(f schema.Field, pkgConfig *config.PackageConfig) GoStructFie
 	// In the case a field type is of type Interface, we need to ensure we
 	// append the term "Interface" to it, as is done in the "Implements"
 	// below.
-	if kinds[len(kinds)-1] == schema.KindInterface {
+	if f.Type.IsInterface() {
 		typeNameSuffix = "Interface"
 		isInterface = true
 	}
@@ -580,8 +571,7 @@ func goMethodForField(field schema.Field, pkgConfig *config.PackageConfig, input
 
 	for pathName, fields := range inputFields {
 		for _, f := range fields {
-			kinds := f.Type.GetKinds()
-			if kinds[0] == schema.KindNonNull {
+			if f.Type.IsNonNull() {
 				typeName, err := f.GetTypeNameWithOverride(pkgConfig)
 				if err != nil {
 					log.Error(err)
@@ -589,7 +579,7 @@ func goMethodForField(field schema.Field, pkgConfig *config.PackageConfig, input
 				}
 
 				var prefix string
-				if kinds[1] == schema.KindList {
+				if f.Type.IsList() {
 					prefix = "[]"
 				}
 
@@ -613,21 +603,18 @@ func goMethodForField(field schema.Field, pkgConfig *config.PackageConfig, input
 		}
 	}
 
-	var prefix, postfix string
-	kinds := field.Type.GetKinds()
-	switch kinds[0] {
-	case schema.KindList:
+	var prefix, suffix string
+
+	if field.Type.IsList() {
 		prefix = "[]"
 		method.Signature.ReturnSlice = true
-	case schema.KindInterface:
-		postfix = "Interface"
-	default:
-	}
-	if len(kinds) > 1 && kinds[1] == schema.KindInterface {
-		postfix = "Interface"
 	}
 
-	pointerReturn := fmt.Sprintf("%s%s%s", prefix, field.Type.GetTypeName(), postfix)
+	if field.Type.IsInterface() {
+		suffix = "Interface"
+	}
+
+	pointerReturn := fmt.Sprintf("%s%s%s", prefix, field.Type.GetTypeName(), suffix)
 	method.Signature.Return = []string{pointerReturn, "error"}
 
 	for _, methodArg := range field.Args {
@@ -637,10 +624,8 @@ func goMethodForField(field schema.Field, pkgConfig *config.PackageConfig, input
 			continue
 		}
 
-		methodArgKinds := methodArg.Type.GetKinds()
-
 		var methodArgPrefix string
-		if methodArgKinds[0] == schema.KindList {
+		if methodArg.Type.IsList() {
 			methodArgPrefix = "[]"
 		}
 
