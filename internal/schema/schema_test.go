@@ -168,30 +168,35 @@ func TestSchema_GetQueryStringForEndpoint(t *testing.T) {
 	require.NoError(t, err)
 
 	cases := map[string]struct {
-		Path  []string
-		Field string
-		Depth int
+		Path     []string
+		Field    string
+		Depth    int
+		Nullable bool
 	}{
 		"entitySearch": {
-			Path:  []string{"actor"},
-			Field: "entitySearch",
-			Depth: 3,
+			Path:     []string{"actor"},
+			Field:    "entitySearch",
+			Depth:    3,
+			Nullable: false,
 		},
 		"entities": {
 			Path:  []string{"actor"},
 			Field: "entities",
 			// Zero set here because we have the field coverage above with greater depth.  Here we want to ensure that required arguments on the entities endpoint has the correct syntax.
-			Depth: 0,
+			Depth:    0,
+			Nullable: false,
 		},
 		"linkedAccounts": {
-			Path:  []string{"actor", "cloud"},
-			Field: "linkedAccounts",
-			Depth: 2,
+			Path:     []string{"actor", "cloud"},
+			Field:    "linkedAccounts",
+			Depth:    2,
+			Nullable: true,
 		},
 		"policy": {
-			Path:  []string{"actor", "account", "alerts"},
-			Field: "policy",
-			Depth: 2,
+			Path:     []string{"actor", "account", "alerts"},
+			Field:    "policy",
+			Depth:    2,
+			Nullable: false,
 		},
 	}
 
@@ -200,7 +205,7 @@ func TestSchema_GetQueryStringForEndpoint(t *testing.T) {
 		typePath, err := s.LookupQueryTypesByFieldPath(tc.Path)
 		require.NoError(t, err)
 
-		result := s.GetQueryStringForEndpoint(typePath, tc.Path, tc.Field, tc.Depth)
+		result := s.GetQueryStringForEndpoint(typePath, tc.Path, tc.Field, tc.Depth, tc.Nullable)
 		// saveFixture(t, n, result)
 		expected := loadFixture(t, n)
 		assert.Equal(t, expected, result)

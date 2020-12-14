@@ -160,6 +160,9 @@ Before contributing, all linting and tests must pass.  Tests can be run directly
     # Only integration tests
     $ make test-integration
 
+*Note:* You'll need to update `testdata/schema.json` to the latest GraphQL schema for tests to run
+correctly.
+
 ### Commit Messages
 
 Using the following format for commit messages allows for auto-generation of

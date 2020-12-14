@@ -1,5 +1,7 @@
 query(
+	$provider: String,
 ) { actor { cloud { linkedAccounts(
+	provider: $provider,
 ) {
 	authLabel
 	createdAt

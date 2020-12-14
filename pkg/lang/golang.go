@@ -187,7 +187,7 @@ func GenerateGoMethodQueriesForPackage(s *schema.Schema, genConfig *config.Gener
 
 					method := goMethodForField(field, pkgConfig, inputFields)
 
-					method.QueryString = s.GetQueryStringForEndpoint(typePath, pkgQuery.Path, endpoint.Name, endpoint.MaxQueryFieldDepth)
+					method.QueryString = s.GetQueryStringForEndpoint(typePath, pkgQuery.Path, endpoint.Name, endpoint.MaxQueryFieldDepth, endpoint.IncludeNullable)
 					method.ResponseObjectType = fmt.Sprintf("%sResponse", endpoint.Name)
 					method.Signature.ReturnPath = returnPath
 
@@ -353,7 +353,7 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 				}
 
 				// Require at least one auto-generated method, allow others
-				yyy.Methods = make([]string, len(interfaceMethods)+1)
+				yyy.Methods = make([]string, 0, len(interfaceMethods)+1)
 				yyy.Methods = append(yyy.Methods, "Implements"+t.GetName()+"()")
 				yyy.Methods = append(yyy.Methods, interfaceMethods...)
 
