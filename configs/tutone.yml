@@ -49,7 +49,7 @@ packages:
       - path: ["actor", "cloud"]
         endpoints:
           - name: linkedAccounts
-            maxQueryFieldDepth: 2
+            max_query_field_depth: 2
             include_nullable: true
     mutations:
       - name: cloudConfigureIntegration
