@@ -229,7 +229,7 @@ func GenerateGoMethodMutationsForPackage(s *schema.Schema, genConfig *config.Gen
 		}
 
 		method := goMethodForField(*field, pkgConfig, nil)
-		method.QueryString = s.GetQueryStringForMutation(field, pkgMutation.MaxQueryFieldDepth)
+		method.QueryString = s.GetQueryStringForMutation(field, pkgMutation.MaxQueryFieldDepth, pkgMutation.RequireFields)
 
 		methods = append(methods, method)
 	}

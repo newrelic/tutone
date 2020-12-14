@@ -374,7 +374,7 @@ func (s *Schema) GetQueryArg(field Field) QueryArg {
 }
 
 // GetQueryStringForMutation packs a nerdgraph query header and footer around the set of query fields GraphQL mutation name.
-func (s *Schema) GetQueryStringForMutation(mutation *Field, depth int) string {
+func (s *Schema) GetQueryStringForMutation(mutation *Field, depth int, requireFields []string) string {
 	log.WithFields(log.Fields{
 		"depth": depth,
 		"name":  mutation.Name,
@@ -391,7 +391,11 @@ func (s *Schema) GetQueryStringForMutation(mutation *Field, depth int) string {
 	}
 
 	for _, a := range mutation.Args {
-		data.Args = append(data.Args, s.GetQueryArg(a))
+		arg := s.GetQueryArg(a)
+		if arg.Value[len(arg.Value)-1:] != "!" && stringInStrings(arg.Key, requireFields) {
+			arg.Value += "!"
+		}
+		data.Args = append(data.Args, arg)
 	}
 
 	data.Fields = PrefixLineTab(fieldType.GetQueryStringFields(s, 0, depth, true))
