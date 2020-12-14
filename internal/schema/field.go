@@ -43,7 +43,7 @@ func (f *Field) GetTypeNameWithOverride(pkgConfig *config.PackageConfig) (string
 				log.WithFields(log.Fields{
 					"name":                nameToMatch,
 					"field_type_override": p.FieldTypeOverride,
-				}).Debug("overriding typeref")
+				}).Trace("overriding typeref")
 				overrideType = p.FieldTypeOverride
 			}
 		}

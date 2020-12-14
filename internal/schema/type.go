@@ -76,7 +76,7 @@ func (t *Type) IsGoType() bool {
 	return false
 }
 
-func (t *Type) GetQueryStringFields(s *Schema, depth, maxDepth int) string {
+func (t *Type) GetQueryStringFields(s *Schema, depth, maxDepth int, isMutation bool) string {
 	depth++
 
 	var lines []string
@@ -90,12 +90,12 @@ func (t *Type) GetQueryStringFields(s *Schema, depth, maxDepth int) string {
 	for _, field := range t.Fields {
 		// If any of the arguments for a given field are required, then we
 		// currently skip the field in the query since we are not handling the
-		// parameters necessary to fill that out.  TODO is perhaps to ensure that
-		// all the query field arguments are available for each of the nested
-		// fields.
-		if field.HasRequiredArg() {
+		// parameters necessary to fill that out.
+		if !isMutation && field.HasRequiredArg() {
 			log.WithFields(log.Fields{
-				"name": field.Name,
+				"depth":      depth,
+				"isMutation": isMutation,
+				"name":       field.Name,
 			}).Trace("skipping, field has at least one required arg")
 			continue
 		}
@@ -119,11 +119,13 @@ func (t *Type) GetQueryStringFields(s *Schema, depth, maxDepth int) string {
 
 			// Recurse first so if we have no children, we skip completely
 			// and don't end up with `field { }` (invalid)
-			subTContent := subT.GetQueryStringFields(s, depth, maxDepth)
+			subTContent := subT.GetQueryStringFields(s, depth, maxDepth, isMutation)
 			subTLines := strings.Split(subTContent, "\n")
 			if subTContent == "" || len(subTLines) < 1 {
 				log.WithFields(log.Fields{
-					"name": field.Name,
+					"depth":      depth,
+					"isMutation": isMutation,
+					"name":       field.Name,
 				}).Trace("skipping, all sub-fields require arguments")
 				continue
 			}
@@ -145,7 +147,6 @@ func (t *Type) GetQueryStringFields(s *Schema, depth, maxDepth int) string {
 			lines = append(lines, field.Name)
 			parentFieldNames = append(parentFieldNames, field.Name)
 		}
-
 	}
 
 	for _, possibleType := range t.PossibleTypes {
@@ -157,7 +158,7 @@ func (t *Type) GetQueryStringFields(s *Schema, depth, maxDepth int) string {
 		lines = append(lines, fmt.Sprintf("... on %s {", possibleType.Name))
 		lines = append(lines, "\t__typename")
 
-		possibleTContent := possibleT.GetQueryStringFields(s, depth, maxDepth)
+		possibleTContent := possibleT.GetQueryStringFields(s, depth, maxDepth, isMutation)
 
 		possibleTLines := strings.Split(possibleTContent, "\n")
 		for _, b := range possibleTLines {

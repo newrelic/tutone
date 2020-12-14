@@ -241,14 +241,14 @@ func (s *Schema) GetInputFieldsForQueryPath(queryPath []string) map[string][]Fie
 // the query fields for that type, or log an error and return and empty string.
 // The returned string is used in a mutation, so that the relevant fields are
 // returned once the mutation is performed, or during a query for a given type.
-func (s *Schema) QueryFieldsForTypeName(name string, maxDepth int) string {
+func (s *Schema) QueryFieldsForTypeName(name string, maxDepth int, isMutation bool) string {
 	t, err := s.LookupTypeByName(name)
 	if err != nil {
 		log.Errorf("failed to to retrieve type by name: %s", err)
 		return ""
 	}
 
-	return t.GetQueryStringFields(s, 0, maxDepth)
+	return t.GetQueryStringFields(s, 0, maxDepth, isMutation)
 }
 
 // BuildQueryArgsForEndpoint is meant to fill in the data necessary for a query(<args_go_here>)
@@ -329,7 +329,7 @@ func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string,
 			}
 
 			if depth > 0 {
-				data.Fields = PrefixLineTab(fieldType.GetQueryStringFields(s, 0, depth))
+				data.Fields = PrefixLineTab(fieldType.GetQueryStringFields(s, 0, depth, false))
 			}
 			break
 		}
@@ -375,6 +375,10 @@ func (s *Schema) GetQueryArg(field Field) QueryArg {
 
 // GetQueryStringForMutation packs a nerdgraph query header and footer around the set of query fields GraphQL mutation name.
 func (s *Schema) GetQueryStringForMutation(mutation *Field, depth int) string {
+	log.WithFields(log.Fields{
+		"depth": depth,
+		"name":  mutation.Name,
+	}).Trace("GetQueryStringForMutation")
 
 	data := mutationStringData{
 		MutationName: mutation.Name,
@@ -390,7 +394,7 @@ func (s *Schema) GetQueryStringForMutation(mutation *Field, depth int) string {
 		data.Args = append(data.Args, s.GetQueryArg(a))
 	}
 
-	data.Fields = PrefixLineTab(fieldType.GetQueryStringFields(s, 0, depth))
+	data.Fields = PrefixLineTab(fieldType.GetQueryStringFields(s, 0, depth, true))
 	tmpl, err := template.New(fieldType.GetName()).Funcs(sprig.TxtFuncMap()).Parse(mutationHeaderTemplate)
 	if err != nil {
 		log.Error(err)
