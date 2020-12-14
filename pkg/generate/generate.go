@@ -23,9 +23,7 @@ type GeneratorOptions struct {
 
 // Generate reads the configuration file and executes generators relevant to a particular package.
 func Generate(options GeneratorOptions) error {
-	defFile := viper.GetString("definition")
 	schemaFile := viper.GetString("cache.schema_file")
-	typesFile := viper.GetString("generate.types_file")
 
 	_, err := os.Stat(schemaFile)
 
@@ -41,9 +39,7 @@ func Generate(options GeneratorOptions) error {
 	}
 
 	log.WithFields(log.Fields{
-		"definition_file": defFile,
-		"schema_file":     schemaFile,
-		"types_file":      typesFile,
+		"schema_file": schemaFile,
 	}).Info("Loading generation config")
 
 	// load the config
