@@ -75,6 +75,10 @@ func (f *Field) GetTags() string {
 
 	jsonTag := "`json:\"" + f.Name
 
+	if f.Type.IsInputObject() {
+		jsonTag += ",omitempty"
+	}
+
 	return jsonTag + "\"`"
 }
 
