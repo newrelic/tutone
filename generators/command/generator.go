@@ -8,7 +8,6 @@ import (
 	"github.com/newrelic/tutone/internal/codegen"
 	"github.com/newrelic/tutone/internal/config"
 	"github.com/newrelic/tutone/internal/filesystem"
-	"github.com/newrelic/tutone/internal/output"
 	"github.com/newrelic/tutone/internal/schema"
 	"github.com/newrelic/tutone/pkg/lang"
 )
@@ -101,8 +100,6 @@ func (g *Generator) Execute(genConfig *config.GeneratorConfig, pkgConfig *config
 				return err
 			}
 		}
-
-		output.PrintSuccessMessage(pkgConfig.Path, destinationFile)
 	}
 
 	return nil

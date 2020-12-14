@@ -8,6 +8,7 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/newrelic/tutone/internal/output"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/tools/imports"
 )
@@ -75,6 +76,8 @@ func (c *CodeGen) WriteFile(g Generator) error {
 		return err
 	}
 
+	output.PrintSuccessMessage(c.DestinationDir, c.DestinationFile)
+
 	return nil
 }
 
@@ -119,6 +122,8 @@ func (c *CodeGen) WriteFileFromTemplateString(g Generator, templateString string
 	if err != nil {
 		return err
 	}
+
+	output.PrintSuccessMessage(c.DestinationDir, c.DestinationFile)
 
 	return nil
 }
