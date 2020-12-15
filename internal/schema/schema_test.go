@@ -222,19 +222,19 @@ func TestSchema_GetQueryStringForMutation(t *testing.T) {
 	cases := map[string]struct {
 		Mutation string
 		Depth    int
-		Require  []string
+		Override map[string]string
 	}{
 		"alertsMutingRuleCreate": {
 			Mutation: "alertsMutingRuleCreate",
 			Depth:    3,
-			Require:  []string{},
+			Override: map[string]string{},
 		},
 		"cloudRenameAccount": {
 			Mutation: "cloudRenameAccount",
 			Depth:    1,
-			Require: []string{
-				"accountId",
-				"accounts",
+			Override: map[string]string{
+				"accountId": "Int!",
+				"accounts":  "[CloudRenameAccountsInput!]!",
 			},
 		},
 	}
@@ -244,7 +244,7 @@ func TestSchema_GetQueryStringForMutation(t *testing.T) {
 		field, err := s.LookupMutationByName(tc.Mutation)
 		require.NoError(t, err)
 
-		result := s.GetQueryStringForMutation(field, tc.Depth, tc.Require)
+		result := s.GetQueryStringForMutation(field, tc.Depth, tc.Override)
 		// saveFixture(t, n, result)
 		expected := loadFixture(t, n)
 		assert.Equal(t, expected, result)

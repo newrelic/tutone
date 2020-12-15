@@ -55,7 +55,13 @@ packages:
       - name: cloudConfigureIntegration
       - name: cloudDisableIntegration
       - name: cloudLinkAccount
+        argument_type_overrides:
+          accountId: "Int!"
+          accounts: "CloudLinkCloudAccountsInput!"
       - name: cloudRenameAccount
+        argument_type_overrides:
+          accountId: "Int!"
+          accounts: "[CloudRenameAccountsInput!]!"
       - name: cloudUnlinkAccount
 
 generators:

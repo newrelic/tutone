@@ -112,9 +112,9 @@ type GeneratorConfig struct {
 // MutationConfig is the information about the GraphQL mutations.
 type MutationConfig struct {
 	// Name is the name of the GraphQL method.
-	Name               string   `yaml:"name"`
-	MaxQueryFieldDepth int      `yaml:"max_query_field_depth,omitempty"`
-	RequireFields      []string `yaml:"require_fields,omitempty"`
+	Name                  string            `yaml:"name"`
+	MaxQueryFieldDepth    int               `yaml:"max_query_field_depth,omitempty"`
+	ArgumentTypeOverrides map[string]string `yaml:"argument_type_overrides,omitempty"`
 }
 
 type EndpointConfig struct {
