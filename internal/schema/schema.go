@@ -356,18 +356,33 @@ func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string,
 
 // GetQueryArg returns the GraphQL formatted Query Argument
 // including formatting for List and NonNull
+//
+// Example:
+// {
+//   "name": "tags",
+//   "type": { "kind": "NON_NULL", "ofType": { "kind": "LIST", "ofType": { "kind": "NON_NULL", "ofType": { "name": "TaggingTagInput", "kind": "INPUT_OBJECT" } } } }
+// }
+//   [TaggingTagInput!]!
+//
 func (s *Schema) GetQueryArg(field Field) QueryArg {
 	queryArg := QueryArg{
 		Key:   field.Name,
 		Value: field.Type.GetTypeName(),
 	}
 
-	// Order matters here
-	if field.Type.IsList() {
-		queryArg.Value = "[" + queryArg.Value + "]"
-	}
-	if field.IsRequired() {
-		queryArg.Value += "!"
+	kinds := field.Type.GetKinds()
+
+	// Build backwards from the raw kinds, as we can have
+	// multiple levels of non-null
+	for k := len(kinds) - 1; k >= 0; k-- {
+		switch kinds[k] {
+		case KindNonNull:
+			queryArg.Value += "!"
+		case KindList:
+			queryArg.Value = "[" + queryArg.Value + "]"
+		default:
+			continue
+		}
 	}
 
 	return queryArg
