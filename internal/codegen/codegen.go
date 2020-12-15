@@ -8,9 +8,10 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/newrelic/tutone/internal/output"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/tools/imports"
+
+	"github.com/newrelic/tutone/internal/output"
 )
 
 type CodeGen struct {

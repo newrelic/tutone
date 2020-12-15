@@ -43,7 +43,7 @@ func (f *Field) GetTypeNameWithOverride(pkgConfig *config.PackageConfig) (string
 				log.WithFields(log.Fields{
 					"name":                nameToMatch,
 					"field_type_override": p.FieldTypeOverride,
-				}).Debug("overriding typeref")
+				}).Trace("overriding typeref")
 				overrideType = p.FieldTypeOverride
 			}
 		}
@@ -74,6 +74,10 @@ func (f *Field) GetTags() string {
 	}
 
 	jsonTag := "`json:\"" + f.Name
+
+	if f.Type.IsInputObject() || !f.Type.IsNonNull() {
+		jsonTag += ",omitempty"
+	}
 
 	return jsonTag + "\"`"
 }
@@ -113,4 +117,14 @@ func (f *Field) IsEnum() bool {
 	}
 
 	return f.Type.OfType != nil && f.Type.OfType.Kind == KindENUM
+}
+
+func (f *Field) HasRequiredArg() bool {
+	for _, a := range f.Args {
+		if a.IsRequired() {
+			return true
+		}
+	}
+
+	return false
 }

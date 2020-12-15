@@ -19,22 +19,32 @@ func TestType_GetQueryFieldsString(t *testing.T) {
 	cases := map[string]struct {
 		TypeName string
 		Depth    int
+		Mutation bool
 	}{
 		"AlertsNrqlCondition": {
 			TypeName: "AlertsNrqlCondition",
 			Depth:    2,
+			Mutation: false,
 		},
 		"AlertsNrqlBaselineCondition": {
 			TypeName: "AlertsNrqlBaselineCondition",
 			Depth:    2,
+			Mutation: false,
 		},
 		"AlertsNrqlOutlierCondition": {
 			TypeName: "AlertsNrqlOutlierCondition",
 			Depth:    2,
+			Mutation: false,
 		},
 		"CloudLinkedAccount": {
 			TypeName: "CloudLinkedAccount",
 			Depth:    3,
+			Mutation: false,
+		},
+		"CloudDisableIntegrationPayload": {
+			TypeName: "CloudDisableIntegrationPayload",
+			Depth:    1,
+			Mutation: true,
 		},
 	}
 
@@ -42,7 +52,7 @@ func TestType_GetQueryFieldsString(t *testing.T) {
 		x, err := s.LookupTypeByName(tc.TypeName)
 		require.NoError(t, err)
 
-		xx := x.GetQueryStringFields(s, 0, tc.Depth)
+		xx := x.GetQueryStringFields(s, 0, tc.Depth, tc.Mutation)
 		// saveFixture(t, n, xx)
 		expected := loadFixture(t, n)
 		assert.Equal(t, expected, xx)

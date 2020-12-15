@@ -117,6 +117,14 @@ The generator configuration specifies details about how the generator should adj
 | name     | Yes      | The name of the generator used in `pkg/generate/generate.go` file            |
 | fileName | No       | Where to write the output of the generated code within the specified package |
 
+## Templates
+
+Example templates are available in the [templates/<generator>](templates/) directory, and are dynamically loaded from your project.
+
+* Rendered using [text/template](https://golang.org/pkg/text/template/)
+* Additional pipeline functions from [sprig](http://masterminds.github.io/sprig/)
+
+
 ## Community
 
 New Relic hosts and moderates an online forum where customers can interact with New Relic employees as well as other customers to get help and share best practices. 

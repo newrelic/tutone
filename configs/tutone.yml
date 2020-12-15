@@ -49,13 +49,19 @@ packages:
       - path: ["actor", "cloud"]
         endpoints:
           - name: linkedAccounts
-            maxQueryFieldDepth: 2
+            max_query_field_depth: 2
             include_nullable: true
     mutations:
       - name: cloudConfigureIntegration
       - name: cloudDisableIntegration
       - name: cloudLinkAccount
+        argument_type_overrides:
+          accountId: "Int!"
+          accounts: "CloudLinkCloudAccountsInput!"
       - name: cloudRenameAccount
+        argument_type_overrides:
+          accountId: "Int!"
+          accounts: "[CloudRenameAccountsInput!]!"
       - name: cloudUnlinkAccount
 
 generators:

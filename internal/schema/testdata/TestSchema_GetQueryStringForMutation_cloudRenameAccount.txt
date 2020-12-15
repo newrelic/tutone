@@ -1,6 +1,6 @@
 mutation(
-	$accountId: Int,
-	$accounts: [CloudRenameAccountsInput],
+	$accountId: Int!,
+	$accounts: [CloudRenameAccountsInput!]!,
 ) { cloudRenameAccount(
 	accountId: $accountId,
 	accounts: $accounts,

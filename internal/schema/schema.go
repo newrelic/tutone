@@ -241,14 +241,14 @@ func (s *Schema) GetInputFieldsForQueryPath(queryPath []string) map[string][]Fie
 // the query fields for that type, or log an error and return and empty string.
 // The returned string is used in a mutation, so that the relevant fields are
 // returned once the mutation is performed, or during a query for a given type.
-func (s *Schema) QueryFieldsForTypeName(name string, maxDepth int) string {
+func (s *Schema) QueryFieldsForTypeName(name string, maxDepth int, isMutation bool) string {
 	t, err := s.LookupTypeByName(name)
 	if err != nil {
 		log.Errorf("failed to to retrieve type by name: %s", err)
 		return ""
 	}
 
-	return t.GetQueryStringFields(s, 0, maxDepth)
+	return t.GetQueryStringFields(s, 0, maxDepth, isMutation)
 }
 
 // BuildQueryArgsForEndpoint is meant to fill in the data necessary for a query(<args_go_here>)
@@ -259,38 +259,12 @@ func (s *Schema) BuildQueryArgsForEndpoint(t *Type, fields []string, includeNull
 	for _, f := range t.Fields {
 		if stringInStrings(f.Name, fields) {
 			for _, a := range f.Args {
-				kinds := a.Type.GetKinds()
-
 				// TODO implement optional arguments.
-				if kinds[0] != KindNonNull && !includeNullable {
+				if !a.IsRequired() && !includeNullable {
 					continue
 				}
 
-				queryArg := QueryArg{
-					Key: a.Name,
-				}
-
-				var typeName = a.Type.GetTypeName()
-
-				var next Kind
-				left := kinds
-				remain := len(left)
-
-				for remain > 0 {
-					next, left = left[len(left)-1], left[:len(left)-1]
-					switch next {
-					case KindNonNull:
-						typeName = fmt.Sprintf("%s!", typeName)
-					case KindList:
-						typeName = fmt.Sprintf("[%s]", typeName)
-					}
-
-					remain = len(left)
-				}
-
-				queryArg.Value = typeName
-
-				args = append(args, queryArg)
+				args = append(args, s.GetQueryArg(a))
 			}
 		}
 	}
@@ -318,22 +292,18 @@ func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string,
 	for _, pathName := range fieldPath {
 		// Match the field paths we received with the input fields.
 		if fields, ok := inputFields[pathName]; ok {
-
 			for _, f := range fields {
 				inputTypeName := fmt.Sprintf("%s%s", pathName, f.GetName())
 
 				fieldSpec := fmt.Sprintf("%s(%s: $%s)", pathName, f.Name, inputTypeName)
 				data.FieldPath = append(data.FieldPath, fieldSpec)
 
-				queryArg := QueryArg{
-					Key:   inputTypeName,
-					Value: fmt.Sprintf("%s!", f.Type.GetTypeName()),
-				}
-
-				kinds := f.Type.GetKinds()
 				// TODO implement optional arguments.
-				if kinds[0] == KindNonNull {
-					data.QueryArgs = append(data.QueryArgs, queryArg)
+				if f.IsRequired() {
+					data.QueryArgs = append(data.QueryArgs, QueryArg{
+						Key:   inputTypeName,
+						Value: fmt.Sprintf("%s!", f.Type.GetTypeName()),
+					})
 				}
 			}
 
@@ -359,7 +329,7 @@ func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string,
 			}
 
 			if depth > 0 {
-				data.Fields = PrefixLineTab(fieldType.GetQueryStringFields(s, 0, depth))
+				data.Fields = PrefixLineTab(fieldType.GetQueryStringFields(s, 0, depth, false))
 			}
 			break
 		}
@@ -384,8 +354,46 @@ func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string,
 	return final
 }
 
+// GetQueryArg returns the GraphQL formatted Query Argument
+// including formatting for List and NonNull
+//
+// Example:
+// {
+//   "name": "tags",
+//   "type": { "kind": "NON_NULL", "ofType": { "kind": "LIST", "ofType": { "kind": "NON_NULL", "ofType": { "name": "TaggingTagInput", "kind": "INPUT_OBJECT" } } } }
+// }
+//   [TaggingTagInput!]!
+//
+func (s *Schema) GetQueryArg(field Field) QueryArg {
+	queryArg := QueryArg{
+		Key:   field.Name,
+		Value: field.Type.GetTypeName(),
+	}
+
+	kinds := field.Type.GetKinds()
+
+	// Build backwards from the raw kinds, as we can have
+	// multiple levels of non-null
+	for k := len(kinds) - 1; k >= 0; k-- {
+		switch kinds[k] {
+		case KindNonNull:
+			queryArg.Value += "!"
+		case KindList:
+			queryArg.Value = "[" + queryArg.Value + "]"
+		default:
+			continue
+		}
+	}
+
+	return queryArg
+}
+
 // GetQueryStringForMutation packs a nerdgraph query header and footer around the set of query fields GraphQL mutation name.
-func (s *Schema) GetQueryStringForMutation(mutation *Field, depth int) string {
+func (s *Schema) GetQueryStringForMutation(mutation *Field, depth int, argTypeOverrides map[string]string) string {
+	log.WithFields(log.Fields{
+		"depth": depth,
+		"name":  mutation.Name,
+	}).Trace("GetQueryStringForMutation")
 
 	data := mutationStringData{
 		MutationName: mutation.Name,
@@ -398,31 +406,14 @@ func (s *Schema) GetQueryStringForMutation(mutation *Field, depth int) string {
 	}
 
 	for _, a := range mutation.Args {
-		queryArg := QueryArg{
-			Key: a.Name,
+		arg := s.GetQueryArg(a)
+		if v, ok := argTypeOverrides[arg.Key]; ok {
+			arg.Value = v
 		}
-
-		var value string
-		var suffix string
-
-		if a.Type.Kind == KindNonNull {
-			suffix = "!"
-		}
-
-		typeKinds := a.Type.GetKinds()
-		if typeKinds[0] == KindList {
-			value = fmt.Sprintf("[%s]%s", a.Type.GetTypeName(), suffix)
-		} else {
-			value = fmt.Sprintf("%s%s", a.Type.GetTypeName(), suffix)
-		}
-
-		queryArg.Value = value
-
-		data.Args = append(data.Args, queryArg)
-
+		data.Args = append(data.Args, arg)
 	}
 
-	data.Fields = PrefixLineTab(fieldType.GetQueryStringFields(s, 0, depth))
+	data.Fields = PrefixLineTab(fieldType.GetQueryStringFields(s, 0, depth, true))
 	tmpl, err := template.New(fieldType.GetName()).Funcs(sprig.TxtFuncMap()).Parse(mutationHeaderTemplate)
 	if err != nil {
 		log.Error(err)

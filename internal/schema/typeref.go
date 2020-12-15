@@ -16,17 +16,6 @@ type TypeRef struct {
 	OfType *TypeRef `json:"ofType,omitempty"`
 }
 
-// IsList determines if a TypeRef is of a KIND LIST.
-func (r *TypeRef) IsList() bool {
-	kinds := r.GetKinds()
-
-	if len(kinds) > 0 && kinds[0] == KindList {
-		return true
-	}
-
-	return false
-}
-
 // GetKinds returns an array or the type kind
 func (r *TypeRef) GetKinds() []Kind {
 	tree := []Kind{}
@@ -104,12 +93,11 @@ func (r *TypeRef) GetDescription() string {
 func (r *TypeRef) IsInputObject() bool {
 	kinds := r.GetKinds()
 
-	if len(kinds) > 0 && kinds[0] == KindInputObject {
-		return true
-	}
-
-	if r.OfType != nil && r.OfType.Kind == KindInputObject {
-		return true
+	// Lots of kinds
+	for _, k := range kinds {
+		if k == KindInputObject {
+			return true
+		}
 	}
 
 	return false
@@ -119,6 +107,65 @@ func (r *TypeRef) IsScalarID() bool {
 	return r.OfType != nil && r.OfType.Kind == KindScalar && r.GetTypeName() == "ID"
 }
 
+// IsNonNull walks down looking for NON_NULL kind, however that can appear
+// multiple times, so this is likely a bit deceiving...
+// Example:
+// {
+//    "name": "tags",
+//    "description": "An array of key-values pairs to represent a tag. For example:  Team:TeamName.",
+//    "type": {
+//     "kind": "NON_NULL",
+//     "ofType": {
+//      "kind": "LIST",
+//      "ofType": {
+//       "kind": "NON_NULL",
+//       "ofType": {
+//        "name": "TaggingTagInput",
+//        "kind": "INPUT_OBJECT"
+//       }
+//      }
+//     }
+//    }
+//   }
+//  ]
+// }
 func (r *TypeRef) IsNonNull() bool {
-	return r.Kind == KindNonNull
+	kinds := r.GetKinds()
+
+	// Lots of kinds
+	for _, k := range kinds {
+		if k == KindNonNull {
+			return true
+		}
+	}
+
+	return false
+}
+
+// IsList determines if a TypeRef is of a KIND LIST.
+func (r *TypeRef) IsList() bool {
+	kinds := r.GetKinds()
+
+	// Lots of kinds
+	for _, k := range kinds {
+		if k == KindList {
+			return true
+		}
+	}
+
+	return false
+}
+
+// IsList determines if a TypeRef is of a KIND INTERFACE.
+func (r *TypeRef) IsInterface() bool {
+	kinds := r.GetKinds()
+
+	// Lots of kinds
+	for _, k := range kinds {
+		if k == KindInterface {
+			return true
+		}
+	}
+
+	return false
 }
