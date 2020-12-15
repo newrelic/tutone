@@ -41,6 +41,11 @@ func TestType_GetQueryFieldsString(t *testing.T) {
 			Depth:    3,
 			Mutation: false,
 		},
+		"CloudDisableIntegrationPayload": {
+			TypeName: "CloudDisableIntegrationPayload",
+			Depth:    1,
+			Mutation: true,
+		},
 	}
 
 	for n, tc := range cases {
