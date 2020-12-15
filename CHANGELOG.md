@@ -1,3 +1,15 @@
+<a name="v0.4.0"></a>
+## [v0.4.0] - 2020-12-15
+### Bug Fixes
+- **config:** Mutation and Query field depth params should match
+- **schema:** improve Mutation query generation
+
+### Documentation Updates
+- Add some info on templates
+
+### Features
+- **schema:** Enable mutations to have fields required in GraphQL (work-around schema issues)
+
 <a name="v0.3.0"></a>
 ## [v0.3.0] - 2020-12-04
 ### Bug Fixes
@@ -108,7 +120,8 @@
 - **generator:** introduce a generator concept
 - **tutone:** default path for tutone config file
 
-[Unreleased]: https://github.com/newrelic/newrelic-client-go/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-client-go/compare/v0.4.0...HEAD
+[v0.4.0]: https://github.com/newrelic/newrelic-client-go/compare/v0.3.0...v0.4.0
 [v0.3.0]: https://github.com/newrelic/newrelic-client-go/compare/v0.2.5...v0.3.0
 [v0.2.5]: https://github.com/newrelic/newrelic-client-go/compare/v0.2.4...v0.2.5
 [v0.2.4]: https://github.com/newrelic/newrelic-client-go/compare/v0.2.3...v0.2.4
