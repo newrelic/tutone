@@ -44,10 +44,10 @@ func TestSchema_BuildQueryArgsForEndpoint(t *testing.T) {
 	require.NoError(t, err)
 
 	cases := map[string]struct {
-		Name            string
-		Fields          []string
-		IncludeNullable bool
-		Results         []QueryArg
+		Name        string
+		Fields      []string
+		IncludeArgs []string
+		Results     []QueryArg
 	}{
 		"accountEntities": {
 			Name:   "Actor",
@@ -72,9 +72,14 @@ func TestSchema_BuildQueryArgsForEndpoint(t *testing.T) {
 			},
 		},
 		"entitySearch": {
-			Name:            "Actor",
-			Fields:          []string{"entitySearch"},
-			IncludeNullable: true,
+			Name:   "Actor",
+			Fields: []string{"entitySearch"},
+			IncludeArgs: []string{
+				"options",
+				"query",
+				"queryBuilder",
+				"sortBy",
+			},
 			Results: []QueryArg{
 				{Key: "options", Value: "EntitySearchOptions"},
 				{Key: "query", Value: "String"},
@@ -90,27 +95,32 @@ func TestSchema_BuildQueryArgsForEndpoint(t *testing.T) {
 			},
 		},
 		"accountOutline": {
-			Name:            "AccountOutline",
-			Fields:          []string{"reportingEventTypes"},
-			IncludeNullable: true,
+			Name:        "AccountOutline",
+			Fields:      []string{"reportingEventTypes"},
+			IncludeArgs: []string{"filter", "timeWindow"},
 			Results: []QueryArg{
 				{Key: "filter", Value: "[String]"},
 				{Key: "timeWindow", Value: "TimeWindowInput"},
 			},
 		},
 		"linkedAccounts": {
-			Name:            "CloudActorFields",
-			Fields:          []string{"linkedAccounts"},
-			IncludeNullable: true,
+			Name:        "CloudActorFields",
+			Fields:      []string{"linkedAccounts"},
+			IncludeArgs: []string{"provider"},
 			Results: []QueryArg{
 				{Key: "provider", Value: "String"},
 			},
 		},
 		"linkedAccountsWithoutNullable": {
-			Name:            "CloudActorFields",
-			Fields:          []string{"linkedAccounts"},
-			IncludeNullable: false,
-			Results:         []QueryArg{},
+			Name:    "CloudActorFields",
+			Fields:  []string{"linkedAccounts"},
+			Results: []QueryArg{},
+		},
+		"linkedAccountsWithInvalidIncludeArgument": {
+			Name:        "CloudActorFields",
+			Fields:      []string{"linkedAccounts"},
+			IncludeArgs: []string{"this-argument-does-not-exist"},
+			Results:     []QueryArg{},
 		},
 	}
 
@@ -118,7 +128,7 @@ func TestSchema_BuildQueryArgsForEndpoint(t *testing.T) {
 		x, err := s.LookupTypeByName(tc.Name)
 		require.NoError(t, err)
 
-		result := s.BuildQueryArgsForEndpoint(x, tc.Fields, tc.IncludeNullable)
+		result := s.BuildQueryArgsForEndpoint(x, tc.Fields, tc.IncludeArgs)
 		assert.Equal(t, tc.Results, result)
 	}
 }
@@ -168,35 +178,32 @@ func TestSchema_GetQueryStringForEndpoint(t *testing.T) {
 	require.NoError(t, err)
 
 	cases := map[string]struct {
-		Path     []string
-		Field    string
-		Depth    int
-		Nullable bool
+		Path        []string
+		Field       string
+		Depth       int
+		IncludeArgs []string
 	}{
 		"entitySearch": {
-			Path:     []string{"actor"},
-			Field:    "entitySearch",
-			Depth:    3,
-			Nullable: false,
+			Path:  []string{"actor"},
+			Field: "entitySearch",
+			Depth: 3,
 		},
 		"entities": {
 			Path:  []string{"actor"},
 			Field: "entities",
 			// Zero set here because we have the field coverage above with greater depth.  Here we want to ensure that required arguments on the entities endpoint has the correct syntax.
-			Depth:    0,
-			Nullable: false,
+			Depth: 0,
 		},
 		"linkedAccounts": {
-			Path:     []string{"actor", "cloud"},
-			Field:    "linkedAccounts",
-			Depth:    2,
-			Nullable: true,
+			Path:        []string{"actor", "cloud"},
+			Field:       "linkedAccounts",
+			Depth:       2,
+			IncludeArgs: []string{"provider"},
 		},
 		"policy": {
-			Path:     []string{"actor", "account", "alerts"},
-			Field:    "policy",
-			Depth:    2,
-			Nullable: false,
+			Path:  []string{"actor", "account", "alerts"},
+			Field: "policy",
+			Depth: 2,
 		},
 	}
 
@@ -205,7 +212,7 @@ func TestSchema_GetQueryStringForEndpoint(t *testing.T) {
 		typePath, err := s.LookupQueryTypesByFieldPath(tc.Path)
 		require.NoError(t, err)
 
-		result := s.GetQueryStringForEndpoint(typePath, tc.Path, tc.Field, tc.Depth, tc.Nullable)
+		result := s.GetQueryStringForEndpoint(typePath, tc.Path, tc.Field, tc.Depth, tc.IncludeArgs)
 		// saveFixture(t, n, result)
 		expected := loadFixture(t, n)
 		assert.Equal(t, expected, result)

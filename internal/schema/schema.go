@@ -253,18 +253,16 @@ func (s *Schema) QueryFieldsForTypeName(name string, maxDepth int, isMutation bo
 
 // BuildQueryArgsForEndpoint is meant to fill in the data necessary for a query(<args_go_here>)
 // string.  i.e: query($guids: [String]!) { actor ...
-func (s *Schema) BuildQueryArgsForEndpoint(t *Type, fields []string, includeNullable bool) []QueryArg {
+func (s *Schema) BuildQueryArgsForEndpoint(t *Type, fields []string, includeArguments []string) []QueryArg {
 	args := []QueryArg{}
 
 	for _, f := range t.Fields {
 		if stringInStrings(f.Name, fields) {
 			for _, a := range f.Args {
 				// TODO implement optional arguments.
-				if !a.IsRequired() && !includeNullable {
-					continue
+				if a.IsRequired() || stringInStrings(a.Name, includeArguments) {
+					args = append(args, s.GetQueryArg(a))
 				}
-
-				args = append(args, s.GetQueryArg(a))
 			}
 		}
 	}
@@ -273,7 +271,7 @@ func (s *Schema) BuildQueryArgsForEndpoint(t *Type, fields []string, includeNull
 }
 
 // GetQueryStringForEndpoint packs a nerdgraph query header and footer around the set of query fields for a given type name and endpoint.
-func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string, endpoint string, depth int, includeNullable bool) string {
+func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string, endpoint string, depth int, includeArguments []string) string {
 
 	// We use the final type in the type path so that we can locate the field on
 	// this type by the same name of the receveid endpoint.  Without this
@@ -314,7 +312,7 @@ func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string,
 
 	// Append to QueryArgs and EndpointArgs only after the parent field
 	// requirements have been added so that they are last.
-	args := s.BuildQueryArgsForEndpoint(t, []string{endpoint}, includeNullable)
+	args := s.BuildQueryArgsForEndpoint(t, []string{endpoint}, includeArguments)
 	data.EndpointArgs = append(data.EndpointArgs, args...)
 	// Append all the endpoint args to the query args
 	data.QueryArgs = append(data.QueryArgs, data.EndpointArgs...)
