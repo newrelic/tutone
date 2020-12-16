@@ -377,6 +377,10 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 
 				xxx.Values = append(xxx.Values, value)
 			}
+			// Alpha sort the ENUMs
+			sort.SliceStable(xxx.Values, func(i, j int) bool {
+				return xxx.Values[i].Name < xxx.Values[j].Name
+			})
 
 			enumsForGen = append(enumsForGen, xxx)
 		case schema.KindScalar:
