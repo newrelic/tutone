@@ -60,7 +60,7 @@ func TestLoadConfig(t *testing.T) {
 							{
 								Name:               "linkedAccounts",
 								MaxQueryFieldDepth: 2,
-								IncludeNullable:    true,
+								IncludeArguments:   []string{"provider"},
 							},
 						},
 					},

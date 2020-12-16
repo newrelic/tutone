@@ -17,7 +17,8 @@ packages:
         endpoints:
           - name: linkedAccounts
             max_query_field_depth: 2
-            include_nullable: true
+            include_arguments:
+              - "provider"
     types:
       - name: AlertsMutingRuleConditionInput
       - name: ID
