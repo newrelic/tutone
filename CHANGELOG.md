@@ -1,3 +1,5 @@
+<a name="v0.4.2"></a>
+## [v0.4.2] - 2020-12-16
 <a name="v0.4.1"></a>
 ## [v0.4.1] - 2020-12-15
 <a name="v0.4.0"></a>
@@ -122,7 +124,8 @@
 - **generator:** introduce a generator concept
 - **tutone:** default path for tutone config file
 
-[Unreleased]: https://github.com/newrelic/newrelic-client-go/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-client-go/compare/v0.4.2...HEAD
+[v0.4.2]: https://github.com/newrelic/newrelic-client-go/compare/v0.4.1...v0.4.2
 [v0.4.1]: https://github.com/newrelic/newrelic-client-go/compare/v0.4.0...v0.4.1
 [v0.4.0]: https://github.com/newrelic/newrelic-client-go/compare/v0.3.0...v0.4.0
 [v0.3.0]: https://github.com/newrelic/newrelic-client-go/compare/v0.2.5...v0.3.0
