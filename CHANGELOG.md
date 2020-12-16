@@ -1,3 +1,5 @@
+<a name="v0.4.1"></a>
+## [v0.4.1] - 2020-12-15
 <a name="v0.4.0"></a>
 ## [v0.4.0] - 2020-12-15
 ### Bug Fixes
@@ -120,7 +122,8 @@
 - **generator:** introduce a generator concept
 - **tutone:** default path for tutone config file
 
-[Unreleased]: https://github.com/newrelic/newrelic-client-go/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-client-go/compare/v0.4.1...HEAD
+[v0.4.1]: https://github.com/newrelic/newrelic-client-go/compare/v0.4.0...v0.4.1
 [v0.4.0]: https://github.com/newrelic/newrelic-client-go/compare/v0.3.0...v0.4.0
 [v0.3.0]: https://github.com/newrelic/newrelic-client-go/compare/v0.2.5...v0.3.0
 [v0.2.5]: https://github.com/newrelic/newrelic-client-go/compare/v0.2.4...v0.2.5
