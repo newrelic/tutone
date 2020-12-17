@@ -13,12 +13,14 @@ type Expander struct {
 	sync.Mutex
 	schema        *Schema
 	expandedTypes []*Type
+	skipTypes     []string
 }
 
 // NewExpander is to return a sane Expander.
-func NewExpander(schema *Schema) *Expander {
+func NewExpander(schema *Schema, skipTypes []string) *Expander {
 	return &Expander{
-		schema: schema,
+		schema:    schema,
+		skipTypes: skipTypes,
 	}
 }
 
@@ -48,7 +50,16 @@ func (x *Expander) ExpandType(t *Type) (err error) {
 		return fmt.Errorf("unable to expand nil Type")
 	}
 
-	if ok := x.includeType(t); ok {
+	if stringInStrings(t.Name, x.skipTypes) {
+		log.WithFields(log.Fields{
+			"name":             t.Name,
+			"skip_type_create": true,
+		}).Debug("Not expanding skipped type")
+
+		return nil
+	}
+
+	if x.includeType(t) {
 		err := x.expandType(t)
 		if err != nil {
 			log.WithFields(log.Fields{
@@ -109,15 +120,15 @@ func (x *Expander) expandType(t *Type) error {
 		"kind":              t.Kind,
 		"fields_count":      len(t.Fields),
 		"inputFields_count": len(t.InputFields),
-	}).Debugf("expanding type %s", t.Name)
+	}).Debug("expanding type")
 
 	// Collect the nested types from InputFields and Fields.
 	for _, i := range fields {
 		log.WithFields(log.Fields{
+			"args": len(i.Args),
 			"name": i.GetName(),
-			"type": i.Type,
-			"args": i.Args,
-		}).Debugf("expanding field %s", i.Name)
+			"type": i.Type.Kind,
+		}).Debug("expanding field")
 
 		var err error
 
