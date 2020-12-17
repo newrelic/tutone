@@ -188,6 +188,12 @@ func TestSchema_GetQueryStringForEndpoint(t *testing.T) {
 			Field: "entitySearch",
 			Depth: 3,
 		},
+		"entitySearchArgs": {
+			Path:        []string{"actor"},
+			Field:       "entitySearch",
+			Depth:       3,
+			IncludeArgs: []string{"query"},
+		},
 		"entities": {
 			Path:  []string{"actor"},
 			Field: "entities",
