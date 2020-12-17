@@ -468,11 +468,12 @@ var queryHeaderTemplate = `query(
 	{{- range .QueryArgs}}
 	${{.Key}}: {{.Value}},
 	{{- end}}
-) { {{ .FieldPath | join " { " }} { {{.Endpoint}}(
-	{{- range .EndpointArgs}}
+) { {{ .FieldPath | join " { " }} { {{.Endpoint}}
+  {{- if .EndpointArgs }}(
+	{{-   range .EndpointArgs}}
 	{{.Key}}: ${{.Key}},
-	{{- end}}
-) {
+	{{-   end}}
+){{- end}} {
 {{.Fields}}
 `
 
