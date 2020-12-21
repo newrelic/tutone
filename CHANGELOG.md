@@ -1,3 +1,9 @@
+<a name="v0.4.3"></a>
+## [v0.4.3] - 2020-12-21
+### Bug Fixes
+- **schema:** Do not expand fields of types we will not create
+- **schema:** The endpoint for a query might not take args
+
 <a name="v0.4.2"></a>
 ## [v0.4.2] - 2020-12-16
 <a name="v0.4.1"></a>
@@ -124,7 +130,8 @@
 - **generator:** introduce a generator concept
 - **tutone:** default path for tutone config file
 
-[Unreleased]: https://github.com/newrelic/newrelic-client-go/compare/v0.4.2...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-client-go/compare/v0.4.3...HEAD
+[v0.4.3]: https://github.com/newrelic/newrelic-client-go/compare/v0.4.2...v0.4.3
 [v0.4.2]: https://github.com/newrelic/newrelic-client-go/compare/v0.4.1...v0.4.2
 [v0.4.1]: https://github.com/newrelic/newrelic-client-go/compare/v0.4.0...v0.4.1
 [v0.4.0]: https://github.com/newrelic/newrelic-client-go/compare/v0.3.0...v0.4.0
