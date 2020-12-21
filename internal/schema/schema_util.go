@@ -59,11 +59,11 @@ func formatDescription(name string, description string) string {
 	return strings.Join(resultLines, "\n")
 }
 
-// typeNameInTypes determines if a name is already present in a set of config.TypeConfig.
+// typeNameInTypes determines if a name is already present in a set of config.TypeConfig
 func typeNameInTypes(s string, types []config.TypeConfig) bool {
 	for _, t := range types {
-		if t.Name == s {
-			return true
+		if strings.EqualFold(t.Name, s) {
+			return !(t.SkipTypeCreate)
 		}
 	}
 
@@ -107,39 +107,47 @@ func ExpandTypes(s *Schema, pkgConfig *config.PackageConfig) (*[]*Type, error) {
 		return nil, fmt.Errorf("unable to expand types from nil PackageConfig")
 	}
 
+	skipTypes := make([]string, 0, len(pkgConfig.Types))
+	for _, t := range pkgConfig.Types {
+		if t.SkipTypeCreate {
+			skipTypes = append(skipTypes, t.Name)
+		}
+	}
+
 	var err error
-	expander := NewExpander(s)
+	expander := NewExpander(s, skipTypes)
+
+	queries := []string{}
+	for _, pkgQuery := range pkgConfig.Queries {
+		for _, q := range pkgQuery.Endpoints {
+			queries = append(queries, q.Name)
+		}
+	}
 
 	for _, schemaType := range s.Types {
-		if schemaType != nil {
-			// Constrain our handling to include only the type names which are mentioned in the configuration.
-			if typeNameInTypes(schemaType.Name, pkgConfig.Types) {
-				log.WithFields(log.Fields{
-					"name": schemaType.GetName(),
-				}).Debug("config type")
+		if schemaType == nil {
+			continue
+		}
 
-				err = expander.ExpandType(schemaType)
+		// Constrain our handling to include only the type names which are mentioned in the configuration
+		if typeNameInTypes(schemaType.Name, pkgConfig.Types) {
+			log.WithFields(log.Fields{
+				"schema_name": schemaType.GetName(),
+			}).Debug("config type")
+
+			err = expander.ExpandType(schemaType)
+			if err != nil {
+				log.Error(err)
+			}
+		}
+
+		for _, field := range schemaType.Fields {
+			if stringInStrings(field.Name, queries) {
+				err = expander.ExpandTypeFromName(field.Type.GetTypeName())
 				if err != nil {
 					log.Error(err)
 				}
 			}
-
-			queries := []string{}
-			for _, pkgQuery := range pkgConfig.Queries {
-				for _, q := range pkgQuery.Endpoints {
-					queries = append(queries, q.Name)
-				}
-			}
-
-			for _, field := range schemaType.Fields {
-				if stringInStrings(field.Name, queries) {
-					err = expander.ExpandTypeFromName(field.Type.GetTypeName())
-					if err != nil {
-						log.Error(err)
-					}
-				}
-			}
-
 		}
 	}
 
