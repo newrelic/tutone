@@ -125,6 +125,10 @@ type EndpointConfig struct {
 
 // TypeConfig is the information about which types to render and any data specific to handling of the type.
 type TypeConfig struct {
+	// InterfaceMethods is a list of additional methods that are added to an interface definition. The methods are not
+	// defined in the code, so must be implemented by the user.
+	InterfaceMethods []string `yaml:"interface_methods,omitempty"`
+	// Name of the type (required)
 	Name string `yaml:"name"`
 	// FieldTypeOverride is the Golang type to override whatever the default detected type would be for a given field.
 	FieldTypeOverride string `yaml:"field_type_override,omitempty"`
@@ -132,9 +136,9 @@ type TypeConfig struct {
 	CreateAs string `yaml:"create_as,omitempty"`
 	// SkipTypeCreate allows the user to skip creating a Scalar type.
 	SkipTypeCreate bool `yaml:"skip_type_create,omitempty"`
-	// InterfaceMethods is a list of additional methods that are added to an interface definition. The methods are not
-	// defined in the code, so must be implemented by the user.
-	InterfaceMethods []string `yaml:"interface_methods,omitempty"`
+	// GenerateStructGetters enables the auto-generation of field getters for all fields on a struct.
+	// i.e. if a struct has a field `name` then a function would be created called `GetName()`
+	GenerateStructGetters bool `yaml:"generate_struct_getters,omitempty"`
 }
 
 const (

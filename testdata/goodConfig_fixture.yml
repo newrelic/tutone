@@ -21,6 +21,8 @@ packages:
               - "provider"
     types:
       - name: AlertsMutingRuleConditionInput
+      - name: AlertsPolicy
+        generate_struct_getters: true
       - name: ID
         field_type_override: string
         skip_type_create: true
