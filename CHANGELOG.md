@@ -1,3 +1,8 @@
+<a name="v0.5.0"></a>
+## [v0.5.0] - 2021-01-04
+### Features
+- **golang:** Add ability to generate Get funcs for structs
+
 <a name="v0.4.3"></a>
 ## [v0.4.3] - 2020-12-21
 ### Bug Fixes
@@ -130,7 +135,8 @@
 - **generator:** introduce a generator concept
 - **tutone:** default path for tutone config file
 
-[Unreleased]: https://github.com/newrelic/newrelic-client-go/compare/v0.4.3...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-client-go/compare/v0.5.0...HEAD
+[v0.5.0]: https://github.com/newrelic/newrelic-client-go/compare/v0.4.3...v0.5.0
 [v0.4.3]: https://github.com/newrelic/newrelic-client-go/compare/v0.4.2...v0.4.3
 [v0.4.2]: https://github.com/newrelic/newrelic-client-go/compare/v0.4.1...v0.4.2
 [v0.4.1]: https://github.com/newrelic/newrelic-client-go/compare/v0.4.0...v0.4.1
