@@ -29,6 +29,7 @@ type GoStruct struct {
 	Fields           []GoStructField
 	Implements       []string
 	SpecialUnmarshal bool
+	GenerateGetters  bool
 }
 
 type GoStructField struct {
@@ -212,16 +213,18 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 
 	for _, t := range *expandedTypes {
 		var interfaceMethods []string
+		var generateGetters bool
 		// Default scalars to string
 		createAs := "string"
 
 		if p, ok := configNames[strings.ToLower(t.GetName())]; ok {
 			log.WithFields(log.Fields{
-				"create_as":           p.CreateAs,
-				"field_type_override": p.FieldTypeOverride,
-				"kind":                t.Kind,
-				"name":                p.Name,
-				"skip_type_create":    p.SkipTypeCreate,
+				"create_as":               p.CreateAs,
+				"field_type_override":     p.FieldTypeOverride,
+				"generate_struct_getters": p.GenerateStructGetters,
+				"kind":                    t.Kind,
+				"name":                    p.Name,
+				"skip_type_create":        p.SkipTypeCreate,
 			}).Debug("found type config")
 
 			if p.SkipTypeCreate {
@@ -231,6 +234,8 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 				continue
 			}
 
+			generateGetters = p.GenerateStructGetters
+
 			if p.CreateAs != "" {
 				createAs = p.CreateAs
 			}
@@ -238,13 +243,15 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 			if len(p.InterfaceMethods) > 0 {
 				interfaceMethods = p.InterfaceMethods
 			}
+
 		}
 
 		switch t.Kind {
 		case schema.KindInputObject, schema.KindObject, schema.KindInterface:
 			xxx := GoStruct{
-				Name:        t.GetName(),
-				Description: t.GetDescription(),
+				Name:            t.GetName(),
+				Description:     t.GetDescription(),
+				GenerateGetters: generateGetters,
 			}
 
 			var fields []schema.Field

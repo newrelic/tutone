@@ -38,6 +38,10 @@ func TestLoadConfig(t *testing.T) {
 						Name: "AlertsMutingRuleConditionInput",
 					},
 					{
+						Name:                  "AlertsPolicy",
+						GenerateStructGetters: true,
+					},
+					{
 						Name:              "ID",
 						FieldTypeOverride: "string",
 						SkipTypeCreate:    true,
