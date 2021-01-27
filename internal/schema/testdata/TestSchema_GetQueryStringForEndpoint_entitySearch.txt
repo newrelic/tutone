@@ -88,6 +88,7 @@ query { actor { entitySearch {
 			}
 			... on ThirdPartyServiceEntityOutline {
 				__typename
+				alertSeverity
 			}
 			... on UnavailableEntityOutline {
 				__typename
