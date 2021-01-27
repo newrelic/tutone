@@ -27,9 +27,15 @@ mutation(
 	id
 	name
 	schedule {
+		endRepeat
 		endTime
+		nextEndTime
+		nextStartTime
+		repeat
+		repeatCount
 		startTime
 		timeZone
+		weeklyRepeatDays
 	}
 	status
 	updatedAt
