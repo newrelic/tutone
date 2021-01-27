@@ -464,11 +464,11 @@ func (s *Schema) RecursiveLookupFieldByPath(queryFieldPath []string, obj *Type) 
 	return nil
 }
 
-var queryHeaderTemplate = `query(
+var queryHeaderTemplate = `query{{ if .QueryArgs }}(
 	{{- range .QueryArgs}}
 	${{.Key}}: {{.Value}},
 	{{- end}}
-) { {{ .FieldPath | join " { " }} { {{.Endpoint}}
+){{ end }} { {{ .FieldPath | join " { " }} { {{.Endpoint}}
   {{- if .EndpointArgs }}(
 	{{-   range .EndpointArgs}}
 	{{.Key}}: ${{.Key}},

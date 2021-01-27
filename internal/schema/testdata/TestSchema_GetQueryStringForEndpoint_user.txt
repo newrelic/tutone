@@ -1,0 +1,5 @@
+query { actor { user {
+	email
+	id
+	name
+} } }

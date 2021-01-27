@@ -211,6 +211,11 @@ func TestSchema_GetQueryStringForEndpoint(t *testing.T) {
 			Field: "policy",
 			Depth: 2,
 		},
+		"user": {
+			Path:  []string{"actor"},
+			Field: "user",
+			Depth: 2,
+		},
 	}
 
 	for n, tc := range cases {

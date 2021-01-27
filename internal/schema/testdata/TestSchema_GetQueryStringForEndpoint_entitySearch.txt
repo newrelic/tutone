@@ -1,5 +1,4 @@
-query(
-) { actor { entitySearch {
+query { actor { entitySearch {
 	count
 	query
 	results {
