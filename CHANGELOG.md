@@ -1,3 +1,12 @@
+<a name="v0.6.1"></a>
+## [v0.6.1] - 2021-02-11
+### Bug Fixes
+- **golang:** Use Golang field names, not title case of path
+- **nerdgraphclient:** Return value types need name overrides
+
+### Documentation Updates
+- Fix repository URL in changelog
+
 <a name="v0.6.0"></a>
 ## [v0.6.0] - 2021-01-27
 ### Bug Fixes
@@ -140,19 +149,20 @@
 - **generator:** introduce a generator concept
 - **tutone:** default path for tutone config file
 
-[Unreleased]: https://github.com/newrelic/newrelic-client-go/compare/v0.6.0...HEAD
-[v0.6.0]: https://github.com/newrelic/newrelic-client-go/compare/v0.5.0...v0.6.0
-[v0.5.0]: https://github.com/newrelic/newrelic-client-go/compare/v0.4.3...v0.5.0
-[v0.4.3]: https://github.com/newrelic/newrelic-client-go/compare/v0.4.2...v0.4.3
-[v0.4.2]: https://github.com/newrelic/newrelic-client-go/compare/v0.4.1...v0.4.2
-[v0.4.1]: https://github.com/newrelic/newrelic-client-go/compare/v0.4.0...v0.4.1
-[v0.4.0]: https://github.com/newrelic/newrelic-client-go/compare/v0.3.0...v0.4.0
-[v0.3.0]: https://github.com/newrelic/newrelic-client-go/compare/v0.2.5...v0.3.0
-[v0.2.5]: https://github.com/newrelic/newrelic-client-go/compare/v0.2.4...v0.2.5
-[v0.2.4]: https://github.com/newrelic/newrelic-client-go/compare/v0.2.3...v0.2.4
-[v0.2.3]: https://github.com/newrelic/newrelic-client-go/compare/v0.2.2...v0.2.3
-[v0.2.2]: https://github.com/newrelic/newrelic-client-go/compare/v0.2.1...v0.2.2
-[v0.2.1]: https://github.com/newrelic/newrelic-client-go/compare/v0.2.0...v0.2.1
-[v0.2.0]: https://github.com/newrelic/newrelic-client-go/compare/v0.1.2...v0.2.0
-[v0.1.2]: https://github.com/newrelic/newrelic-client-go/compare/v0.1.1...v0.1.2
-[v0.1.1]: https://github.com/newrelic/newrelic-client-go/compare/v0.1.0...v0.1.1
+[Unreleased]: https://github.com/newrelic/tutone/compare/v0.6.1...HEAD
+[v0.6.1]: https://github.com/newrelic/tutone/compare/v0.6.0...v0.6.1
+[v0.6.0]: https://github.com/newrelic/tutone/compare/v0.5.0...v0.6.0
+[v0.5.0]: https://github.com/newrelic/tutone/compare/v0.4.3...v0.5.0
+[v0.4.3]: https://github.com/newrelic/tutone/compare/v0.4.2...v0.4.3
+[v0.4.2]: https://github.com/newrelic/tutone/compare/v0.4.1...v0.4.2
+[v0.4.1]: https://github.com/newrelic/tutone/compare/v0.4.0...v0.4.1
+[v0.4.0]: https://github.com/newrelic/tutone/compare/v0.3.0...v0.4.0
+[v0.3.0]: https://github.com/newrelic/tutone/compare/v0.2.5...v0.3.0
+[v0.2.5]: https://github.com/newrelic/tutone/compare/v0.2.4...v0.2.5
+[v0.2.4]: https://github.com/newrelic/tutone/compare/v0.2.3...v0.2.4
+[v0.2.3]: https://github.com/newrelic/tutone/compare/v0.2.2...v0.2.3
+[v0.2.2]: https://github.com/newrelic/tutone/compare/v0.2.1...v0.2.2
+[v0.2.1]: https://github.com/newrelic/tutone/compare/v0.2.0...v0.2.1
+[v0.2.0]: https://github.com/newrelic/tutone/compare/v0.1.2...v0.2.0
+[v0.1.2]: https://github.com/newrelic/tutone/compare/v0.1.1...v0.1.2
+[v0.1.1]: https://github.com/newrelic/tutone/compare/v0.1.0...v0.1.1
