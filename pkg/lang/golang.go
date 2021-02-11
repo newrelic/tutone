@@ -575,8 +575,15 @@ func goMethodForField(field schema.Field, pkgConfig *config.PackageConfig, input
 		suffix = "Interface"
 	}
 
-	pointerReturn := fmt.Sprintf("%s%s%s", prefix, field.Type.GetTypeName(), suffix)
-	method.Signature.Return = []string{pointerReturn, "error"}
+	returnTypeName, err := field.GetTypeNameWithOverride(pkgConfig)
+	if err != nil {
+		log.Error(err)
+		returnTypeName = field.Type.GetName()
+	}
+	method.Signature.Return = []string{
+		prefix + returnTypeName + suffix,
+		"error",
+	}
 
 	for _, methodArg := range field.Args {
 		typeName, err := methodArg.GetTypeNameWithOverride(pkgConfig)
