@@ -207,6 +207,45 @@ func (s *Schema) LookupQueryTypesByFieldPath(fieldPath []string) ([]*Type, error
 	return types, nil
 }
 
+// LookupQueryFieldsByFieldPath is used to turn a GraphQL field path into Golang
+// struct path
+func (s *Schema) LookupQueryFieldsByFieldPath(fieldPath []string) ([]string, error) {
+	fields := make([]string, len(fieldPath))
+	var err error
+
+	startingT, err := s.LookupTypeByName("RootQueryType")
+	if err != nil {
+		return nil, err
+	}
+
+	fieldName := func(t *Type, fieldName string) (string, *Type, error) {
+		for _, f := range t.Fields {
+			if f.Name == fieldName {
+				next, nameErr := s.LookupTypeByName(f.Type.GetTypeName())
+				return f.GetName(), next, nameErr
+			}
+		}
+
+		return "", nil, fmt.Errorf("no field name %s on type %s", fieldName, t.Name)
+	}
+
+	found := 0
+	name := ""
+	t := startingT
+
+	for _, f := range fieldPath {
+		name, t, err = fieldName(t, f)
+		if err != nil {
+			return nil, err
+		}
+
+		fields[found] = name
+		found++
+	}
+
+	return fields, nil
+}
+
 // GetInputFieldsForQueryPath is intended to return the fields that are
 // available as input arguments when performing a query using the received
 // query path.  For example, a []string{"actor", "account"} would look at
