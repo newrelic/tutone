@@ -16,7 +16,7 @@ require (
 	github.com/sirupsen/logrus v1.7.0
 	github.com/smartystreets/assertions v1.0.0 // indirect
 	github.com/spf13/afero v1.5.1 // indirect
-	github.com/spf13/cobra v1.1.1
+	github.com/spf13/cobra v1.1.3
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.7.0
