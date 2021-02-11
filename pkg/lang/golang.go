@@ -108,19 +108,15 @@ func GenerateGoMethodQueriesForPackage(s *schema.Schema, genConfig *config.Gener
 	var methods []GoMethod
 
 	for _, pkgQuery := range pkgConfig.Queries {
-
 		typePath, err := s.LookupQueryTypesByFieldPath(pkgQuery.Path)
 		if err != nil {
 			log.Error(err)
 			continue
 		}
 
-		// TODO this will eventually break when a field name of the struct is not a
-		// simple capitalization.  We'd need to loop over the fields for the type
-		// and grab the name as is done in constrainedResponseStructs().
-		returnPath := []string{}
-		for _, t := range pkgQuery.Path {
-			returnPath = append(returnPath, strings.Title(t))
+		returnPath, err := s.LookupQueryFieldsByFieldPath(pkgQuery.Path)
+		if err != nil {
+			return nil, err
 		}
 
 		inputFields := s.GetInputFieldsForQueryPath(pkgQuery.Path)
@@ -575,8 +571,15 @@ func goMethodForField(field schema.Field, pkgConfig *config.PackageConfig, input
 		suffix = "Interface"
 	}
 
-	pointerReturn := fmt.Sprintf("%s%s%s", prefix, field.Type.GetTypeName(), suffix)
-	method.Signature.Return = []string{pointerReturn, "error"}
+	returnTypeName, err := field.GetTypeNameWithOverride(pkgConfig)
+	if err != nil {
+		log.Error(err)
+		returnTypeName = field.Type.GetName()
+	}
+	method.Signature.Return = []string{
+		prefix + returnTypeName + suffix,
+		"error",
+	}
 
 	for _, methodArg := range field.Args {
 		typeName, err := methodArg.GetTypeNameWithOverride(pkgConfig)
