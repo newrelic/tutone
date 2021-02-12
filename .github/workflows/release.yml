@@ -5,27 +5,30 @@ on:
     tags:
       - 'v*'
 
-
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-    - name: Install Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.14.x
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
 
-    - name: Add GOBIN to PATH
-      run: echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
-      shell: bash
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Add GOBIN to PATH
+        run: echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+        shell: bash
 
-    - name: Publish Release
-      shell: bash
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-      run: make release-publish
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          # Needed for release notes
+          fetch-depth: 0
+
+      - name: Publish Release
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.DEV_TOOLKIT_TOKEN }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: make release-publish
 
