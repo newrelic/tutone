@@ -14,14 +14,14 @@ release-clean:
 	@echo "=== $(PROJECT_NAME) === [ release-clean    ]: distribution files..."
 	@rm -rfv $(DIST_DIR) $(SRCDIR)/tmp
 
-release-publish: clean tools release-notes
+release-publish: clean tools docker-login release-notes
 	@echo "=== $(PROJECT_NAME) === [ release-publish  ]: Publishing release via $(REL_CMD)"
 	$(REL_CMD) --release-notes=$(SRCDIR)/tmp/$(RELEASE_NOTES_FILE)
 
 # Local Snapshot
-snapshot: release-clean
+snapshot: clean tools release-notes
 	@echo "=== $(PROJECT_NAME) === [ snapshot         ]: Creating release via $(REL_CMD)"
 	@echo "=== $(PROJECT_NAME) === [ snapshot         ]:   THIS WILL NOT BE PUBLISHED!"
-	$(REL_CMD) --skip-publish --snapshot
+	@$(REL_CMD) --skip-publish --snapshot --release-notes=$(SRCDIR)/tmp/$(RELEASE_NOTES_FILE)
 
 .PHONY: release release-clean release-publish snapshot
