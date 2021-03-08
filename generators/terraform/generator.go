@@ -10,7 +10,6 @@ type Generator struct {
 }
 
 func (g *Generator) Generate(s *schema.Schema) error {
-
 	log.Debugf("s: %+v", *s)
 
 	return nil

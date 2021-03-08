@@ -48,6 +48,7 @@ query { actor { entitySearch {
 			... on DashboardEntityOutline {
 				__typename
 				dashboardParentGuid
+				permissions
 			}
 			... on GenericEntityOutline {
 				__typename

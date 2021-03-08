@@ -9,6 +9,12 @@ run:
   # include test files or not, default is true
   tests: true
 
+  build-tags:
+    - integration
+    - unit
+
+  modules-download-mode: readonly
+
 # all available settings of specific linters
 linters-settings:
   govet:
@@ -23,6 +29,11 @@ linters-settings:
   maligned:
     # print struct with more effective memory layout or not, false by default
     suggest-new: true
+  nolintlint:
+    # Enable to ensure that nolint directives are all used. Default is true.
+    allow-unused: false
+    # Enable to require nolint directives to mention the specific linter being suppressed. Default is false.
+    require-specific: true
   depguard:
     list-type: blacklist
     include-go-root: false
@@ -41,20 +52,25 @@ linters:
   enable:
     - deadcode
     - errcheck
+    - goimports
     - gocyclo
     - gofmt
     - golint
     - gosimple
     - govet
     - ineffassign
-    - maligned
     - misspell
+    - nolintlint
+    - scopelint
     - staticcheck
     - structcheck
+    - thelper
     - unconvert
+    #- unparam
     - unused
     - varcheck
     - vet
+    - whitespace
 
 issues:
   # disable limits on issue reporting

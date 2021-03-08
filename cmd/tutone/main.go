@@ -72,12 +72,14 @@ func initConfig() {
 	}
 
 	err := viper.ReadInConfig()
-	// nolint
 	if err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+		switch e := err.(type) {
+		case viper.ConfigFileNotFoundError:
 			log.Debug("no config file found, using defaults")
-		} else if e, ok := err.(viper.ConfigParseError); ok {
+		case viper.ConfigParseError:
 			log.Errorf("error parsing config file: %v", e)
+		default:
+			log.Errorf("unknown error: %v", e)
 		}
 	}
 

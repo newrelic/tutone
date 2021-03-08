@@ -83,5 +83,4 @@ func TestLoadConfig(t *testing.T) {
 	}
 
 	assert.Equal(t, config, expected)
-
 }
