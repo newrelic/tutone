@@ -52,6 +52,7 @@ query(
 			... on DashboardEntityOutline {
 				__typename
 				dashboardParentGuid
+				permissions
 			}
 			... on GenericEntityOutline {
 				__typename

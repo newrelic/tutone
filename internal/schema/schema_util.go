@@ -176,7 +176,6 @@ func ExpandTypes(s *Schema, pkgConfig *config.PackageConfig) (*[]*Type, error) {
 				}
 			}
 		}
-
 	}
 
 	return expander.ExpandedTypes(), nil

@@ -13,20 +13,26 @@ import (
 	"github.com/tj/assert"
 )
 
+//nolint:deadcode,unused //used to update fixtures as needed
 func saveFixture(t *testing.T, n, s string) {
+	t.Helper()
 	wd, _ := os.Getwd()
 	fileName := fmt.Sprintf("testdata/%s_%s.txt", t.Name(), n)
 	t.Logf("saving fixture to %s/%s", wd, fileName)
 
-	os.Mkdir("testdata", 0750)
+	err := os.Mkdir("testdata", 0750)
+	require.NoError(t, err)
 
 	f, err := os.Create(fileName)
 	require.NoError(t, err)
-	f.WriteString(s)
 	defer f.Close()
+
+	_, err = f.WriteString(s)
+	require.NoError(t, err)
 }
 
 func loadFixture(t *testing.T, n string) string {
+	t.Helper()
 	fileName := fmt.Sprintf("testdata/%s_%s.txt", t.Name(), n)
 	t.Logf("loading fixture %s", strings.TrimPrefix(fileName, "testdata/"))
 
@@ -167,7 +173,6 @@ func TestSchema_LookupTypesByFieldPath(t *testing.T) {
 			assert.Equal(t, tc.Result[i], result[i])
 		}
 	}
-
 }
 
 func TestSchema_GetQueryStringForEndpoint(t *testing.T) {
@@ -303,8 +308,8 @@ func TestSchema_GetInputFieldsForQueryPath(t *testing.T) {
 	for _, tc := range cases {
 		result := s.GetInputFieldsForQueryPath(tc.QueryPath)
 		assert.Equal(t, len(tc.Fields), len(result))
-		for pathName, fields := range tc.Fields {
 
+		for pathName, fields := range tc.Fields {
 			for i, name := range fields {
 				assert.Equal(t, name, result[pathName][i].Name)
 			}

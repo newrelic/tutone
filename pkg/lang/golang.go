@@ -131,7 +131,6 @@ func GenerateGoMethodQueriesForPackage(s *schema.Schema, genConfig *config.Gener
 		for _, endpoint := range pkgQuery.Endpoints {
 			for _, field := range t.Fields {
 				if field.Name == endpoint.Name {
-
 					method := goMethodForField(field, pkgConfig, inputFields)
 
 					method.QueryString = s.GetQueryStringForEndpoint(typePath, pkgQuery.Path, endpoint.Name, endpoint.MaxQueryFieldDepth, endpoint.IncludeArguments)
@@ -239,7 +238,6 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 			if len(p.InterfaceMethods) > 0 {
 				interfaceMethods = p.InterfaceMethods
 			}
-
 		}
 
 		switch t.Kind {
@@ -455,7 +453,6 @@ func constrainedResponseStructs(s *schema.Schema, pkgConfig *config.PackageConfi
 
 	// Build a response object for each one of the queries in the configuration.
 	for _, query := range pkgConfig.Queries {
-
 		// Retrieve the corresponding types for each of the field names in the query config.
 		pathTypes, err := s.LookupQueryTypesByFieldPath(query.Path)
 		if err != nil {
@@ -477,7 +474,6 @@ func constrainedResponseStructs(s *schema.Schema, pkgConfig *config.PackageConfi
 
 			for _, f := range t.Fields {
 				if isExpanded(expandedTypes, f.Type.GetTypeName()) || isInPath(pathTypes, f.Type.GetName()) {
-
 					xxx.Fields = append(xxx.Fields, getStructField(f, pkgConfig))
 				}
 			}
@@ -487,7 +483,6 @@ func constrainedResponseStructs(s *schema.Schema, pkgConfig *config.PackageConfi
 
 		// Ensure we have a response struct for each of the endpoints in our config.
 		for _, endpoint := range query.Endpoints {
-
 			xxx := GoStruct{
 				Name: fmt.Sprintf("%sResponse", endpoint.Name),
 			}
@@ -505,7 +500,6 @@ func constrainedResponseStructs(s *schema.Schema, pkgConfig *config.PackageConfi
 			xxx.Fields = append(xxx.Fields, field)
 			goStructs = append(goStructs, xxx)
 		}
-
 	}
 
 	return goStructs
@@ -520,7 +514,6 @@ func constrainedResponseStructs(s *schema.Schema, pkgConfig *config.PackageConfi
 // schema that are used as a starting place for input variables, since the
 // parent objects may require those inputs.
 func goMethodForField(field schema.Field, pkgConfig *config.PackageConfig, inputFields map[string][]schema.Field) GoMethod {
-
 	method := GoMethod{
 		Name:        field.GetName(),
 		Description: field.GetDescription(),
@@ -607,7 +600,6 @@ func goMethodForField(field schema.Field, pkgConfig *config.PackageConfig, input
 		}
 
 		method.QueryVars = append(method.QueryVars, queryVar)
-
 	}
 
 	return method
