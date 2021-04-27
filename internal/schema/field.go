@@ -67,6 +67,51 @@ func (f *Field) GetName() string {
 	return formatGoName(f.Name)
 }
 
+func (f *Field) GetTagsWithOverrides(parentType Type, pkgConfig *config.PackageConfig) string {
+	if f == nil {
+		return ""
+	}
+
+	// Get the parent type config to apply any field struct tag overrides
+	parentTypeConfig := pkgConfig.GetTypeConfigByName(parentType.Name)
+
+	var tags string
+	if parentTypeConfig != nil && len(parentTypeConfig.StructTags) > 0 {
+		tags = f.buildStructTags(f.Name, parentTypeConfig.StructTags)
+	}
+
+	if tags == "" {
+		return f.GetTags()
+	}
+
+	return tags
+}
+
+func (f *Field) buildStructTags(fieldName string, structTags []string) string {
+	tagsString := "`"
+	tagsCount := len(structTags)
+
+	for i, tagType := range structTags {
+		tagEnd := "\" "
+		if i == tagsCount-1 {
+			tagEnd = "\"" // no trailing space if last tag
+		}
+
+		tagsString = tagsString + tagType + ":\"" + f.Name
+
+		if f.Type.IsInputObject() || !f.Type.IsNonNull() {
+			tagsString = tagsString + ",omitempty"
+		}
+
+		tagsString = tagsString + tagEnd
+	}
+
+	// Add closing back tick
+	tagsString += "`"
+
+	return tagsString
+}
+
 // GetTags is used to return the Go struct tags for a field.
 func (f *Field) GetTags() string {
 	if f == nil {
@@ -79,7 +124,15 @@ func (f *Field) GetTags() string {
 		jsonTag += ",omitempty"
 	}
 
-	return jsonTag + "\"`"
+	tags := jsonTag + "\"`"
+
+	// log.Print("\n\n **************************** \n")
+	// log.Printf("\n Struct Tags:  %s \n", f)
+	// log.Printf("\n Struct Tags:  %s \n", jsonTag)
+	// log.Print("\n **************************** \n\n")
+	// time.Sleep(5 * time.Second)
+
+	return tags
 }
 
 func (f *Field) IsPrimitiveType() bool {
