@@ -31,8 +31,9 @@ type Endpoint struct {
 }
 
 type AuthConfig struct {
-	Header string
-	APIKey string
+	Disable bool
+	Header  string
+	APIKey  string
 }
 
 type HTTPConfig struct {
@@ -163,11 +164,13 @@ func (e *Endpoint) fetch(query GraphqlQuery) (*schema.QueryResponse, error) {
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	if e.Auth.APIKey != "" {
-		log.WithFields(log.Fields{
-			"header": req.Header,
-		}).Trace("setting API Key header")
-		req.Header.Set(e.Auth.Header, e.Auth.APIKey)
+	if !e.Auth.Disable {
+		if e.Auth.APIKey != "" {
+			log.WithFields(log.Fields{
+				"header": req.Header,
+			}).Trace("setting API Key header")
+			req.Header.Set(e.Auth.Header, e.Auth.APIKey)
+		}
 	}
 
 	log.Trace("creating HTTP client")

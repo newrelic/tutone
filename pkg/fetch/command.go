@@ -28,6 +28,7 @@ Query the GraphQL server for schema and write it to a file.
 	Run: func(cmd *cobra.Command, args []string) {
 		Fetch(
 			viper.GetString("endpoint"),
+			viper.GetBool("auth.disable"),
 			viper.GetString("auth.header"),
 			viper.GetString("auth.api_key_env_var"),
 			viper.GetString("cache.schema_file"),
@@ -38,6 +39,7 @@ Query the GraphQL server for schema and write it to a file.
 
 func Fetch(
 	endpoint string,
+	disableAuth bool,
 	authHeader string,
 	authEnvVariableName string,
 	schemaFile string,
@@ -45,6 +47,7 @@ func Fetch(
 ) {
 	e := NewEndpoint()
 	e.URL = endpoint
+	e.Auth.Disable = disableAuth
 	e.Auth.Header = authHeader
 	e.Auth.APIKey = os.Getenv(authEnvVariableName)
 
