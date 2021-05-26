@@ -18,6 +18,7 @@ mutation(
 		disabled
 		externalId
 		id
+		metricCollectionMode
 		name
 		nrAccountId
 		updatedAt

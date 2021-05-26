@@ -18,6 +18,7 @@ query(
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -126,6 +127,11 @@ query(
 			inventoryPollingInterval
 			metricsPollingInterval
 		}
+		... on CloudAwsMetadataIntegration {
+			__typename
+			inventoryPollingInterval
+			metricsPollingInterval
+		}
 		... on CloudAwsMqIntegration {
 			__typename
 			awsRegions
@@ -159,6 +165,11 @@ query(
 		... on CloudAwsStatesIntegration {
 			__typename
 			awsRegions
+			inventoryPollingInterval
+			metricsPollingInterval
+		}
+		... on CloudAwsTagsGlobalIntegration {
+			__typename
 			inventoryPollingInterval
 			metricsPollingInterval
 		}
@@ -491,6 +502,16 @@ query(
 			inventoryPollingInterval
 			metricsPollingInterval
 		}
+		... on CloudGcpBigtableIntegration {
+			__typename
+			inventoryPollingInterval
+			metricsPollingInterval
+		}
+		... on CloudGcpComposerIntegration {
+			__typename
+			inventoryPollingInterval
+			metricsPollingInterval
+		}
 		... on CloudGcpDataflowIntegration {
 			__typename
 			inventoryPollingInterval
@@ -546,9 +567,19 @@ query(
 			inventoryPollingInterval
 			metricsPollingInterval
 		}
+		... on CloudGcpMemcacheIntegration {
+			__typename
+			inventoryPollingInterval
+			metricsPollingInterval
+		}
 		... on CloudGcpPubsubIntegration {
 			__typename
 			fetchTags
+			inventoryPollingInterval
+			metricsPollingInterval
+		}
+		... on CloudGcpRedisIntegration {
+			__typename
 			inventoryPollingInterval
 			metricsPollingInterval
 		}
@@ -704,6 +735,7 @@ query(
 			tagValue
 		}
 	}
+	metricCollectionMode
 	name
 	nrAccountId
 	provider {

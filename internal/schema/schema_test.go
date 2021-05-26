@@ -20,7 +20,7 @@ func saveFixture(t *testing.T, n, s string) {
 	fileName := fmt.Sprintf("testdata/%s_%s.txt", t.Name(), n)
 	t.Logf("saving fixture to %s/%s", wd, fileName)
 
-	err := os.Mkdir("testdata", 0750)
+	err := os.MkdirAll("testdata", 0750)
 	require.NoError(t, err)
 
 	f, err := os.Create(fileName)

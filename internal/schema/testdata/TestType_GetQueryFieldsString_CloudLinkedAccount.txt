@@ -112,6 +112,11 @@ integrations {
 				inventoryPollingInterval
 				metricsPollingInterval
 			}
+			... on CloudAwsMetadataIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
 			... on CloudAwsMqIntegration {
 				__typename
 				awsRegions
@@ -145,6 +150,11 @@ integrations {
 			... on CloudAwsStatesIntegration {
 				__typename
 				awsRegions
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudAwsTagsGlobalIntegration {
+				__typename
 				inventoryPollingInterval
 				metricsPollingInterval
 			}
@@ -477,6 +487,16 @@ integrations {
 				inventoryPollingInterval
 				metricsPollingInterval
 			}
+			... on CloudGcpBigtableIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudGcpComposerIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
 			... on CloudGcpDataflowIntegration {
 				__typename
 				inventoryPollingInterval
@@ -532,9 +552,19 @@ integrations {
 				inventoryPollingInterval
 				metricsPollingInterval
 			}
+			... on CloudGcpMemcacheIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
 			... on CloudGcpPubsubIntegration {
 				__typename
 				fetchTags
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
+			... on CloudGcpRedisIntegration {
+				__typename
 				inventoryPollingInterval
 				metricsPollingInterval
 			}
@@ -690,6 +720,7 @@ integrations {
 				tagValue
 			}
 		}
+		metricCollectionMode
 		name
 		nrAccountId
 		provider {
@@ -768,6 +799,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -796,6 +828,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -824,6 +857,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -849,6 +883,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -874,6 +909,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -899,6 +935,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -924,6 +961,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -949,6 +987,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -974,6 +1013,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -999,6 +1039,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1024,6 +1065,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1049,6 +1091,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1074,6 +1117,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1099,6 +1143,32 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAwsMetadataIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1124,6 +1194,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1149,6 +1220,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1174,6 +1246,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1199,6 +1272,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1224,6 +1298,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1249,6 +1324,32 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAwsTagsGlobalIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1274,6 +1375,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1299,6 +1401,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1324,6 +1427,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1349,6 +1453,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1373,6 +1478,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1398,6 +1504,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1423,6 +1530,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1448,6 +1556,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1473,6 +1582,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1498,6 +1608,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1523,6 +1634,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1548,6 +1660,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1573,6 +1686,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1598,6 +1712,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1623,6 +1738,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1648,6 +1764,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1673,6 +1790,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1698,6 +1816,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1723,6 +1842,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1748,6 +1868,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1773,6 +1894,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1798,6 +1920,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1823,6 +1946,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1848,6 +1972,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1873,6 +1998,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1898,6 +2024,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1923,6 +2050,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1948,6 +2076,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1973,6 +2102,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -1998,6 +2128,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2023,6 +2154,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2048,6 +2180,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2073,6 +2206,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2098,6 +2232,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2122,6 +2257,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2145,6 +2281,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2171,6 +2308,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2198,6 +2336,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2225,6 +2364,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2253,6 +2393,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2281,6 +2422,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2309,6 +2451,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2337,6 +2480,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2365,6 +2509,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2394,6 +2539,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2422,6 +2568,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2451,6 +2598,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2477,6 +2625,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2503,6 +2652,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2528,6 +2678,57 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudGcpBigtableIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			metricCollectionMode
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudGcpComposerIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2552,6 +2753,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2576,6 +2778,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2600,6 +2803,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2624,6 +2828,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2648,6 +2853,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2672,6 +2878,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2696,6 +2903,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2720,6 +2928,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2744,6 +2953,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2768,6 +2978,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2792,6 +3003,32 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudGcpMemcacheIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2817,6 +3054,32 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudGcpRedisIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2841,6 +3104,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2865,6 +3129,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2890,6 +3155,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2914,6 +3180,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2939,6 +3206,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2963,6 +3231,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -2987,6 +3256,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -3011,6 +3281,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -3035,6 +3306,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -3062,6 +3334,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -3087,6 +3360,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -3114,6 +3388,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -3142,6 +3417,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -3170,6 +3446,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -3197,6 +3474,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -3224,6 +3502,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -3250,6 +3529,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -3277,6 +3557,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -3303,6 +3584,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -3330,6 +3612,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -3357,6 +3640,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -3384,6 +3668,7 @@ integrations {
 			disabled
 			externalId
 			id
+			metricCollectionMode
 			name
 			nrAccountId
 			updatedAt
@@ -3402,6 +3687,7 @@ integrations {
 		tagValue
 	}
 }
+metricCollectionMode
 name
 nrAccountId
 provider {
