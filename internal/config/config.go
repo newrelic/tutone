@@ -139,7 +139,7 @@ type TypeConfig struct {
 	// GenerateStructGetters enables the auto-generation of field getters for all fields on a struct.
 	// i.e. if a struct has a field `name` then a function would be created called `GetName()`
 	GenerateStructGetters bool `yaml:"generate_struct_getters,omitempty"`
-
+	// Applies to all fields of the struct
 	StructTags []string `yaml:"struct_tags,omitempty"`
 }
 
