@@ -10,6 +10,7 @@ query { actor { entitySearch {
 				reportingEventTypes
 			}
 			accountId
+			alertSeverity
 			domain
 			entityType
 			guid
@@ -24,7 +25,6 @@ query { actor { entitySearch {
 			type
 			... on ApmApplicationEntityOutline {
 				__typename
-				alertSeverity
 				applicationId
 				language
 			}
@@ -41,7 +41,6 @@ query { actor { entitySearch {
 			... on BrowserApplicationEntityOutline {
 				__typename
 				agentInstallType
-				alertSeverity
 				applicationId
 				servingApmApplicationId
 			}
@@ -50,27 +49,26 @@ query { actor { entitySearch {
 				dashboardParentGuid
 				permissions
 			}
+			... on ExternalEntityOutline {
+				__typename
+			}
 			... on GenericEntityOutline {
 				__typename
 			}
 			... on GenericInfrastructureEntityOutline {
 				__typename
-				alertSeverity
 				integrationTypeCode
 			}
 			... on InfrastructureAwsLambdaFunctionEntityOutline {
 				__typename
-				alertSeverity
 				integrationTypeCode
 				runtime
 			}
 			... on InfrastructureHostEntityOutline {
 				__typename
-				alertSeverity
 			}
 			... on MobileApplicationEntityOutline {
 				__typename
-				alertSeverity
 				applicationId
 			}
 			... on SecureCredentialEntityOutline {
@@ -81,7 +79,6 @@ query { actor { entitySearch {
 			}
 			... on SyntheticMonitorEntityOutline {
 				__typename
-				alertSeverity
 				monitorId
 				monitorType
 				monitoredUrl
@@ -89,14 +86,12 @@ query { actor { entitySearch {
 			}
 			... on ThirdPartyServiceEntityOutline {
 				__typename
-				alertSeverity
 			}
 			... on UnavailableEntityOutline {
 				__typename
 			}
 			... on WorkloadEntityOutline {
 				__typename
-				alertSeverity
 				createdAt
 				updatedAt
 			}

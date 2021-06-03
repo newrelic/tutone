@@ -31,6 +31,7 @@ func Generate(options GeneratorOptions) error {
 	if os.IsNotExist(err) || options.Refetch {
 		fetch.Fetch(
 			viper.GetString("endpoint"),
+			viper.GetBool("auth.disable"),
 			viper.GetString("auth.header"),
 			viper.GetString("auth.api_key_env_var"),
 			schemaFile,
