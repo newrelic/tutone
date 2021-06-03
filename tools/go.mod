@@ -9,7 +9,7 @@ require (
 	github.com/goreleaser/goreleaser v0.159.0
 	github.com/hashicorp/go-retryablehttp v0.6.8 // indirect
 	github.com/llorllale/go-gitlint v0.0.0-20200802191503-5984945d4b80
-	github.com/psampaz/go-mod-outdated v0.7.0
+	github.com/psampaz/go-mod-outdated v0.8.0
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/tools v0.1.0
 )
