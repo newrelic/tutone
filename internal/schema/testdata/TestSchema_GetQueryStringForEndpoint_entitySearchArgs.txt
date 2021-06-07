@@ -50,8 +50,10 @@ query(
 			}
 			... on DashboardEntityOutline {
 				__typename
+				createdAt
 				dashboardParentGuid
 				permissions
+				updatedAt
 			}
 			... on ExternalEntityOutline {
 				__typename
