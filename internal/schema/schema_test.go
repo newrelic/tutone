@@ -39,7 +39,7 @@ func loadFixture(t *testing.T, n string) string {
 	content, err := ioutil.ReadFile(fileName)
 	require.NoError(t, err)
 
-	return string(content)
+	return strings.TrimSpace(string(content))
 }
 
 func TestSchema_BuildQueryArgsForEndpoint(t *testing.T) {
