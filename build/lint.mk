@@ -16,7 +16,7 @@ GOLINTER      = golangci-lint
 EXCLUDEDIR      ?= .git
 SRCDIR          ?= .
 GO_PKGS         ?= $(shell ${GO} list ./... | grep -v -e "/vendor/" -e "/example")
-FILES           ?= $(shell find ${SRCDIR} -type f | grep -v -e '.git/' -e '/vendor/')
+SPELL_FILES     ?= $(shell find ${SRCDIR} -type f | grep -v -e '.git/' -e '/vendor/' -e 'go.sum' -e '/testdata/')
 GO_FILES        ?= $(shell find $(SRCDIR) -type f -name "*.go" | grep -v -e ".git/" -e '/vendor/' -e '/example/')
 PROJECT_MODULE  ?= $(shell $(GO) list -m)
 
@@ -37,11 +37,11 @@ lint-fix: deps spell-check-fix gofmt-fix goimports
 #
 spell-check: deps
 	@echo "=== $(PROJECT_NAME) === [ spell-check      ]: Checking for spelling mistakes with $(MISSPELL)..."
-	@$(MISSPELL) -source text $(FILES)
+	@$(MISSPELL) -source text $(SPELL_FILES)
 
 spell-check-fix: deps
 	@echo "=== $(PROJECT_NAME) === [ spell-check-fix  ]: Fixing spelling mistakes with $(MISSPELL)..."
-	@$(MISSPELL) -source text -w $(FILES)
+	@$(MISSPELL) -source text -w $(SPELL_FILES)
 
 gofmt: deps
 	@echo "=== $(PROJECT_NAME) === [ gofmt            ]: Checking file format with $(GOFMT)..."

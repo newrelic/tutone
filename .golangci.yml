@@ -55,13 +55,13 @@ linters:
     - goimports
     - gocyclo
     - gofmt
-    - golint
+    #- golint
     - gosimple
     - govet
     - ineffassign
     - misspell
     - nolintlint
-    - scopelint
+    #- scopelint
     - staticcheck
     - structcheck
     - thelper
