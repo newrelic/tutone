@@ -12,6 +12,16 @@ packages:
     import_path: "github.com/newrelic/newrelic-client-go/pkg/alerts"
     generators:
       - typegen
+    mutations:
+      - name: cloudConfigureIntegration
+        max_query_field_depth: 1
+      - name: cloudLinkAccount
+        max_query_field_depth: 1
+        argument_type_overrides:
+          accountId: "Int!"
+          accounts: "CloudLinkCloudAccountsInput!"
+        exclude_fields:
+          - "updatedAt"
     queries:
       - path: ["actor", "cloud"]
         endpoints:
