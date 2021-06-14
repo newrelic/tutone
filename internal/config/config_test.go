@@ -65,8 +65,24 @@ func TestLoadConfig(t *testing.T) {
 								Name:               "linkedAccounts",
 								MaxQueryFieldDepth: 2,
 								IncludeArguments:   []string{"provider"},
+								ExcludeFields:      []string{"updatedAt"},
 							},
 						},
+					},
+				},
+				Mutations: []MutationConfig{
+					{
+						Name:               "cloudConfigureIntegration",
+						MaxQueryFieldDepth: 1,
+					},
+					{
+						Name:               "cloudLinkAccount",
+						MaxQueryFieldDepth: 1,
+						ArgumentTypeOverrides: map[string]string{
+							"accountId": "Int!",
+							"accounts":  "CloudLinkCloudAccountsInput!",
+						},
+						ExcludeFields: []string{"updatedAt"},
 					},
 				},
 			},

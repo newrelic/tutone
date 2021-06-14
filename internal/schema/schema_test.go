@@ -9,8 +9,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tj/assert"
+
+	"github.com/newrelic/tutone/internal/config"
 )
 
 //nolint:deadcode,unused //used to update fixtures as needed
@@ -183,43 +185,56 @@ func TestSchema_GetQueryStringForEndpoint(t *testing.T) {
 	require.NoError(t, err)
 
 	cases := map[string]struct {
-		Path        []string
-		Field       string
-		Depth       int
-		IncludeArgs []string
+		Path     []string
+		Endpoint config.EndpointConfig
 	}{
 		"entitySearch": {
-			Path:  []string{"actor"},
-			Field: "entitySearch",
-			Depth: 3,
+			Path: []string{"actor"},
+			Endpoint: config.EndpointConfig{
+				Name:               "entitySearch",
+				MaxQueryFieldDepth: 3,
+			},
 		},
 		"entitySearchArgs": {
-			Path:        []string{"actor"},
-			Field:       "entitySearch",
-			Depth:       3,
-			IncludeArgs: []string{"query"},
+			Path: []string{"actor"},
+			Endpoint: config.EndpointConfig{
+				Name:               "entitySearch",
+				MaxQueryFieldDepth: 3,
+				IncludeArguments:   []string{"query"},
+			},
 		},
 		"entities": {
-			Path:  []string{"actor"},
-			Field: "entities",
-			// Zero set here because we have the field coverage above with greater depth.  Here we want to ensure that required arguments on the entities endpoint has the correct syntax.
-			Depth: 0,
+			Path: []string{"actor"},
+			Endpoint: config.EndpointConfig{
+				Name: "entities",
+				// Zero set here because we have the field coverage above with greater depth.  Here we want to ensure that required arguments on the entities endpoint has the correct syntax.
+				MaxQueryFieldDepth: 0,
+			},
 		},
 		"linkedAccounts": {
-			Path:        []string{"actor", "cloud"},
-			Field:       "linkedAccounts",
-			Depth:       2,
-			IncludeArgs: []string{"provider"},
+			Path: []string{"actor", "cloud"},
+			Endpoint: config.EndpointConfig{
+				Name:               "linkedAccounts",
+				MaxQueryFieldDepth: 2,
+				IncludeArguments:   []string{"provider"},
+			},
 		},
 		"policy": {
-			Path:  []string{"actor", "account", "alerts"},
-			Field: "policy",
-			Depth: 2,
+			Path: []string{"actor", "account", "alerts"},
+			Endpoint: config.EndpointConfig{
+				Name:               "policy",
+				MaxQueryFieldDepth: 2,
+			},
 		},
 		"user": {
-			Path:  []string{"actor"},
-			Field: "user",
-			Depth: 2,
+			Path: []string{"actor"},
+			Endpoint: config.EndpointConfig{
+				Name:               "user",
+				MaxQueryFieldDepth: 2,
+				ExcludeFields: []string{
+					"email",
+				},
+			},
 		},
 	}
 
@@ -228,7 +243,7 @@ func TestSchema_GetQueryStringForEndpoint(t *testing.T) {
 		typePath, err := s.LookupQueryTypesByFieldPath(tc.Path)
 		require.NoError(t, err)
 
-		result := s.GetQueryStringForEndpoint(typePath, tc.Path, tc.Field, tc.Depth, tc.IncludeArgs)
+		result := s.GetQueryStringForEndpoint(typePath, tc.Path, tc.Endpoint)
 		// saveFixture(t, n, result)
 		expected := loadFixture(t, n)
 		assert.Equal(t, expected, result)
@@ -242,34 +257,38 @@ func TestSchema_GetQueryStringForMutation(t *testing.T) {
 	s, err := Load("../../testdata/schema.json")
 	require.NoError(t, err)
 
-	cases := map[string]struct {
-		Mutation string
-		Depth    int
-		Override map[string]string
-	}{
-		"alertsMutingRuleCreate": {
-			Mutation: "alertsMutingRuleCreate",
-			Depth:    3,
-			Override: map[string]string{},
+	cases := []config.MutationConfig{
+		{
+			Name:                  "alertsMutingRuleCreate",
+			MaxQueryFieldDepth:    3,
+			ArgumentTypeOverrides: map[string]string{},
 		},
-		"cloudRenameAccount": {
-			Mutation: "cloudRenameAccount",
-			Depth:    1,
-			Override: map[string]string{
+		{
+			Name:               "cloudRenameAccount",
+			MaxQueryFieldDepth: 1,
+			ArgumentTypeOverrides: map[string]string{
 				"accountId": "Int!",
 				"accounts":  "[CloudRenameAccountsInput!]!",
 			},
 		},
+		{
+			Name:                  "apiAccessCreateKeys",
+			MaxQueryFieldDepth:    3,
+			ArgumentTypeOverrides: map[string]string{},
+			ExcludeFields: []string{
+				"notes",
+			},
+		},
 	}
 
-	for n, tc := range cases {
-		t.Logf("TestCase: %s", n)
-		field, err := s.LookupMutationByName(tc.Mutation)
+	for _, tc := range cases {
+		t.Logf("TestCase: %s", tc.Name)
+		field, err := s.LookupMutationByName(tc.Name)
 		require.NoError(t, err)
 
-		result := s.GetQueryStringForMutation(field, tc.Depth, tc.Override)
-		// saveFixture(t, n, result)
-		expected := loadFixture(t, n)
+		result := s.GetQueryStringForMutation(field, tc)
+		// saveFixture(t, tc.Name, result)
+		expected := loadFixture(t, tc.Name)
 		assert.Equal(t, expected, result)
 	}
 }
