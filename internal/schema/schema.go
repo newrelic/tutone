@@ -312,7 +312,7 @@ func (s *Schema) BuildQueryArgsForEndpoint(t *Type, fields []string, includeArgu
 }
 
 // GetQueryStringForEndpoint packs a nerdgraph query header and footer around the set of query fields for a given type name and endpoint.
-func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string, endpoint string, depth int, includeArguments []string) string {
+func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string, endpoint config.EndpointConfig) string {
 	// We use the final type in the type path so that we can locate the field on
 	// this type by the same name of the receveid endpoint.  Without this
 	// information, we've no idea where to look for the endpoint, since the name
@@ -323,7 +323,7 @@ func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string,
 
 	// Set the TypeName so that we can create a special UnmarshalJSON where we need it.
 	data.TypeName = t.GetName()
-	data.Endpoint = endpoint
+	data.Endpoint = endpoint.Name
 
 	// Format the path arguments for the query.
 	inputFields := s.GetInputFieldsForQueryPath(fieldPath)
@@ -351,22 +351,22 @@ func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string,
 
 	// Append to QueryArgs and EndpointArgs only after the parent field
 	// requirements have been added so that they are last.
-	args := s.BuildQueryArgsForEndpoint(t, []string{endpoint}, includeArguments)
+	args := s.BuildQueryArgsForEndpoint(t, []string{endpoint.Name}, endpoint.IncludeArguments)
 	data.EndpointArgs = append(data.EndpointArgs, args...)
 	// Append all the endpoint args to the query args
 	data.QueryArgs = append(data.QueryArgs, data.EndpointArgs...)
 
 	// Match the endpoint field
 	for _, f := range t.Fields {
-		if f.Name == endpoint {
+		if f.Name == endpoint.Name {
 			fieldType, lookupErr := s.LookupTypeByName(f.Type.GetTypeName())
 			if lookupErr != nil {
 				log.Error(lookupErr)
 				return ""
 			}
 
-			if depth > 0 {
-				data.Fields = PrefixLineTab(fieldType.GetQueryStringFields(s, 0, depth, false))
+			if endpoint.MaxQueryFieldDepth > 0 {
+				data.Fields = PrefixLineTab(fieldType.GetQueryStringFields(s, 0, endpoint.MaxQueryFieldDepth, false))
 			}
 			break
 		}

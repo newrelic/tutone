@@ -230,7 +230,7 @@ func TestSchema_GetQueryStringForEndpoint(t *testing.T) {
 		typePath, err := s.LookupQueryTypesByFieldPath(tc.Path)
 		require.NoError(t, err)
 
-		result := s.GetQueryStringForEndpoint(typePath, tc.Path, tc.Field, tc.Depth, tc.IncludeArgs)
+		result := s.GetQueryStringForEndpoint(typePath, tc.Path, config.EndpointConfig{Name: tc.Field, MaxQueryFieldDepth: tc.Depth, IncludeArguments: tc.IncludeArgs})
 		// saveFixture(t, n, result)
 		expected := loadFixture(t, n)
 		assert.Equal(t, expected, result)

@@ -133,7 +133,7 @@ func GenerateGoMethodQueriesForPackage(s *schema.Schema, genConfig *config.Gener
 				if field.Name == endpoint.Name {
 					method := goMethodForField(field, pkgConfig, inputFields)
 
-					method.QueryString = s.GetQueryStringForEndpoint(typePath, pkgQuery.Path, endpoint.Name, endpoint.MaxQueryFieldDepth, endpoint.IncludeArguments)
+					method.QueryString = s.GetQueryStringForEndpoint(typePath, pkgQuery.Path, endpoint)
 					method.ResponseObjectType = fmt.Sprintf("%sResponse", endpoint.Name)
 					method.Signature.ReturnPath = returnPath
 
