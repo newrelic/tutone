@@ -13,6 +13,8 @@ import (
 
 	"github.com/Masterminds/sprig/v3"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/newrelic/tutone/internal/config"
 )
 
 // QueryArg is the key value pair for an nerdgraph query argument on an endpoint.  These might be required, or not.
@@ -424,9 +426,9 @@ func (s *Schema) GetQueryArg(field Field) QueryArg {
 }
 
 // GetQueryStringForMutation packs a nerdgraph query header and footer around the set of query fields GraphQL mutation name.
-func (s *Schema) GetQueryStringForMutation(mutation *Field, depth int, argTypeOverrides map[string]string) string {
+func (s *Schema) GetQueryStringForMutation(mutation *Field, cfg config.MutationConfig) string {
 	log.WithFields(log.Fields{
-		"depth": depth,
+		"depth": cfg.MaxQueryFieldDepth,
 		"name":  mutation.Name,
 	}).Trace("GetQueryStringForMutation")
 
@@ -442,13 +444,13 @@ func (s *Schema) GetQueryStringForMutation(mutation *Field, depth int, argTypeOv
 
 	for _, a := range mutation.Args {
 		arg := s.GetQueryArg(a)
-		if v, ok := argTypeOverrides[arg.Key]; ok {
+		if v, ok := cfg.ArgumentTypeOverrides[arg.Key]; ok {
 			arg.Value = v
 		}
 		data.Args = append(data.Args, arg)
 	}
 
-	data.Fields = PrefixLineTab(fieldType.GetQueryStringFields(s, 0, depth, true))
+	data.Fields = PrefixLineTab(fieldType.GetQueryStringFields(s, 0, cfg.MaxQueryFieldDepth, true))
 	tmpl, err := template.New(fieldType.GetName()).Funcs(sprig.TxtFuncMap()).Parse(mutationHeaderTemplate)
 	if err != nil {
 		log.Error(err)

@@ -9,8 +9,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tj/assert"
+
+	"github.com/newrelic/tutone/internal/config"
 )
 
 //nolint:deadcode,unused //used to update fixtures as needed
@@ -242,34 +244,30 @@ func TestSchema_GetQueryStringForMutation(t *testing.T) {
 	s, err := Load("../../testdata/schema.json")
 	require.NoError(t, err)
 
-	cases := map[string]struct {
-		Mutation string
-		Depth    int
-		Override map[string]string
-	}{
-		"alertsMutingRuleCreate": {
-			Mutation: "alertsMutingRuleCreate",
-			Depth:    3,
-			Override: map[string]string{},
+	cases := []config.MutationConfig{
+		{
+			Name:                  "alertsMutingRuleCreate",
+			MaxQueryFieldDepth:    3,
+			ArgumentTypeOverrides: map[string]string{},
 		},
-		"cloudRenameAccount": {
-			Mutation: "cloudRenameAccount",
-			Depth:    1,
-			Override: map[string]string{
+		{
+			Name:               "cloudRenameAccount",
+			MaxQueryFieldDepth: 1,
+			ArgumentTypeOverrides: map[string]string{
 				"accountId": "Int!",
 				"accounts":  "[CloudRenameAccountsInput!]!",
 			},
 		},
 	}
 
-	for n, tc := range cases {
-		t.Logf("TestCase: %s", n)
-		field, err := s.LookupMutationByName(tc.Mutation)
+	for _, tc := range cases {
+		t.Logf("TestCase: %s", tc.Name)
+		field, err := s.LookupMutationByName(tc.Name)
 		require.NoError(t, err)
 
-		result := s.GetQueryStringForMutation(field, tc.Depth, tc.Override)
+		result := s.GetQueryStringForMutation(field, tc)
 		// saveFixture(t, n, result)
-		expected := loadFixture(t, n)
+		expected := loadFixture(t, tc.Name)
 		assert.Equal(t, expected, result)
 	}
 }
