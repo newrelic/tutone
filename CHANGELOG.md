@@ -1,3 +1,11 @@
+<a name="v0.7.0"></a>
+## [v0.7.0] - 2021-06-14
+### Bug Fixes
+- **fetch:** allow plain graphql endpoints for local development
+
+### Features
+- **schema:** Add ability to filter out specific fields in queries/mutations
+
 <a name="v0.6.1"></a>
 ## [v0.6.1] - 2021-02-11
 ### Bug Fixes
@@ -149,7 +157,8 @@
 - **generator:** introduce a generator concept
 - **tutone:** default path for tutone config file
 
-[Unreleased]: https://github.com/newrelic/tutone/compare/v0.6.1...HEAD
+[Unreleased]: https://github.com/newrelic/tutone/compare/v0.7.0...HEAD
+[v0.7.0]: https://github.com/newrelic/tutone/compare/v0.6.1...v0.7.0
 [v0.6.1]: https://github.com/newrelic/tutone/compare/v0.6.0...v0.6.1
 [v0.6.0]: https://github.com/newrelic/tutone/compare/v0.5.0...v0.6.0
 [v0.5.0]: https://github.com/newrelic/tutone/compare/v0.4.3...v0.5.0
