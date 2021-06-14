@@ -282,14 +282,14 @@ func (s *Schema) GetInputFieldsForQueryPath(queryPath []string) map[string][]Fie
 // the query fields for that type, or log an error and return and empty string.
 // The returned string is used in a mutation, so that the relevant fields are
 // returned once the mutation is performed, or during a query for a given type.
-func (s *Schema) QueryFieldsForTypeName(name string, maxDepth int, isMutation bool) string {
+func (s *Schema) QueryFieldsForTypeName(name string, maxDepth int, isMutation bool, excludeFields []string) string {
 	t, err := s.LookupTypeByName(name)
 	if err != nil {
 		log.Errorf("failed to to retrieve type by name: %s", err)
 		return ""
 	}
 
-	return t.GetQueryStringFields(s, 0, maxDepth, isMutation)
+	return t.GetQueryStringFields(s, 0, maxDepth, isMutation, excludeFields)
 }
 
 // BuildQueryArgsForEndpoint is meant to fill in the data necessary for a query(<args_go_here>)
@@ -366,7 +366,7 @@ func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string,
 			}
 
 			if endpoint.MaxQueryFieldDepth > 0 {
-				data.Fields = PrefixLineTab(fieldType.GetQueryStringFields(s, 0, endpoint.MaxQueryFieldDepth, false))
+				data.Fields = PrefixLineTab(fieldType.GetQueryStringFields(s, 0, endpoint.MaxQueryFieldDepth, false, endpoint.ExcludeFields))
 			}
 			break
 		}
@@ -450,7 +450,7 @@ func (s *Schema) GetQueryStringForMutation(mutation *Field, cfg config.MutationC
 		data.Args = append(data.Args, arg)
 	}
 
-	data.Fields = PrefixLineTab(fieldType.GetQueryStringFields(s, 0, cfg.MaxQueryFieldDepth, true))
+	data.Fields = PrefixLineTab(fieldType.GetQueryStringFields(s, 0, cfg.MaxQueryFieldDepth, true, cfg.ExcludeFields))
 	tmpl, err := template.New(fieldType.GetName()).Funcs(sprig.TxtFuncMap()).Parse(mutationHeaderTemplate)
 	if err != nil {
 		log.Error(err)

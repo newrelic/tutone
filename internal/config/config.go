@@ -115,12 +115,14 @@ type MutationConfig struct {
 	Name                  string            `yaml:"name"`
 	MaxQueryFieldDepth    int               `yaml:"max_query_field_depth,omitempty"`
 	ArgumentTypeOverrides map[string]string `yaml:"argument_type_overrides,omitempty"`
+	ExcludeFields         []string          `yaml:"exclude_fields,omitempty"`
 }
 
 type EndpointConfig struct {
 	Name               string   `yaml:"name,omitempty"`
 	MaxQueryFieldDepth int      `yaml:"max_query_field_depth,omitempty"`
 	IncludeArguments   []string `yaml:"include_arguments,omitempty"`
+	ExcludeFields      []string `yaml:"exclude_fields,omitempty"`
 }
 
 // TypeConfig is the information about which types to render and any data specific to handling of the type.

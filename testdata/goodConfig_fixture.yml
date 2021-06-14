@@ -29,6 +29,8 @@ packages:
             max_query_field_depth: 2
             include_arguments:
               - "provider"
+            exclude_fields:
+              - "updatedAt"
     types:
       - name: AlertsMutingRuleConditionInput
       - name: AlertsPolicy

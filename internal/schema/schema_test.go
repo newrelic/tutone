@@ -185,43 +185,56 @@ func TestSchema_GetQueryStringForEndpoint(t *testing.T) {
 	require.NoError(t, err)
 
 	cases := map[string]struct {
-		Path        []string
-		Field       string
-		Depth       int
-		IncludeArgs []string
+		Path     []string
+		Endpoint config.EndpointConfig
 	}{
 		"entitySearch": {
-			Path:  []string{"actor"},
-			Field: "entitySearch",
-			Depth: 3,
+			Path: []string{"actor"},
+			Endpoint: config.EndpointConfig{
+				Name:               "entitySearch",
+				MaxQueryFieldDepth: 3,
+			},
 		},
 		"entitySearchArgs": {
-			Path:        []string{"actor"},
-			Field:       "entitySearch",
-			Depth:       3,
-			IncludeArgs: []string{"query"},
+			Path: []string{"actor"},
+			Endpoint: config.EndpointConfig{
+				Name:               "entitySearch",
+				MaxQueryFieldDepth: 3,
+				IncludeArguments:   []string{"query"},
+			},
 		},
 		"entities": {
-			Path:  []string{"actor"},
-			Field: "entities",
-			// Zero set here because we have the field coverage above with greater depth.  Here we want to ensure that required arguments on the entities endpoint has the correct syntax.
-			Depth: 0,
+			Path: []string{"actor"},
+			Endpoint: config.EndpointConfig{
+				Name: "entities",
+				// Zero set here because we have the field coverage above with greater depth.  Here we want to ensure that required arguments on the entities endpoint has the correct syntax.
+				MaxQueryFieldDepth: 0,
+			},
 		},
 		"linkedAccounts": {
-			Path:        []string{"actor", "cloud"},
-			Field:       "linkedAccounts",
-			Depth:       2,
-			IncludeArgs: []string{"provider"},
+			Path: []string{"actor", "cloud"},
+			Endpoint: config.EndpointConfig{
+				Name:               "linkedAccounts",
+				MaxQueryFieldDepth: 2,
+				IncludeArguments:   []string{"provider"},
+			},
 		},
 		"policy": {
-			Path:  []string{"actor", "account", "alerts"},
-			Field: "policy",
-			Depth: 2,
+			Path: []string{"actor", "account", "alerts"},
+			Endpoint: config.EndpointConfig{
+				Name:               "policy",
+				MaxQueryFieldDepth: 2,
+			},
 		},
 		"user": {
-			Path:  []string{"actor"},
-			Field: "user",
-			Depth: 2,
+			Path: []string{"actor"},
+			Endpoint: config.EndpointConfig{
+				Name:               "user",
+				MaxQueryFieldDepth: 2,
+				ExcludeFields: []string{
+					"email",
+				},
+			},
 		},
 	}
 
@@ -230,7 +243,7 @@ func TestSchema_GetQueryStringForEndpoint(t *testing.T) {
 		typePath, err := s.LookupQueryTypesByFieldPath(tc.Path)
 		require.NoError(t, err)
 
-		result := s.GetQueryStringForEndpoint(typePath, tc.Path, config.EndpointConfig{Name: tc.Field, MaxQueryFieldDepth: tc.Depth, IncludeArguments: tc.IncludeArgs})
+		result := s.GetQueryStringForEndpoint(typePath, tc.Path, tc.Endpoint)
 		// saveFixture(t, n, result)
 		expected := loadFixture(t, n)
 		assert.Equal(t, expected, result)
@@ -258,6 +271,14 @@ func TestSchema_GetQueryStringForMutation(t *testing.T) {
 				"accounts":  "[CloudRenameAccountsInput!]!",
 			},
 		},
+		{
+			Name:                  "apiAccessCreateKeys",
+			MaxQueryFieldDepth:    3,
+			ArgumentTypeOverrides: map[string]string{},
+			ExcludeFields: []string{
+				"notes",
+			},
+		},
 	}
 
 	for _, tc := range cases {
@@ -266,7 +287,7 @@ func TestSchema_GetQueryStringForMutation(t *testing.T) {
 		require.NoError(t, err)
 
 		result := s.GetQueryStringForMutation(field, tc)
-		// saveFixture(t, n, result)
+		// saveFixture(t, tc.Name, result)
 		expected := loadFixture(t, tc.Name)
 		assert.Equal(t, expected, result)
 	}

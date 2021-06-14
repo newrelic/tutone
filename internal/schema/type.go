@@ -76,7 +76,7 @@ func (t *Type) IsGoType() bool {
 	return false
 }
 
-func (t *Type) GetQueryStringFields(s *Schema, depth, maxDepth int, isMutation bool) string {
+func (t *Type) GetQueryStringFields(s *Schema, depth, maxDepth int, isMutation bool, excludeFields []string) string {
 	depth++
 
 	var lines []string
@@ -100,6 +100,16 @@ func (t *Type) GetQueryStringFields(s *Schema, depth, maxDepth int, isMutation b
 			continue
 		}
 
+		// Explicitly skip these via config
+		if stringInStrings(field.Name, excludeFields) {
+			log.WithFields(log.Fields{
+				"depth":      depth,
+				"isMutation": isMutation,
+				"name":       field.Name,
+			}).Trace("skipping, field excluded via configuration")
+			continue
+		}
+
 		kinds := field.Type.GetKinds()
 		lastKind := kinds[len(kinds)-1]
 
@@ -119,7 +129,7 @@ func (t *Type) GetQueryStringFields(s *Schema, depth, maxDepth int, isMutation b
 
 			// Recurse first so if we have no children, we skip completely
 			// and don't end up with `field { }` (invalid)
-			subTContent := subT.GetQueryStringFields(s, depth, maxDepth, isMutation)
+			subTContent := subT.GetQueryStringFields(s, depth, maxDepth, isMutation, excludeFields)
 			subTLines := strings.Split(subTContent, "\n")
 			if subTContent == "" || len(subTLines) < 1 {
 				log.WithFields(log.Fields{
@@ -158,7 +168,7 @@ func (t *Type) GetQueryStringFields(s *Schema, depth, maxDepth int, isMutation b
 		lines = append(lines, fmt.Sprintf("... on %s {", possibleType.Name))
 		lines = append(lines, "\t__typename")
 
-		possibleTContent := possibleT.GetQueryStringFields(s, depth, maxDepth, isMutation)
+		possibleTContent := possibleT.GetQueryStringFields(s, depth, maxDepth, isMutation, excludeFields)
 
 		possibleTLines := strings.Split(possibleTContent, "\n")
 		for _, b := range possibleTLines {
