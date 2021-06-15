@@ -49,7 +49,7 @@ dockers:
       - "newrelic/tutone:{{ .Tag }}"
       - "newrelic/tutone:v{{ .Major }}.{{ .Minor }}"
       - "newrelic/tutone:latest"
-    binaries:
+    ids:
       - tutone
     build_flag_templates:
       - "--pull"
