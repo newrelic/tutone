@@ -293,6 +293,38 @@ func TestSchema_GetQueryStringForMutation(t *testing.T) {
 	}
 }
 
+func TestSchema_GetQueryStringForMutation_Pattern(t *testing.T) {
+	t.Parallel()
+
+	// schema cached by 'make test-prep'
+	s, err := Load("../../testdata/schema.json")
+	require.NoError(t, err)
+
+	cases := []config.MutationConfig{
+		{
+			Name:                  "alertsMutingRuleCreate",
+			MaxQueryFieldDepth:    3,
+			ArgumentTypeOverrides: map[string]string{},
+		},
+		{
+			Name:               "edge.*",
+			MaxQueryFieldDepth: 3,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Logf("TestCase: %s", tc.Name)
+		fields := s.LookupMutationsByPattern(tc.Name)
+
+		for _, field := range fields {
+			result := s.GetQueryStringForMutation(&field, tc)
+			// saveFixture(t, field.Name, result)
+			expected := loadFixture(t, field.Name)
+			assert.Equal(t, expected, result)
+		}
+	}
+}
+
 func TestSchema_GetInputFieldsForQueryPath(t *testing.T) {
 	t.Parallel()
 

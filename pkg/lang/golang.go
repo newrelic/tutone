@@ -161,23 +161,15 @@ func GenerateGoMethodMutationsForPackage(s *schema.Schema, genConfig *config.Gen
 		return nil, nil
 	}
 
-	// for _, field := range s.MutationType.Fields {
 	for _, pkgMutation := range pkgConfig.Mutations {
-		field, err := s.LookupMutationByName(pkgMutation.Name)
-		if err != nil {
-			log.Error(err)
-			continue
+		fields := s.LookupMutationsByPattern(pkgMutation.Name)
+
+		for _, field := range fields {
+			method := goMethodForField(field, pkgConfig, nil)
+			method.QueryString = s.GetQueryStringForMutation(&field, pkgMutation)
+
+			methods = append(methods, method)
 		}
-
-		if field == nil {
-			log.Errorf("unable to generate mutation from nil field, %s", pkgMutation.Name)
-			continue
-		}
-
-		method := goMethodForField(*field, pkgConfig, nil)
-		method.QueryString = s.GetQueryStringForMutation(field, pkgMutation)
-
-		methods = append(methods, method)
 	}
 
 	if len(methods) > 0 {
