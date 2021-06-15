@@ -1,3 +1,8 @@
+<a name="v0.8.0"></a>
+## [v0.8.0] - 2021-06-15
+### Features
+- **schema:** Allow for mutations to be matched by regexp instead of statically declared in config
+
 <a name="v0.7.0"></a>
 ## [v0.7.0] - 2021-06-14
 ### Bug Fixes
@@ -157,7 +162,8 @@
 - **generator:** introduce a generator concept
 - **tutone:** default path for tutone config file
 
-[Unreleased]: https://github.com/newrelic/tutone/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/newrelic/tutone/compare/v0.8.0...HEAD
+[v0.8.0]: https://github.com/newrelic/tutone/compare/v0.7.0...v0.8.0
 [v0.7.0]: https://github.com/newrelic/tutone/compare/v0.6.1...v0.7.0
 [v0.6.1]: https://github.com/newrelic/tutone/compare/v0.6.0...v0.6.1
 [v0.6.0]: https://github.com/newrelic/tutone/compare/v0.5.0...v0.6.0
