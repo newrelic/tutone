@@ -1,3 +1,8 @@
+<a name="v0.8.1"></a>
+## [v0.8.1] - 2021-06-15
+### Bug Fixes
+- **schema:** Explicitly anchor the regexp for mutation name (MatchString does not)
+
 <a name="v0.8.0"></a>
 ## [v0.8.0] - 2021-06-15
 ### Features
@@ -162,7 +167,8 @@
 - **generator:** introduce a generator concept
 - **tutone:** default path for tutone config file
 
-[Unreleased]: https://github.com/newrelic/tutone/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/newrelic/tutone/compare/v0.8.1...HEAD
+[v0.8.1]: https://github.com/newrelic/tutone/compare/v0.8.0...v0.8.1
 [v0.8.0]: https://github.com/newrelic/tutone/compare/v0.7.0...v0.8.0
 [v0.7.0]: https://github.com/newrelic/tutone/compare/v0.6.1...v0.7.0
 [v0.6.1]: https://github.com/newrelic/tutone/compare/v0.6.0...v0.6.1
