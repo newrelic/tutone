@@ -73,7 +73,7 @@ func typeNameInTypes(s string, types []config.TypeConfig) bool {
 // mutationNameInMutations determines if a name is already present in a set of config.MutationConfig.
 func mutationNameInMutations(s string, mutations []config.MutationConfig) bool {
 	for _, t := range mutations {
-		if t.Name == s {
+		if found, _ := regexp.MatchString(t.Name, s); found {
 			return true
 		}
 	}

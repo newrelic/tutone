@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 	"text/template"
 
@@ -162,6 +163,8 @@ func (s *Schema) LookupTypeByName(typeName string) (*Type, error) {
 	return nil, fmt.Errorf("type by name %s not found", typeName)
 }
 
+// LookupMutationByName searches for the specific mutation by name and returns
+// a reference if found.
 func (s *Schema) LookupMutationByName(mutationName string) (*Field, error) {
 	for _, f := range s.MutationType.Fields {
 		if f.Name == mutationName {
@@ -170,6 +173,19 @@ func (s *Schema) LookupMutationByName(mutationName string) (*Field, error) {
 	}
 
 	return nil, fmt.Errorf("mutation by name %s not found", mutationName)
+}
+
+// LookupMutationsByPattern finds all matching mutations given the regexp
+func (s *Schema) LookupMutationsByPattern(pattern string) []Field {
+	var ret []Field
+
+	for _, f := range s.MutationType.Fields {
+		if found, _ := regexp.MatchString(pattern, f.Name); found {
+			ret = append(ret, f)
+		}
+	}
+
+	return ret
 }
 
 // LookupQueryTypesByFieldPath is used to retrieve the types, when all you know is

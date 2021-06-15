@@ -1,0 +1,24 @@
+mutation(
+	$accountId: Int!,
+	$rules: EdgeCreateTraceFilterRulesInput!,
+	$traceObserverId: Int!,
+) { edgeCreateTraceFilterRules(
+	accountId: $accountId,
+	rules: $rules,
+	traceObserverId: $traceObserverId,
+) {
+	spanAttributeRules {
+		errors {
+			message
+			type
+		}
+		rules {
+			action
+			id
+			key
+			keyOperator
+			value
+			valueOperator
+		}
+	}
+} }
