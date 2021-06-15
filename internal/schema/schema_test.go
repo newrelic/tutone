@@ -310,6 +310,12 @@ func TestSchema_GetQueryStringForMutation_Pattern(t *testing.T) {
 			Name:               "edge.*",
 			MaxQueryFieldDepth: 3,
 		},
+		{
+			Name: "dashboardCreate",
+		},
+		{
+			Name: "^dashboardUpdate$",
+		},
 	}
 
 	for _, tc := range cases {

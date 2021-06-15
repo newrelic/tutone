@@ -179,6 +179,17 @@ func (s *Schema) LookupMutationByName(mutationName string) (*Field, error) {
 func (s *Schema) LookupMutationsByPattern(pattern string) []Field {
 	var ret []Field
 
+	if len(pattern) < 1 {
+		return ret
+	}
+
+	if pattern[0] != '^' {
+		pattern = `^` + pattern
+	}
+	if pattern[len(pattern)-1] != '$' {
+		pattern += `$`
+	}
+
 	for _, f := range s.MutationType.Fields {
 		if found, _ := regexp.MatchString(pattern, f.Name); found {
 			ret = append(ret, f)
