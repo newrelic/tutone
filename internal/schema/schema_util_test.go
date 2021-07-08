@@ -12,6 +12,67 @@ import (
 	"github.com/newrelic/tutone/internal/config"
 )
 
+func TestMutationInMutations(t *testing.T) {
+	t.Parallel()
+
+	cases := map[string]struct {
+		Name           string
+		Mutations      []config.MutationConfig
+		ExpectedResult bool
+	}{
+		"simple string": {
+			Name: "asdf",
+			Mutations: []config.MutationConfig{
+				{
+					Name: "asdf",
+				},
+			},
+			ExpectedResult: true,
+		},
+		"no match": {
+			Name: "bar",
+			Mutations: []config.MutationConfig{
+				{
+					Name: "foo",
+				},
+			},
+			ExpectedResult: false,
+		},
+		"regexp match simple": {
+			Name: "edgeCreateTraceFilterRules",
+			Mutations: []config.MutationConfig{
+				{
+					Name: "edge.*",
+				},
+			},
+			ExpectedResult: true,
+		},
+		"regexp match complex": {
+			Name: "edgeCreateTraceFilterRules",
+			Mutations: []config.MutationConfig{
+				{
+					Name: "edge(Create|Delete)TraceFilterRules",
+				},
+			},
+			ExpectedResult: true,
+		},
+		"regexp no match": {
+			Name: "bar",
+			Mutations: []config.MutationConfig{
+				{
+					Name: "/foo(Create|Delete)/",
+				},
+			},
+			ExpectedResult: false,
+		},
+	}
+
+	for caseName, tc := range cases {
+		result := mutationNameInMutations(tc.Name, tc.Mutations)
+		assert.Equal(t, tc.ExpectedResult, result, caseName)
+	}
+}
+
 func TestExpandTypes(t *testing.T) {
 	t.Parallel()
 

@@ -1,0 +1,25 @@
+mutation(
+	$accountId: Int!,
+	$traceObserverConfigs: [EdgeCreateTraceObserverInput!]!,
+) { edgeCreateTraceObserver(
+	accountId: $accountId,
+	traceObserverConfigs: $traceObserverConfigs,
+) {
+	responses {
+		errors {
+			message
+			type
+		}
+		traceObserver {
+			endpoints {
+				endpointType
+				status
+			}
+			id
+			monitoringAccountId
+			name
+			providerRegion
+			status
+		}
+	}
+} }

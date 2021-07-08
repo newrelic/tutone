@@ -1,0 +1,9 @@
+mutation(
+	$accountId: Int!,
+	$dashboard: DashboardInput!,
+) { dashboardCreate(
+	accountId: $accountId,
+	dashboard: $dashboard,
+) {
+	
+} }

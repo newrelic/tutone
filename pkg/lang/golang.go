@@ -134,7 +134,7 @@ func GenerateGoMethodQueriesForPackage(s *schema.Schema, genConfig *config.Gener
 				if field.Name == endpoint.Name {
 					method := goMethodForField(field, pkgConfig, inputFields)
 
-					method.QueryString = s.GetQueryStringForEndpoint(typePath, pkgQuery.Path, endpoint.Name, endpoint.MaxQueryFieldDepth, endpoint.IncludeArguments)
+					method.QueryString = s.GetQueryStringForEndpoint(typePath, pkgQuery.Path, endpoint)
 					method.ResponseObjectType = fmt.Sprintf("%sResponse", endpoint.Name)
 					method.Signature.ReturnPath = returnPath
 
@@ -162,23 +162,15 @@ func GenerateGoMethodMutationsForPackage(s *schema.Schema, genConfig *config.Gen
 		return nil, nil
 	}
 
-	// for _, field := range s.MutationType.Fields {
 	for _, pkgMutation := range pkgConfig.Mutations {
-		field, err := s.LookupMutationByName(pkgMutation.Name)
-		if err != nil {
-			log.Error(err)
-			continue
+		fields := s.LookupMutationsByPattern(pkgMutation.Name)
+
+		for _, field := range fields {
+			method := goMethodForField(field, pkgConfig, nil)
+			method.QueryString = s.GetQueryStringForMutation(&field, pkgMutation)
+
+			methods = append(methods, method)
 		}
-
-		if field == nil {
-			log.Errorf("unable to generate mutation from nil field, %s", pkgMutation.Name)
-			continue
-		}
-
-		method := goMethodForField(*field, pkgConfig, nil)
-		method.QueryString = s.GetQueryStringForMutation(field, pkgMutation.MaxQueryFieldDepth, pkgMutation.ArgumentTypeOverrides)
-
-		methods = append(methods, method)
 	}
 
 	if len(methods) > 0 {

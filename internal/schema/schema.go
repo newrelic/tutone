@@ -8,11 +8,14 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/newrelic/tutone/internal/config"
 )
 
 // QueryArg is the key value pair for an nerdgraph query argument on an endpoint.  These might be required, or not.
@@ -160,6 +163,8 @@ func (s *Schema) LookupTypeByName(typeName string) (*Type, error) {
 	return nil, fmt.Errorf("type by name %s not found", typeName)
 }
 
+// LookupMutationByName searches for the specific mutation by name and returns
+// a reference if found.
 func (s *Schema) LookupMutationByName(mutationName string) (*Field, error) {
 	for _, f := range s.MutationType.Fields {
 		if f.Name == mutationName {
@@ -168,6 +173,30 @@ func (s *Schema) LookupMutationByName(mutationName string) (*Field, error) {
 	}
 
 	return nil, fmt.Errorf("mutation by name %s not found", mutationName)
+}
+
+// LookupMutationsByPattern finds all matching mutations given the regexp
+func (s *Schema) LookupMutationsByPattern(pattern string) []Field {
+	var ret []Field
+
+	if len(pattern) < 1 {
+		return ret
+	}
+
+	if pattern[0] != '^' {
+		pattern = `^` + pattern
+	}
+	if pattern[len(pattern)-1] != '$' {
+		pattern += `$`
+	}
+
+	for _, f := range s.MutationType.Fields {
+		if found, _ := regexp.MatchString(pattern, f.Name); found {
+			ret = append(ret, f)
+		}
+	}
+
+	return ret
 }
 
 // LookupQueryTypesByFieldPath is used to retrieve the types, when all you know is
@@ -280,14 +309,14 @@ func (s *Schema) GetInputFieldsForQueryPath(queryPath []string) map[string][]Fie
 // the query fields for that type, or log an error and return and empty string.
 // The returned string is used in a mutation, so that the relevant fields are
 // returned once the mutation is performed, or during a query for a given type.
-func (s *Schema) QueryFieldsForTypeName(name string, maxDepth int, isMutation bool) string {
+func (s *Schema) QueryFieldsForTypeName(name string, maxDepth int, isMutation bool, excludeFields []string) string {
 	t, err := s.LookupTypeByName(name)
 	if err != nil {
 		log.Errorf("failed to to retrieve type by name: %s", err)
 		return ""
 	}
 
-	return t.GetQueryStringFields(s, 0, maxDepth, isMutation)
+	return t.GetQueryStringFields(s, 0, maxDepth, isMutation, excludeFields)
 }
 
 // BuildQueryArgsForEndpoint is meant to fill in the data necessary for a query(<args_go_here>)
@@ -310,7 +339,7 @@ func (s *Schema) BuildQueryArgsForEndpoint(t *Type, fields []string, includeArgu
 }
 
 // GetQueryStringForEndpoint packs a nerdgraph query header and footer around the set of query fields for a given type name and endpoint.
-func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string, endpoint string, depth int, includeArguments []string) string {
+func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string, endpoint config.EndpointConfig) string {
 	// We use the final type in the type path so that we can locate the field on
 	// this type by the same name of the receveid endpoint.  Without this
 	// information, we've no idea where to look for the endpoint, since the name
@@ -321,7 +350,7 @@ func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string,
 
 	// Set the TypeName so that we can create a special UnmarshalJSON where we need it.
 	data.TypeName = t.GetName()
-	data.Endpoint = endpoint
+	data.Endpoint = endpoint.Name
 
 	// Format the path arguments for the query.
 	inputFields := s.GetInputFieldsForQueryPath(fieldPath)
@@ -349,22 +378,22 @@ func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string,
 
 	// Append to QueryArgs and EndpointArgs only after the parent field
 	// requirements have been added so that they are last.
-	args := s.BuildQueryArgsForEndpoint(t, []string{endpoint}, includeArguments)
+	args := s.BuildQueryArgsForEndpoint(t, []string{endpoint.Name}, endpoint.IncludeArguments)
 	data.EndpointArgs = append(data.EndpointArgs, args...)
 	// Append all the endpoint args to the query args
 	data.QueryArgs = append(data.QueryArgs, data.EndpointArgs...)
 
 	// Match the endpoint field
 	for _, f := range t.Fields {
-		if f.Name == endpoint {
+		if f.Name == endpoint.Name {
 			fieldType, lookupErr := s.LookupTypeByName(f.Type.GetTypeName())
 			if lookupErr != nil {
 				log.Error(lookupErr)
 				return ""
 			}
 
-			if depth > 0 {
-				data.Fields = PrefixLineTab(fieldType.GetQueryStringFields(s, 0, depth, false))
+			if endpoint.MaxQueryFieldDepth > 0 {
+				data.Fields = PrefixLineTab(fieldType.GetQueryStringFields(s, 0, endpoint.MaxQueryFieldDepth, false, endpoint.ExcludeFields))
 			}
 			break
 		}
@@ -424,9 +453,9 @@ func (s *Schema) GetQueryArg(field Field) QueryArg {
 }
 
 // GetQueryStringForMutation packs a nerdgraph query header and footer around the set of query fields GraphQL mutation name.
-func (s *Schema) GetQueryStringForMutation(mutation *Field, depth int, argTypeOverrides map[string]string) string {
+func (s *Schema) GetQueryStringForMutation(mutation *Field, cfg config.MutationConfig) string {
 	log.WithFields(log.Fields{
-		"depth": depth,
+		"depth": cfg.MaxQueryFieldDepth,
 		"name":  mutation.Name,
 	}).Trace("GetQueryStringForMutation")
 
@@ -442,13 +471,13 @@ func (s *Schema) GetQueryStringForMutation(mutation *Field, depth int, argTypeOv
 
 	for _, a := range mutation.Args {
 		arg := s.GetQueryArg(a)
-		if v, ok := argTypeOverrides[arg.Key]; ok {
+		if v, ok := cfg.ArgumentTypeOverrides[arg.Key]; ok {
 			arg.Value = v
 		}
 		data.Args = append(data.Args, arg)
 	}
 
-	data.Fields = PrefixLineTab(fieldType.GetQueryStringFields(s, 0, depth, true))
+	data.Fields = PrefixLineTab(fieldType.GetQueryStringFields(s, 0, cfg.MaxQueryFieldDepth, true, cfg.ExcludeFields))
 	tmpl, err := template.New(fieldType.GetName()).Funcs(sprig.TxtFuncMap()).Parse(mutationHeaderTemplate)
 	if err != nil {
 		log.Error(err)

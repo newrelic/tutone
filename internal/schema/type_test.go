@@ -17,9 +17,10 @@ func TestType_GetQueryFieldsString(t *testing.T) {
 	require.NoError(t, err)
 
 	cases := map[string]struct {
-		TypeName string
-		Depth    int
-		Mutation bool
+		TypeName      string
+		Depth         int
+		Mutation      bool
+		ExcludeFields []string
 	}{
 		"AlertsNrqlCondition": {
 			TypeName: "AlertsNrqlCondition",
@@ -52,7 +53,7 @@ func TestType_GetQueryFieldsString(t *testing.T) {
 		x, err := s.LookupTypeByName(tc.TypeName)
 		require.NoError(t, err)
 
-		xx := x.GetQueryStringFields(s, 0, tc.Depth, tc.Mutation)
+		xx := x.GetQueryStringFields(s, 0, tc.Depth, tc.Mutation, tc.ExcludeFields)
 		// saveFixture(t, n, xx)
 		expected := loadFixture(t, n)
 		assert.Equal(t, expected, xx)

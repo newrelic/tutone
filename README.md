@@ -6,7 +6,7 @@
 [![Security Scan](https://github.com/newrelic/tutone/workflows/Security%20Scan/badge.svg)](https://github.com/newrelic/tutone/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/newrelic/tutone?style=flat-square)](https://goreportcard.com/report/github.com/newrelic/tutone)
 [![GoDoc](https://godoc.org/github.com/newrelic/tutone?status.svg)](https://godoc.org/github.com/newrelic/tutone)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/newrelic/tutone/blob/master/LICENSE)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/newrelic/tutone/blob/main/LICENSE)
 [![CLA assistant](https://cla-assistant.io/readme/badge/newrelic/tutone)](https://cla-assistant.io/newrelic/tutone)
 [![Release](https://img.shields.io/github/release/newrelic/tutone/all.svg)](https://github.com/newrelic/tutone/releases/latest)
 
@@ -219,6 +219,6 @@ _Please do not report issues with this software to New Relic Global Technical Su
 
 This project is distributed under the [Apache 2 license](LICENSE).
 
-[example_config]: https://github.com/newrelic/tutone/blob/master/configs/tutone.yml
+[example_config]: https://github.com/newrelic/tutone/blob/main/configs/tutone.yml
 
 [pkg_go_dev]: https://pkg.go.dev/github.com/newrelic/tutone@v0.2.3/internal/config?tab=doc

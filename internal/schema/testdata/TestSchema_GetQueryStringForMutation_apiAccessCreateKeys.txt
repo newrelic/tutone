@@ -1,0 +1,57 @@
+mutation(
+	$keys: ApiAccessCreateInput!,
+) { apiAccessCreateKeys(
+	keys: $keys,
+) {
+	createdKeys {
+		__typename
+		createdAt
+		id
+		key
+		name
+		type
+		... on ApiAccessIngestKey {
+			__typename
+			account {
+				id
+				name
+			}
+			accountId
+			ingestType
+		}
+		... on ApiAccessUserKey {
+			__typename
+			account {
+				id
+				name
+			}
+			accountId
+			user {
+				email
+				gravatar
+				id
+				name
+			}
+			userId
+		}
+	}
+	errors {
+		__typename
+		message
+		type
+		... on ApiAccessIngestKeyError {
+			__typename
+			accountId
+			errorType
+			id
+			ingestType
+		}
+		... on ApiAccessUserKeyError {
+			__typename
+			accountId
+			errorType
+			id
+			userId
+		}
+	}
+} }
