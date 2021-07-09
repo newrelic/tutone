@@ -27,6 +27,7 @@ type GoStruct struct {
 	Name             string
 	Description      string
 	Fields           []GoStructField
+	StructTags       []string
 	Implements       []string
 	SpecialUnmarshal bool
 	GenerateGetters  bool
@@ -253,7 +254,7 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 					xxx.SpecialUnmarshal = true
 				}
 
-				xxx.Fields = append(xxx.Fields, getStructField(f, pkgConfig))
+				xxx.Fields = append(xxx.Fields, getStructField(f, pkgConfig, t))
 			}
 
 			if len(fieldErrs) > 0 {
@@ -372,7 +373,7 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 	return &structsForGen, &enumsForGen, &scalarsForGen, &interfacesForGen, nil
 }
 
-func getStructField(f schema.Field, pkgConfig *config.PackageConfig) GoStructField {
+func getStructField(f schema.Field, pkgConfig *config.PackageConfig, parentType *schema.Type) GoStructField {
 	var typeName string
 	var typeNamePrefix string
 	var typeNameSuffix string
@@ -406,7 +407,7 @@ func getStructField(f schema.Field, pkgConfig *config.PackageConfig) GoStructFie
 		Description: f.GetDescription(),
 		Name:        f.GetName(),
 		TagKey:      f.Name,
-		Tags:        f.GetTags(),
+		Tags:        f.GetTagsWithOverrides(*parentType, pkgConfig),
 		IsInterface: isInterface,
 		IsList:      isList,
 		Type:        fmt.Sprintf("%s%s%s", typeNamePrefix, typeName, typeNameSuffix),
@@ -466,7 +467,7 @@ func constrainedResponseStructs(s *schema.Schema, pkgConfig *config.PackageConfi
 
 			for _, f := range t.Fields {
 				if isExpanded(expandedTypes, f.Type.GetTypeName()) || isInPath(pathTypes, f.Type.GetName()) {
-					xxx.Fields = append(xxx.Fields, getStructField(f, pkgConfig))
+					xxx.Fields = append(xxx.Fields, getStructField(f, pkgConfig, t))
 				}
 			}
 
