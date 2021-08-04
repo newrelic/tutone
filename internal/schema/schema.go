@@ -12,10 +12,10 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/Masterminds/sprig/v3"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/newrelic/tutone/internal/config"
+	"github.com/newrelic/tutone/internal/util"
 )
 
 // QueryArg is the key value pair for an nerdgraph query argument on an endpoint.  These might be required, or not.
@@ -399,7 +399,7 @@ func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string,
 		}
 	}
 
-	tmpl, err := template.New(t.GetName()).Funcs(sprig.TxtFuncMap()).Parse(queryHeaderTemplate)
+	tmpl, err := template.New(t.GetName()).Funcs(util.GetTemplateFuncs()).Parse(queryHeaderTemplate)
 	if err != nil {
 		log.Error(err)
 		return ""
@@ -478,7 +478,7 @@ func (s *Schema) GetQueryStringForMutation(mutation *Field, cfg config.MutationC
 	}
 
 	data.Fields = PrefixLineTab(fieldType.GetQueryStringFields(s, 0, cfg.MaxQueryFieldDepth, true, cfg.ExcludeFields))
-	tmpl, err := template.New(fieldType.GetName()).Funcs(sprig.TxtFuncMap()).Parse(mutationHeaderTemplate)
+	tmpl, err := template.New(fieldType.GetName()).Funcs(util.GetTemplateFuncs()).Parse(mutationHeaderTemplate)
 	if err != nil {
 		log.Error(err)
 		return ""

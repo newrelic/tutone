@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"text/template"
 
-	"github.com/Masterminds/sprig/v3"
+	"github.com/newrelic/tutone/internal/util"
 )
 
 // RenderStringFromGenerator receives a Generator that is used to render the received template string.
 func RenderStringFromGenerator(s string, g Generator) (string, error) {
-	tmpl, err := template.New("string").Funcs(sprig.TxtFuncMap()).Parse(s)
+	tmpl, err := template.New("string").Funcs(util.GetTemplateFuncs()).Parse(s)
 	if err != nil {
 		return "", err
 	}
@@ -31,7 +31,7 @@ func RenderStringFromGenerator(s string, g Generator) (string, error) {
 //       Templates are stored as map[string]*Template - ("someName": *Template).
 //       https://stackoverflow.com/questions/41176355/go-template-name
 func RenderTemplate(templateName string, templateString string, data interface{}) (string, error) {
-	tmpl, err := template.New(templateName).Funcs(sprig.TxtFuncMap()).Parse(templateString)
+	tmpl, err := template.New(templateName).Funcs(util.GetTemplateFuncs()).Parse(templateString)
 	if err != nil {
 		return "", err
 	}
