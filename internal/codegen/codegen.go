@@ -7,11 +7,11 @@ import (
 	"path"
 	"text/template"
 
-	"github.com/Masterminds/sprig/v3"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/tools/imports"
 
 	"github.com/newrelic/tutone/internal/output"
+	"github.com/newrelic/tutone/internal/util"
 )
 
 type CodeGen struct {
@@ -50,7 +50,7 @@ func (c *CodeGen) WriteFile(g Generator) error {
 	templatePath := path.Join(c.TemplateDir, c.TemplateName)
 	templateName := path.Base(templatePath)
 
-	tmpl, err := template.New(templateName).Funcs(sprig.TxtFuncMap()).ParseFiles(templatePath)
+	tmpl, err := template.New(templateName).Funcs(util.GetTemplateFuncs()).ParseFiles(templatePath)
 	if err != nil {
 		return err
 	}
@@ -101,7 +101,7 @@ func (c *CodeGen) WriteFileFromTemplateString(g Generator, templateString string
 	templatePath := path.Join(c.TemplateDir, c.TemplateName)
 	templateName := path.Base(templatePath)
 
-	tmpl, err := template.New(templateName).Funcs(sprig.TxtFuncMap()).Parse(templateString)
+	tmpl, err := template.New(templateName).Funcs(util.GetTemplateFuncs()).Parse(templateString)
 	if err != nil {
 		return err
 	}
