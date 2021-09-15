@@ -1,3 +1,10 @@
+<a name="v0.9.0"></a>
+## [v0.9.0] - 2021-09-15
+### Features
+- add skip_fields for skipping fields within a type
+- add custom template funcs
+- **generator:** add ability to override struct tags
+
 <a name="v0.8.1"></a>
 ## [v0.8.1] - 2021-06-15
 ### Bug Fixes
@@ -167,7 +174,8 @@
 - **generator:** introduce a generator concept
 - **tutone:** default path for tutone config file
 
-[Unreleased]: https://github.com/newrelic/tutone/compare/v0.8.1...HEAD
+[Unreleased]: https://github.com/newrelic/tutone/compare/v0.9.0...HEAD
+[v0.9.0]: https://github.com/newrelic/tutone/compare/v0.8.1...v0.9.0
 [v0.8.1]: https://github.com/newrelic/tutone/compare/v0.8.0...v0.8.1
 [v0.8.0]: https://github.com/newrelic/tutone/compare/v0.7.0...v0.8.0
 [v0.7.0]: https://github.com/newrelic/tutone/compare/v0.6.1...v0.7.0
