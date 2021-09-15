@@ -1,3 +1,4 @@
+//go:build unit
 // +build unit
 
 package schema
@@ -6,8 +7,8 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tj/assert"
 
 	"github.com/newrelic/tutone/internal/config"
 )
