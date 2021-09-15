@@ -7,6 +7,7 @@ import (
 
 	"github.com/newrelic/tutone/internal/config"
 	"github.com/newrelic/tutone/internal/schema"
+	"github.com/newrelic/tutone/internal/util"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -245,8 +246,18 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 			fields = append(fields, t.Fields...)
 			fields = append(fields, t.InputFields...)
 
+			c := getTypeConfig(t.Name, pkgConfig.Types)
+
 			fieldErrs := []error{}
 			for _, f := range fields {
+				// Skip field if specified in the config
+				if c != nil && util.StringInStrings(f.GetName(), c.SkipFields) {
+					log.WithFields(log.Fields{
+						"name": f.GetName(),
+					}).Debug("skipping field")
+					continue
+				}
+
 				// If any of the fields for this type are an interface type, then we
 				// need to signal to the template an UnmarshalJSON() should be
 				// rendered.
@@ -496,6 +507,16 @@ func constrainedResponseStructs(s *schema.Schema, pkgConfig *config.PackageConfi
 	}
 
 	return goStructs
+}
+
+func getTypeConfig(name string, typeConfigs []config.TypeConfig) *config.TypeConfig {
+	for _, c := range typeConfigs {
+		if c.Name == name {
+			return &c
+		}
+	}
+
+	return nil
 }
 
 // goMethodForField creates a new GoMethod based on a field.  Note that the

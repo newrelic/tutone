@@ -6,6 +6,8 @@ import (
 	"sync"
 
 	log "github.com/sirupsen/logrus"
+
+	"github.com/newrelic/tutone/internal/util"
 )
 
 // Expander is mean to hold the state while the schema is being expanded.
@@ -50,7 +52,7 @@ func (x *Expander) ExpandType(t *Type) (err error) {
 		return fmt.Errorf("unable to expand nil Type")
 	}
 
-	if stringInStrings(t.Name, x.skipTypes) {
+	if util.StringInStrings(t.Name, x.skipTypes) {
 		log.WithFields(log.Fields{
 			"name":             t.Name,
 			"skip_type_create": true,
