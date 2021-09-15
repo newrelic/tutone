@@ -7,8 +7,8 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tj/assert"
 
 	"github.com/newrelic/tutone/internal/config"
 )

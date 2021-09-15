@@ -6,8 +6,8 @@ package schema
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tj/assert"
 )
 
 func TestType_GetQueryFieldsString(t *testing.T) {
