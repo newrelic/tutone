@@ -8,6 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/newrelic/tutone/internal/config"
+	"github.com/newrelic/tutone/internal/util"
 )
 
 // filterDescription uses a regex to parse certain data out of the
@@ -142,7 +143,7 @@ func ExpandTypes(s *Schema, pkgConfig *config.PackageConfig) (*[]*Type, error) {
 		}
 
 		for _, field := range schemaType.Fields {
-			if stringInStrings(field.Name, queries) {
+			if util.StringInStrings(field.Name, queries) {
 				err = expander.ExpandTypeFromName(field.Type.GetTypeName())
 				if err != nil {
 					log.Error(err)
@@ -223,14 +224,4 @@ func formatGoName(name string) string {
 	fieldName = r.Replace(fieldName)
 
 	return fieldName
-}
-
-func stringInStrings(s string, ss []string) bool {
-	for _, sss := range ss {
-		if s == sss {
-			return true
-		}
-	}
-
-	return false
 }

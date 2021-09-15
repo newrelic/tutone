@@ -138,6 +138,8 @@ type TypeConfig struct {
 	CreateAs string `yaml:"create_as,omitempty"`
 	// SkipTypeCreate allows the user to skip creating a Scalar type.
 	SkipTypeCreate bool `yaml:"skip_type_create,omitempty"`
+	// SkipFields allows the user to skip generating specific fields within a type.
+	SkipFields []string `yaml:"skip_fields,omitempty"`
 	// GenerateStructGetters enables the auto-generation of field getters for all fields on a struct.
 	// i.e. if a struct has a field `name` then a function would be created called `GetName()`
 	GenerateStructGetters bool `yaml:"generate_struct_getters,omitempty"`
