@@ -22,6 +22,7 @@ type Type struct {
 	InputFields   []Field     `json:"inputFields,omitempty"`
 	Interfaces    []TypeRef   `json:"interfaces,omitempty"`
 	PossibleTypes []TypeRef   `json:"possibleTypes,omitempty"`
+	SkipFields    []string    `json:"skipFields,omitempty"`
 }
 
 // Save writes the schema out to a file

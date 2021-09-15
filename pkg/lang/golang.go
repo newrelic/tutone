@@ -245,8 +245,19 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 			fields = append(fields, t.Fields...)
 			fields = append(fields, t.InputFields...)
 
+			c := getTypeConfig(t.Name, pkgConfig.Types)
+
 			fieldErrs := []error{}
 			for _, f := range fields {
+
+				// Skip field if specified in the config
+				if c != nil && stringInStrings(f.GetName(), c.SkipFields) {
+					log.WithFields(log.Fields{
+						"name": f.GetName(),
+					}).Debug("skipping field")
+					continue
+				}
+
 				// If any of the fields for this type are an interface type, then we
 				// need to signal to the template an UnmarshalJSON() should be
 				// rendered.
@@ -496,6 +507,26 @@ func constrainedResponseStructs(s *schema.Schema, pkgConfig *config.PackageConfi
 	}
 
 	return goStructs
+}
+
+func stringInStrings(s string, ss []string) bool {
+	for _, sss := range ss {
+		if s == sss {
+			return true
+		}
+	}
+
+	return false
+}
+
+func getTypeConfig(name string, typeConfigs []config.TypeConfig) *config.TypeConfig {
+	for _, c := range typeConfigs {
+		if c.Name == name {
+			return &c
+		}
+	}
+
+	return nil
 }
 
 // goMethodForField creates a new GoMethod based on a field.  Note that the
