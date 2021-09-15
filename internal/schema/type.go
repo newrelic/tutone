@@ -9,6 +9,8 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
+
+	"github.com/newrelic/tutone/internal/util"
 )
 
 // Type defines a specific type within the schema
@@ -102,7 +104,7 @@ func (t *Type) GetQueryStringFields(s *Schema, depth, maxDepth int, isMutation b
 		}
 
 		// Explicitly skip these via config
-		if stringInStrings(field.Name, excludeFields) {
+		if util.StringInStrings(field.Name, excludeFields) {
 			log.WithFields(log.Fields{
 				"depth":      depth,
 				"isMutation": isMutation,
@@ -178,7 +180,7 @@ func (t *Type) GetQueryStringFields(s *Schema, depth, maxDepth int, isMutation b
 			// reduce the query complexity, while still retaining all of the data.
 			// This allows us to rely on the parent types fields and avoid increasing
 			// the complexity by enumerating all fields on the PossibleTypes as well.
-			if stringInStrings(b, parentFieldNames) {
+			if util.StringInStrings(b, parentFieldNames) {
 				continue
 			}
 

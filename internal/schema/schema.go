@@ -325,10 +325,10 @@ func (s *Schema) BuildQueryArgsForEndpoint(t *Type, fields []string, includeArgu
 	args := []QueryArg{}
 
 	for _, f := range t.Fields {
-		if stringInStrings(f.Name, fields) {
+		if util.StringInStrings(f.Name, fields) {
 			for _, a := range f.Args {
 				// TODO implement optional arguments.
-				if a.IsRequired() || stringInStrings(a.Name, includeArguments) {
+				if a.IsRequired() || util.StringInStrings(a.Name, includeArguments) {
 					args = append(args, s.GetQueryArg(a))
 				}
 			}

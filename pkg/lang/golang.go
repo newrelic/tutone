@@ -7,6 +7,7 @@ import (
 
 	"github.com/newrelic/tutone/internal/config"
 	"github.com/newrelic/tutone/internal/schema"
+	"github.com/newrelic/tutone/internal/util"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -249,9 +250,8 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 
 			fieldErrs := []error{}
 			for _, f := range fields {
-
 				// Skip field if specified in the config
-				if c != nil && stringInStrings(f.GetName(), c.SkipFields) {
+				if c != nil && util.StringInStrings(f.GetName(), c.SkipFields) {
 					log.WithFields(log.Fields{
 						"name": f.GetName(),
 					}).Debug("skipping field")
@@ -507,16 +507,6 @@ func constrainedResponseStructs(s *schema.Schema, pkgConfig *config.PackageConfi
 	}
 
 	return goStructs
-}
-
-func stringInStrings(s string, ss []string) bool {
-	for _, sss := range ss {
-		if s == sss {
-			return true
-		}
-	}
-
-	return false
 }
 
 func getTypeConfig(name string, typeConfigs []config.TypeConfig) *config.TypeConfig {
