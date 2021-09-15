@@ -6,10 +6,13 @@ package util
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestToSnakeCase(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Input    string
 		Expected string
@@ -28,5 +31,27 @@ func TestToSnakeCase(t *testing.T) {
 		result := ToSnakeCase(c.Input)
 
 		require.Equal(t, c.Expected, result)
+	}
+}
+
+func TestStringInStrings(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		Str      string
+		Arry     []string
+		Expected bool
+	}{
+		{"foo", []string{}, false},
+		{"foo", []string{"foo"}, true},
+		{"foo", []string{"foo", "bar"}, true},
+		{"bar", []string{"foo", "bar"}, true},
+		{"baz", []string{"foo", "bar"}, false},
+		{"", []string{"foo", "bar", "baz"}, false},
+	}
+
+	for x := range cases {
+		result := StringInStrings(cases[x].Str, cases[x].Arry)
+		assert.Equal(t, cases[x].Expected, result)
 	}
 }
