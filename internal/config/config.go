@@ -50,16 +50,18 @@ type PackageConfig struct {
 	ImportPath string `yaml:"import_path,omitempty"`
 	// Types is a list of Type configurations to include in the package.
 	Types []TypeConfig `yaml:"types,omitempty"`
-	// Mutations is a list of Method configurations to include in the package.
+	// Mutations is a list of mutation configurations to include in the package.
 	Mutations []MutationConfig `yaml:"mutations,omitempty"`
 	// Generators is a list of names that reference a generator in the Config struct.
 	Generators []string `yaml:"generators,omitempty"`
 	// Imports is a list of strings to represent what pacakges to import for a given package.
 	Imports []string `yaml:"imports,omitempty"`
-
-	Commands []Command `yaml:"commands,omitempty"`
-
+	// Queries is a list of query configurations to include in the package.
 	Queries []Query `yaml:"queries,omitempty"`
+	// Commands is a list of command configurations to include in the package.
+	// The command configuration is used to generate CLI commands for CLI project written in Go.
+	// This feature is only compatible with CLI projects that utilize the Cobra CLI framework.
+	Commands []Command `yaml:"commands,omitempty"`
 }
 
 // Query is the information necessary to build a query method.  The Paths

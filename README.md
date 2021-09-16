@@ -56,7 +56,7 @@ At a high level, the following workflow is used to generate code.
 5.  Run `go generate`
 6.  Add the `./path/to/package/types.go` file to your repo
 
-# Configuration
+<br>
 
 ## Command Flags
 
@@ -64,12 +64,25 @@ Flags for running the typegen command:
 
 | Flag                | Description                                                                    |
 | ------------------- | ------------------------------------------------------------------------------ |
-| `-c`                | Path to a configuration file (default ".tutone.yml")                           |
+| `-c`                | Path to a configuration file (default ".tutone.yml").                           |
 | `-p <Package Name>` | Package name used within the generated file. Overrides the configuration file. |
-| `-v`                | Enable verbose logging                                                         |
-| `-h`                | Tutone help                                                     |
+| `-v`                | Enable verbose logging.                                                         |
+| `-h`                | Display help for the current command.     |
 
-## Configuration File
+<br>
+
+# Configuration
+
+| Name       | Required | Description                                                             |
+| ---------- | -------- | ----------------------------------------------------------------------- |
+| `endpoint`       | Yes      | The URL for the GraphQL API to fetch the schema from for generating code. |
+| `auth` | Yes      | Specify how to authenticate to the API in the case that it's required. See [auth configuration](#auth-configuration)                |
+| `packages`      | Yes       | A list of [package configurations](#package-configuration) from which to start expanding the inferred set of types. |
+| `generators`  | Yes       | A list of [generator configurations](#generator-configuration) to include in the package.  |
+| `log_level`       | No      | Sets the logging level. Default: `info`.                                               |
+| `cache`       | No      | Specify how and where to store the schema that's returned from your GraphQL API.    |
+
+**Configuration File**
 
 An example configuration can be found in [this project repo][example_config].
 
@@ -78,39 +91,63 @@ specifications for which parts of the schema to process.
 
 Please see the [config documentation][pkg_go_dev] for details about specific fields.
 
-### Packages
+<br>
+
+### Auth Configuration
+
+| Name       | Required | Description                                                             |
+| ---------- | -------- | ----------------------------------------------------------------------- |
+| `header`       | No      | The name of the API request header that is used to authenticate. Default: `Api-Key`. |
+| `api_key_env_var` | No      | The name of the environment variable used set the value for the above header. Default: `TUTONE_API_KEY` |
+
+<br>
+
+### Cache Configuration
+
+| Name       | Required | Description                                                             |
+| ---------- | -------- | ----------------------------------------------------------------------- |
+| `enable`       | No      | A boolean to enable or disable schema caching. Default: `false` |
+| `schema_file` | No      | The location where the schema should be cached, including the file name with extension. Default: `schema.json` |
+
+<br>
+
+
+### Package Configuration
 
 The `packages` field in the configuration contains the details about which
 types and mutations to include from the schema, and where the package is located.
 
 | Name       | Required | Description                                                             |
 | ---------- | -------- | ----------------------------------------------------------------------- |
-| `name`       | Yes      | The name of the package                                                 |
-| `path`       | Yes      | Name of the package the output file will be part of (see `-p` flag)     |
-| `generators` | Yes      | A list of generator names from the `generators` field                   |
-| `mutations`  | No       | A list of mutations from which to infer types                           |
-| `types`      | No       | A list of types from which to start expanding the inferred set of types |
+| `name`       | Yes      | The name of the package.                                                 |
+| `path`       | Yes      | Name of the package the output file will be part of (see `-p` flag).     |
+| `generators` | Yes      | A list of generator names from the `generators` field.                   |
+| `import_path`       | No      | The full path used for importing this package into a Go project.    |
+| `types`      | No       | A list of [type configurations](#type-configuration) from which to start expanding the inferred set of types. |
+| `mutations`  | No       | A list of [mutation configurations](#mutation-configuration) to include in the package.                         |
+| `queries`      | No       | A list of [query configurations](#query-configuration) to include in the package.   |
+| `imports`  | No       |  A list of strings to represent what pacakges to import for a given package.                           |
 
 <br>
 
-#### Type Configuration
+### Type Configuration
 
 To fine-tune the types that are created, or not create them at all, the
 following options are supported:
 
 | Name                  | Required | Description |
 | --------------------- | -------- | ----------- |
-| `name`                | Yes      | Name of the type to match |
+| `name`                | Yes      | Name of the type to match. |
 | `create_as`           | No       | Used when creating a new scalar type to determine which Go type to use. |
 | `field_type_override` | No       | Golang type to override whatever the default detected type would be for a given field. |
 | `interface_methods`   | No       | List of additional methods that are added to an interface definition. The methods are not defined in the code, so must be implemented by the user. |
 | `skip_type_create`    | No       | Allows the user to skip creating a type. |
-| `generate_struct_getters` | No | Enables the auto-generation of field getters for all fields on a struct |
-| `struct_tags` | No | Allows the user to customize struct tags for the fields on a struct. JSON tags are applied by default.
+| `generate_struct_getters` | No | Enables the auto-generation of field getters for all fields on a struct. |
+| `struct_tags` | No | Allows the user to customize struct tags for the fields on a struct. JSON tags are applied by default. |
 
 <br>
 
-### Generators
+### Generator Configuration
 
 The `generators` field is used to describe a given generator.  The generator is
 where the bulk of the work is done.  Note that the configuration name
@@ -121,16 +158,47 @@ The generator configuration specifies details about how the generator should adj
 
 | Name     | Required | Description                                                                  |
 | -------- | -------- | ---------------------------------------------------------------------------- |
-| `name`     | Yes      | The name of the generator used in `pkg/generate/generate.go` file            |
+| `name`     | Yes      | The name of the generator used in `pkg/generate/generate.go` file.            |
 | `fileName` | No       | The name of the target output file that is to be generated. Default is autogenerated based on package name. |
 | `templateDir` | No       | The path to the directory that contains the code generation Go templates. For example, the `typegen` generator has different templates for code generation than the `command` generator. |
 | `templateName` | No       | The name of the template to use within the `templateDir`. |
 | `templateURL` | No       | A URL to a downloadable file to use as a Go template. Use one of `templateDir` *or* `templateURL`, not both. |
 
-**The commonly used generators are the following:**
+**Commonly used generators**
 
 1. `typegen` - The most commonly used generator. This generator is responsible for generating Go types based on a specified GraphQL API's introspection endpoint query. In New Relic's case, we introspect our NerdGraph API and use the returned GraphQL types to generate corresponding types in Golang.
-2. `nerdgraphclient` - This generator is responsible for generating feature code in `newrelic-client-go`. An example of a fully generated feature can be viewed <a href="https://github.com/newrelic/newrelic-client-go/blob/main/pkg/cloud/cloud_api.go" target="_blank">here</a>.
+2. `nerdgraphclient` - This generator is responsible for generating feature code in the `newrelic-client-go` project. An example of a fully generated feature can be viewed <a href="https://github.com/newrelic/newrelic-client-go/blob/main/pkg/cloud/cloud_api.go" target="_blank">here</a>.
+
+<br>
+
+### Mutation Configuration
+
+| Name       | Required | Description                                                             |
+| ---------- | -------- | ----------------------------------------------------------------------- |
+| `name`       | Yes      | The name of the the GraphQL method from which to generate code.        |
+| `max_query_field_depth`       | No      | The maximum levels to dig into nested JSON to infer types to generate.        |
+| `argument_type_overrides`       | No      | A map of argument types to their cooresponding new argument names. Use this to override or customize argument names in mutations.       |
+| `exclude_fields`       | No      | A list of fields to exclude from a GraphQL schema type when generating the corresponding Go types.  |
+
+<br>
+
+### Query Configuration
+
+| Name       | Required | Description                                                             |
+| ---------- | -------- | ----------------------------------------------------------------------- |
+| `path`       | Yes      | The path of TypeNames in GraphQL that precede the objects being queried.        |
+| `endpoints`       | No      | a list of [endpoint configurations](#endpoint-configuration) that will be found at the above Path.       |
+
+<br>
+
+### Endpoint Configuration
+
+| Name       | Required | Description                                                             |
+| ---------- | -------- | ----------------------------------------------------------------------- |
+| `name`       | Yes      | The name of the the GraphQL method from which to generate code.        |
+| `max_query_field_depth`       | No      | The maximum levels to dig into nested JSON to infer types for code generatation.        |
+| `include_arguments`       | No      | A list of arguments to include when generating code to communicate with GraphQL endpoints.       |
+| `exclude_fields`       | No      | A list of fields to exclude from a GraphQL schema type when generating the corresponding Go types.  |
 
 <br>
 
