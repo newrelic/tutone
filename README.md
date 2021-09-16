@@ -60,14 +60,15 @@ At a high level, the following workflow is used to generate code.
 
 ## Command Flags
 
-Flags for running the typegen command:
+Flags for running the `tutone generate` command:
 
-| Flag                | Description                                                                    |
-| ------------------- | ------------------------------------------------------------------------------ |
-| `-c`                | Path to a configuration file (default ".tutone.yml").                          |
-| `-p <Package Name>` | Package name used within the generated file. Overrides the configuration file. |
-| `-v`                | Enable verbose logging.                                                        |
-| `-h`                | Display help for the current command.                                          |
+| Flag                    | Description                                                                         |
+| ----------------------- | ----------------------------------------------------------------------------------- |
+| `-h`                    | Display help for the current command.                                               |
+| `-p <package name>`     | Package name used within the generated file. Overrides the configuration file.      |
+| `-s <schema file name>` | Schema file to read from (default "schema.json").                                   |
+| `-c`                    | Path to a configuration file. (default: ".tutone.yml")                              |
+| `--refetch`             | Force a refetch of your GraphQL schema to ensure the generated types are up to date |
 
 <br>
 
