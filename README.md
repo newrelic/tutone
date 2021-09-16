@@ -83,11 +83,11 @@ types and mutations to include from the schema, and where the package is located
 
 | Name       | Required | Description                                                             |
 | ---------- | -------- | ----------------------------------------------------------------------- |
-| name       | Yes      | The name of the package                                                 |
-| path       | Yes      | Name of the package the output file will be part of (see `-p` flag)     |
-| generators | Yes      | A list of generator names from the `generators` field                   |
-| mutations  | No       | A list of mutations from which to infer types                           |
-| types      | No       | A list of types from which to start expanding the inferred set of types |
+| `name`       | Yes      | The name of the package                                                 |
+| `path`       | Yes      | Name of the package the output file will be part of (see `-p` flag)     |
+| `generators` | Yes      | A list of generator names from the `generators` field                   |
+| `mutations`  | No       | A list of mutations from which to infer types                           |
+| `types`      | No       | A list of types from which to start expanding the inferred set of types |
 
 
 #### Type Configuration
@@ -102,6 +102,8 @@ following options are supported:
 | `field_type_override` | no       | Golang type to override whatever the default detected type would be for a given field. |
 | `interface_methods`   | no       | List of additional methods that are added to an interface definition. The methods are not defined in the code, so must be implemented by the user. |
 | `skip_type_create`    | no       | Allows the user to skip creating a type. |
+| `generate_struct_getters` | no | Enables the auto-generation of field getters for all fields on a struct |
+| `struct_tags` | no | Allows the user to customize struct tags for the fields on a struct. JSON tags are applied by default.
 
 ### Generators
 
@@ -127,7 +129,7 @@ Example templates are available in the [templates/<generator>](templates/) direc
 
 ## Community
 
-New Relic hosts and moderates an online forum where customers can interact with New Relic employees as well as other customers to get help and share best practices. 
+New Relic hosts and moderates an online forum where customers can interact with New Relic employees as well as other customers to get help and share best practices.
 
 -   [Roadmap](https://newrelic.github.io/developer-toolkit/roadmap/) - As part of the Developer Toolkit, the roadmap for this project follows the same RFC process
 -   [Issues or Enhancement Requests](https://github.com/newrelic/tutone/issues) - Issues and enhancement requests can be submitted in the Issues tab of this repository. Please search for and review the existing open issues before submitting a new issue.
