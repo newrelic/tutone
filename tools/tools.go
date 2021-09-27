@@ -1,11 +1,12 @@
 //go:build tools
 // +build tools
 
-package main
+package tools
 
 import (
 	// build/test.mk
 	_ "github.com/stretchr/testify/assert"
+	_ "gotest.tools/gotestsum"
 
 	// build/lint.mk
 	_ "github.com/client9/misspell/cmd/misspell"
@@ -19,5 +20,7 @@ import (
 	_ "golang.org/x/tools/cmd/godoc"
 
 	// build/release.mk
+	_ "github.com/caarlos0/svu"
 	_ "github.com/goreleaser/goreleaser"
+	_ "github.com/x-motemen/gobump/cmd/gobump"
 )

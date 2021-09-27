@@ -1,9 +1,9 @@
 name: Release
-
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [main]
+
+permissions: write-all
 
 jobs:
   release:
@@ -21,14 +21,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          # Needed for release notes
           fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN }}
 
       - name: Publish Release
         shell: bash
         env:
-          GITHUB_TOKEN: ${{ secrets.DEV_TOOLKIT_TOKEN }}
+          GITHUB_TOKEN:    ${{ secrets.RELEASE_TOKEN }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-        run: make release-publish
-
+        run: |
+          git config --global user.name nr-developer-toolkit
+          git config --global user.email 62031461+nr-developer-toolkit@users.noreply.github.com
+          make release
