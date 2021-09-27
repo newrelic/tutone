@@ -6,6 +6,7 @@ GO           ?= go
 GOLINTER     ?= golangci-lint
 MISSPELL     ?= misspell
 GOFMT        ?= gofmt
+TEST_RUNNER  ?= gotestsum
 
 COVERAGE_DIR ?= ./coverage/
 COVERMODE    ?= atomic
@@ -17,8 +18,6 @@ PROJECT_MODULE ?= $(shell $(GO) list -m)
 
 LDFLAGS_UNIT ?= '-X $(PROJECT_MODULE)/internal/version.GitTag=$(PROJECT_VER_TAGGED)'
 
-GOTOOLS += github.com/stretchr/testify/assert
-
 test: test-only
 test-only: test-unit test-integration
 
@@ -29,12 +28,12 @@ test-prep: compile-only
 test-unit: test-prep
 	@echo "=== $(PROJECT_NAME) === [ test-unit        ]: running unit tests..."
 	@mkdir -p $(COVERAGE_DIR)
-	@$(GO) test -v -ldflags=$(LDFLAGS_UNIT) -parallel 4 -tags unit -covermode=$(COVERMODE) -coverprofile $(COVERAGE_DIR)/unit.tmp $(GO_PKGS)
+	@$(TEST_RUNNER) -f testname --junitfile $(COVERAGE_DIR)/unit.xml -- -v -ldflags=$(LDFLAGS_UNIT) -parallel 4 -tags unit -covermode=$(COVERMODE) -coverprofile $(COVERAGE_DIR)/unit.tmp $(GO_PKGS)
 
 test-integration:
 	@echo "=== $(PROJECT_NAME) === [ test-integration ]: running integration tests..."
 	@mkdir -p $(COVERAGE_DIR)
-	@$(GO) test -v -parallel 4 -tags integration -covermode=$(COVERMODE) -coverprofile $(COVERAGE_DIR)/integration.tmp $(GO_PKGS)
+	@$(TEST_RUNNER) -f testname --junitfile $(COVERAGE_DIR)/integration.xml --rerun-fails=3 --packages "$(GO_PKGS)" -- -v -parallel 4 -tags integration -covermode=$(COVERMODE) -coverprofile $(COVERAGE_DIR)/integration.tmp $(GO_PKGS)
 
 
 #
