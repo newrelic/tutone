@@ -16,7 +16,7 @@ import (
 	"github.com/newrelic/tutone/internal/config"
 )
 
-//nolint:deadcode,unused //used to update fixtures as needed
+//nolint:deadcode
 func saveFixture(t *testing.T, n, s string) {
 	t.Helper()
 	wd, _ := os.Getwd()
