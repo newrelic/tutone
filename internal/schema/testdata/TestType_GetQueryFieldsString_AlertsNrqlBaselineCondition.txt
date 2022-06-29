@@ -1,6 +1,106 @@
 baselineDirection
 description
 enabled
+entity {
+	__typename
+	account {
+		id
+		name
+		reportingEventTypes
+	}
+	accountId
+	alertSeverity
+	domain
+	entityType
+	guid
+	indexedAt
+	name
+	permalink
+	reporting
+	tags {
+		key
+		values
+	}
+	type
+	... on ApmApplicationEntityOutline {
+		__typename
+		applicationId
+		language
+	}
+	... on ApmDatabaseInstanceEntityOutline {
+		__typename
+		host
+		portOrPath
+		vendor
+	}
+	... on ApmExternalServiceEntityOutline {
+		__typename
+		host
+	}
+	... on BrowserApplicationEntityOutline {
+		__typename
+		agentInstallType
+		applicationId
+		servingApmApplicationId
+	}
+	... on DashboardEntityOutline {
+		__typename
+		createdAt
+		dashboardParentGuid
+		permissions
+		updatedAt
+	}
+	... on ExternalEntityOutline {
+		__typename
+	}
+	... on GenericEntityOutline {
+		__typename
+	}
+	... on GenericInfrastructureEntityOutline {
+		__typename
+		integrationTypeCode
+	}
+	... on InfrastructureAwsLambdaFunctionEntityOutline {
+		__typename
+		integrationTypeCode
+		runtime
+	}
+	... on InfrastructureHostEntityOutline {
+		__typename
+	}
+	... on KeyTransactionEntityOutline {
+		__typename
+	}
+	... on MobileApplicationEntityOutline {
+		__typename
+		applicationId
+	}
+	... on SecureCredentialEntityOutline {
+		__typename
+		description
+		secureCredentialId
+		updatedAt
+	}
+	... on SyntheticMonitorEntityOutline {
+		__typename
+		monitorId
+		monitorType
+		monitoredUrl
+		period
+	}
+	... on ThirdPartyServiceEntityOutline {
+		__typename
+	}
+	... on UnavailableEntityOutline {
+		__typename
+	}
+	... on WorkloadEntityOutline {
+		__typename
+		createdAt
+		updatedAt
+	}
+}
+entityGuid
 expiration {
 	closeViolationsOnExpiration
 	expirationDuration
@@ -15,10 +115,14 @@ nrql {
 policyId
 runbookUrl
 signal {
+	aggregationDelay
+	aggregationMethod
+	aggregationTimer
 	aggregationWindow
 	evaluationOffset
 	fillOption
 	fillValue
+	slideBy
 }
 terms {
 	operator

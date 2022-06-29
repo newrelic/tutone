@@ -73,6 +73,9 @@ query(
 			... on InfrastructureHostEntityOutline {
 				__typename
 			}
+			... on KeyTransactionEntityOutline {
+				__typename
+			}
 			... on MobileApplicationEntityOutline {
 				__typename
 				applicationId

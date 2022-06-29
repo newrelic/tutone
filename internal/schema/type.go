@@ -166,6 +166,8 @@ func (t *Type) GetQueryStringFields(s *Schema, depth, maxDepth int, isMutation b
 		possibleT, err := s.LookupTypeByName(possibleType.Name)
 		if err != nil {
 			log.Error(err)
+			// skip appending this query fragment if not found
+			continue
 		}
 
 		lines = append(lines, fmt.Sprintf("... on %s {", possibleType.Name))
