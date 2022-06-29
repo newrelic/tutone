@@ -28,7 +28,7 @@ test-prep: compile-only
 test-unit: tools test-prep
 	@echo "=== $(PROJECT_NAME) === [ test-unit        ]: running unit tests..."
 	@mkdir -p $(COVERAGE_DIR)
-	@$(TEST_RUNNER) -f testname -v -ldflags=$(LDFLAGS_UNIT) -parallel 4 -tags unit -covermode=$(COVERMODE) -coverprofile $(COVERAGE_DIR)/unit.tmp $(GO_PKGS)
+	@$(TEST_RUNNER) -f testname -ldflags=$(LDFLAGS_UNIT) -parallel 4 -tags unit -covermode=$(COVERMODE) -coverprofile $(COVERAGE_DIR)/unit.tmp $(GO_PKGS)
 
 test-integration: tools test-prep
 	@echo "=== $(PROJECT_NAME) === [ test-integration ]: running integration tests..."
