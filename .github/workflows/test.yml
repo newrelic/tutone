@@ -94,3 +94,5 @@ jobs:
 
       - name: Integration Tests
         run: make test-integration
+        env:
+          NEW_RELIC_API_KEY: ${{ secrets.NEW_RELIC_API_KEY }}
