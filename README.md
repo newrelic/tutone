@@ -22,6 +22,15 @@ At a high level, the following workflow is used to generate code.
 -   The schema is cached in `schema.json`.  This is information about the GraphQL schema
 -   `tutone generate` uses the `schema.json` + the configuration + the templates to output generated text.
 
+## Command Flags
+
+Flags for running the typegen command:
+
+| Flag                | Description                                                                    |
+| ------------------- | ------------------------------------------------------------------------------ |
+| `-p <Package Name>` | Package name used within the generated file. Overrides the configuration file. |
+| `-v`                | Enable verbose logging                                                         |
+
 ## Getting Started
 
 1.  Create a project configuration file, see `configs/tutone.yaml` for an example.
@@ -58,15 +67,6 @@ At a high level, the following workflow is used to generate code.
 
 # Configuration
 
-## Command Flags
-
-Flags for running the typegen command:
-
-| Flag                | Description                                                                    |
-| ------------------- | ------------------------------------------------------------------------------ |
-| `-p <Package Name>` | Package name used within the generated file. Overrides the configuration file. |
-| `-v`                | Enable verbose logging                                                         |
-
 ## Configuration File
 
 An example configuration can be found in [this project repo][example_config].
@@ -76,7 +76,7 @@ specifications for which parts of the schema to process.
 
 Please see the [config documentation][pkg_go_dev] for details about specific fields.
 
-### packages
+## Package Schema
 
 The `packages` field in the configuration contains the details about which
 types and mutations to include from the schema, and where the package is located.
@@ -89,6 +89,7 @@ types and mutations to include from the schema, and where the package is located
 | mutations  | No       | A list of mutations from which to infer types                           |
 | types      | No       | A list of types from which to start expanding the inferred set of types |
 
+Please see the [package schema doc](docs/package-schema.md) for detailed information about the schema structure.
 
 #### Type Configuration
 
@@ -127,7 +128,7 @@ Example templates are available in the [templates/<generator>](templates/) direc
 
 ## Community
 
-New Relic hosts and moderates an online forum where customers can interact with New Relic employees as well as other customers to get help and share best practices. 
+New Relic hosts and moderates an online forum where customers can interact with New Relic employees as well as other customers to get help and share best practices.
 
 -   [Roadmap](https://newrelic.github.io/developer-toolkit/roadmap/) - As part of the Developer Toolkit, the roadmap for this project follows the same RFC process
 -   [Issues or Enhancement Requests](https://github.com/newrelic/tutone/issues) - Issues and enhancement requests can be submitted in the Issues tab of this repository. Please search for and review the existing open issues before submitting a new issue.
