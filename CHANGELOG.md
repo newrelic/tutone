@@ -1,3 +1,9 @@
+<a name="vv0.10.2"></a>
+## [vv0.10.2] - 2022-06-30
+### Documentation Updates
+- add tutone --help output to docs for reference
+- add package schema documentation
+
 <a name="v0.10.1"></a>
 ## [v0.10.1] - 2021-09-27
 ### Bug Fixes
@@ -184,7 +190,8 @@
 - **generator:** introduce a generator concept
 - **tutone:** default path for tutone config file
 
-[Unreleased]: https://github.com/newrelic/tutone/compare/v0.10.1...HEAD
+[Unreleased]: https://github.com/newrelic/tutone/compare/vv0.10.2...HEAD
+[vv0.10.2]: https://github.com/newrelic/tutone/compare/v0.10.1...vv0.10.2
 [v0.10.1]: https://github.com/newrelic/tutone/compare/v0.10.0...v0.10.1
 [v0.10.0]: https://github.com/newrelic/tutone/compare/v0.9.0...v0.10.0
 [v0.9.0]: https://github.com/newrelic/tutone/compare/v0.8.1...v0.9.0
