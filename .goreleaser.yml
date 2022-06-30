@@ -43,21 +43,20 @@ archives:
       - LICENSE
       - README.md
 
-dockers:
-  - dockerfile: build/package/Dockerfile
-    image_templates:
-      - "newrelic/tutone:{{ .Tag }}"
-      - "newrelic/tutone:v{{ .Major }}.{{ .Minor }}"
-      - "newrelic/tutone:latest"
-    ids:
-      - tutone
-    build_flag_templates:
-      - "--pull"
-      - "--label=repository=http://github.com/newrelic/tutone"
-      - "--label=homepage=https://developer.newrelic.com/"
-      - "--label=maintainer=Developer Toolkit <opensource@newrelic.com>"
+# dockers:
+#   - dockerfile: build/package/Dockerfile
+#     image_templates:
+#       - "newrelic/tutone:{{ .Tag }}"
+#       - "newrelic/tutone:v{{ .Major }}.{{ .Minor }}"
+#       - "newrelic/tutone:latest"
+#     ids:
+#       - tutone
+#     build_flag_templates:
+#       - "--pull"
+#       - "--label=repository=http://github.com/newrelic/tutone"
+#       - "--label=homepage=https://developer.newrelic.com/"
+#       - "--label=maintainer=Developer Toolkit <opensource@newrelic.com>"
 
 # Already using git-chglog
 changelog:
   skip: true
-
