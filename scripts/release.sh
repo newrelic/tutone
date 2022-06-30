@@ -28,8 +28,9 @@ echo "Next version:    ${VER_NEXT}"
 echo " "
 
 if [ "${VER_CURR}" = "${VER_NEXT}" ]; then
-  echo "No new version recommended, skipping"
-  exit 0
+    VER_NEXT=$(${VER_CMD} patch)
+
+    printf "Bumping current version ${VER_CURR} to version ${VER_NEXT} for release."
 fi
 
 GIT_USER=$(git config user.name)
