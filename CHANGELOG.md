@@ -1,5 +1,7 @@
+<a name="v0.10.301"></a>
+## [v0.10.301] - 0001-01-01
 <a name="v0.10.300"></a>
-## [v0.10.300] - 0001-01-01
+## [v0.10.300] - 2022-06-30
 <a name="v0.10.299"></a>
 ## [v0.10.299] - 2022-06-30
 <a name="v0.10.298"></a>
@@ -786,7 +788,8 @@
 - **generator:** introduce a generator concept
 - **tutone:** default path for tutone config file
 
-[Unreleased]: https://github.com/newrelic/tutone/compare/v0.10.300...HEAD
+[Unreleased]: https://github.com/newrelic/tutone/compare/v0.10.301...HEAD
+[v0.10.301]: https://github.com/newrelic/tutone/compare/v0.10.300...v0.10.301
 [v0.10.300]: https://github.com/newrelic/tutone/compare/v0.10.299...v0.10.300
 [v0.10.299]: https://github.com/newrelic/tutone/compare/v0.10.298...v0.10.299
 [v0.10.298]: https://github.com/newrelic/tutone/compare/v0.10.297...v0.10.298
