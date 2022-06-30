@@ -28,7 +28,7 @@ echo "Next version:    ${VER_NEXT}"
 echo " "
 
 if [ "${VER_CURR}" = "${VER_NEXT}" ]; then
-    VER_NEXT=$(${VER_CMD} patch)
+    VER_NEXT=$(${VER_CMD} patch --strip-prefix)
 
     printf "Bumping current version ${VER_CURR} to version ${VER_NEXT} for release."
 fi
