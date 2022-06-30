@@ -22,6 +22,12 @@ At a high level, the following workflow is used to generate code.
 -   The schema is cached in `schema.json`.  This is information about the GraphQL schema
 -   `tutone generate` uses the `schema.json` + the configuration + the templates to output generated text.
 
+## Installation
+
+```
+go install github.com/newrelic/tutone/cmd/tutone@latest
+```
+
 ## Command Flags
 
 Flags for running the typegen command:
