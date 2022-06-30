@@ -10,9 +10,10 @@ import (
 	"github.com/newrelic/tutone/pkg/generate"
 )
 
+var version = "dev"
+
 var (
 	appName = "tutone"
-	version = "dev"
 	cfgFile string
 )
 
