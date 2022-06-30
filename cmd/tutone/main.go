@@ -6,11 +6,10 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/newrelic/tutone/internal/util"
+	"github.com/newrelic/tutone/internal/version"
 	"github.com/newrelic/tutone/pkg/fetch"
 	"github.com/newrelic/tutone/pkg/generate"
 )
-
-var version = "dev"
 
 var (
 	appName = "tutone"
@@ -22,7 +21,7 @@ var Command = &cobra.Command{
 	Use:               appName,
 	Short:             "Golang code generation from GraphQL",
 	Long:              `Generate Go code based on the introspection of a GraphQL server`,
-	Version:           version,
+	Version:           version.Version,
 	DisableAutoGenTag: true, // Do not print generation date on documentation
 }
 
