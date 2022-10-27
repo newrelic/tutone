@@ -50,7 +50,6 @@ linters-settings:
 linters:
   disable-all: true
   enable:
-    - deadcode
     - errcheck
     - goimports
     - gocyclo
@@ -61,11 +60,9 @@ linters:
     - misspell
     - nolintlint
     - staticcheck
-    - structcheck
     - thelper
     - unconvert
     - unused
-    - varcheck
     - vet
     - whitespace
 
