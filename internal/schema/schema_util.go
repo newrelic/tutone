@@ -5,6 +5,9 @@ import (
 	"regexp"
 	"strings"
 
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+
 	log "github.com/sirupsen/logrus"
 
 	"github.com/newrelic/tutone/internal/config"
@@ -209,7 +212,8 @@ func formatGoName(name string) string {
 	case "policyid":
 		fieldName = "PolicyID"
 	default:
-		fieldName = strings.Title(name)
+		caser := cases.Title(language.Und, cases.NoLower)
+		fieldName = caser.String(name)
 	}
 
 	r := strings.NewReplacer(

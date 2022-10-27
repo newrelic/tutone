@@ -37,23 +37,23 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 	}
 
 	// The Execute() below expects to have Generator g populated for use in the template files.
-	g.PackageName = pkgConfig.Name
-	g.Imports = pkgConfig.Imports
+	g.GolangGenerator.PackageName = pkgConfig.Name
+	g.GolangGenerator.Imports = pkgConfig.Imports
 
 	if structsForGen != nil {
-		g.Types = *structsForGen
+		g.GolangGenerator.Types = *structsForGen
 	}
 
 	if enumsForGen != nil {
-		g.Enums = *enumsForGen
+		g.GolangGenerator.Enums = *enumsForGen
 	}
 
 	if scalarsForGen != nil {
-		g.Scalars = *scalarsForGen
+		g.GolangGenerator.Scalars = *scalarsForGen
 	}
 
 	if interfacesForGen != nil {
-		g.Interfaces = *interfacesForGen
+		g.GolangGenerator.Interfaces = *interfacesForGen
 	}
 
 	return nil

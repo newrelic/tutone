@@ -142,7 +142,6 @@ func (e *Endpoint) FetchType(name string) (*schema.Type, error) {
 	return &resp.Data.Type, nil
 }
 
-//
 // fetch does the heavy lifting to return the schema data
 func (e *Endpoint) fetch(query GraphqlQuery) (*schema.QueryResponse, error) {
 	if e.URL == "" {

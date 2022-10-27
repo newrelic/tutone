@@ -13,8 +13,10 @@ query { actor { entitySearch {
 			alertSeverity
 			domain
 			entityType
+			firstIndexedAt
 			guid
 			indexedAt
+			lastReportingChangeAt
 			name
 			permalink
 			reporting

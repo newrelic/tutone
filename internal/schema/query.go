@@ -1,16 +1,17 @@
 package schema
 
 // https://github.com/graphql/graphql-js/blob/master/src/utilities/getIntrospectionQuery.js#L35
-//   Modified from the following as we only care about the Types
-//   query IntrospectionQuery {
-//     __schema {
-//       directives { name description locations args { ...InputValue } }
-//       mutationType { name }
-//       queryType { name }
-//       subscriptionType { name }
-//       types { ...FullType }
-//     }
-//   }
+//
+//	Modified from the following as we only care about the Types
+//	query IntrospectionQuery {
+//	  __schema {
+//	    directives { name description locations args { ...InputValue } }
+//	    mutationType { name }
+//	    queryType { name }
+//	    subscriptionType { name }
+//	    types { ...FullType }
+//	  }
+//	}
 const (
 	// QuerySchema gets basic info about the schema
 	QuerySchema = `query { __schema { mutationType { name } queryType { name } subscriptionType { name } } }`

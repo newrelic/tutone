@@ -11,8 +11,10 @@ entity {
 	alertSeverity
 	domain
 	entityType
+	firstIndexedAt
 	guid
 	indexedAt
+	lastReportingChangeAt
 	name
 	permalink
 	reporting
@@ -142,8 +144,10 @@ violationTimeLimitSeconds
 		alertSeverity
 		domain
 		entityType
+		firstIndexedAt
 		guid
 		indexedAt
+		lastReportingChangeAt
 		name
 		permalink
 		reporting
@@ -261,8 +265,10 @@ violationTimeLimitSeconds
 		alertSeverity
 		domain
 		entityType
+		firstIndexedAt
 		guid
 		indexedAt
+		lastReportingChangeAt
 		name
 		permalink
 		reporting
@@ -382,8 +388,10 @@ violationTimeLimitSeconds
 		alertSeverity
 		domain
 		entityType
+		firstIndexedAt
 		guid
 		indexedAt
+		lastReportingChangeAt
 		name
 		permalink
 		reporting

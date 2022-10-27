@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"sort"
 	"strings"
 
@@ -42,7 +42,7 @@ func (t *Type) Save(file string) error {
 		return err
 	}
 
-	return ioutil.WriteFile(file, schemaFile, 0644)
+	return os.WriteFile(file, schemaFile, 0644)
 }
 
 // GetDescription formats the description into a GoDoc comment.
