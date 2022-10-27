@@ -19,15 +19,15 @@ type Generator struct {
 func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig) error {
 	log.Debugf("Generate...")
 
-	g.PackageName = pkgConfig.Name
-	g.Imports = pkgConfig.Imports
+	g.CommandGenerator.PackageName = pkgConfig.Name
+	g.CommandGenerator.Imports = pkgConfig.Imports
 
 	cmds := make([]lang.Command, len(pkgConfig.Commands))
 	for i, c := range pkgConfig.Commands {
 		cmds[i] = hydrateCommand(s, c, pkgConfig)
 	}
 
-	g.Commands = cmds
+	g.CommandGenerator.Commands = cmds
 
 	return nil
 }

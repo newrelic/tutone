@@ -2,6 +2,9 @@ package schema
 
 import (
 	"strings"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 type EnumValue struct {
@@ -35,7 +38,8 @@ func (e *EnumValue) GetName() string {
 	case "accountid":
 		fieldName = "AccountID"
 	default:
-		fieldName = strings.Title(e.Name)
+		caser := cases.Title(language.Und, cases.NoLower)
+		fieldName = caser.String(e.Name)
 	}
 
 	return fieldName
