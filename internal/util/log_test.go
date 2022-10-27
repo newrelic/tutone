@@ -5,7 +5,7 @@ package util
 
 import (
 	"errors"
-	"io/ioutil"
+	"io"
 	"testing"
 
 	log "github.com/sirupsen/logrus"
@@ -32,7 +32,7 @@ func TestLogIfError(t *testing.T) {
 	hook := logtest.NewGlobal()
 
 	oldOut := stdLogger.Out
-	stdLogger.Out = ioutil.Discard
+	stdLogger.Out = io.Discard
 	defer func() { stdLogger.Out = oldOut }()
 
 	for x := range cases {

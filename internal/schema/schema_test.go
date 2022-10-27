@@ -5,7 +5,6 @@ package schema
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -39,7 +38,7 @@ func loadFixture(t *testing.T, n string) string {
 	fileName := fmt.Sprintf("testdata/%s_%s.txt", t.Name(), n)
 	t.Logf("loading fixture %s", strings.TrimPrefix(fileName, "testdata/"))
 
-	content, err := ioutil.ReadFile(fileName)
+	content, err := os.ReadFile(fileName)
 	require.NoError(t, err)
 
 	return strings.TrimSpace(string(content))

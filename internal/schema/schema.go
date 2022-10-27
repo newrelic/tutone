@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"regexp"
@@ -56,7 +56,7 @@ func ParseResponse(resp *http.Response) (*QueryResponse, error) {
 	}
 
 	log.Debug("reading response")
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func Load(file string) (*Schema, error) {
 	}
 	defer jsonFile.Close()
 
-	byteValue, _ := ioutil.ReadAll(jsonFile)
+	byteValue, _ := io.ReadAll(jsonFile)
 
 	schema := Schema{}
 	err = json.Unmarshal(byteValue, &schema)
@@ -127,7 +127,7 @@ func (s *Schema) Save(file string) error {
 		return err
 	}
 
-	return ioutil.WriteFile(file, schemaFile, 0644)
+	return os.WriteFile(file, schemaFile, 0644)
 }
 
 func (s *Schema) LookupRootMutationTypeFieldByName(name string) (*Field, error) {

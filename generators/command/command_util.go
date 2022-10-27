@@ -2,7 +2,7 @@ package command
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/huandu/xstrings"
@@ -246,7 +246,7 @@ func fetchRemoteTemplate(url string) (string, error) {
 
 	var respString string
 	if resp.StatusCode == http.StatusOK {
-		respBytes, err := ioutil.ReadAll(resp.Body)
+		respBytes, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return "", err
 		}
