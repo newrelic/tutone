@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/caarlos0/svu v1.9.0
 	github.com/client9/misspell v0.3.4
-	github.com/git-chglog/git-chglog v0.15.0
+	github.com/git-chglog/git-chglog v0.15.1
 	github.com/golangci/golangci-lint v1.50.1
 	github.com/goreleaser/goreleaser v0.180.2
 	github.com/llorllale/go-gitlint v0.0.0-20210608233938-d6303cc52cc5
@@ -25,7 +25,7 @@ require (
 	cloud.google.com/go/storage v1.23.0 // indirect
 	code.gitea.io/sdk/gitea v0.15.0 // indirect
 	github.com/Abirdcfly/dupword v0.0.7 // indirect
-	github.com/AlecAivazis/survey/v2 v2.2.14 // indirect
+	github.com/AlecAivazis/survey/v2 v2.3.2 // indirect
 	github.com/AlekSi/pointer v1.1.0 // indirect
 	github.com/Antonboom/errname v0.1.7 // indirect
 	github.com/Antonboom/nilnil v0.1.1 // indirect
@@ -61,7 +61,7 @@ require (
 	github.com/alecthomas/units v0.0.0-20210208195552-ff826a37aa15 // indirect
 	github.com/alexkohler/prealloc v1.0.0 // indirect
 	github.com/alingse/asasalint v0.0.11 // indirect
-	github.com/andygrunwald/go-jira v1.13.0 // indirect
+	github.com/andygrunwald/go-jira v1.14.0 // indirect
 	github.com/apex/log v1.9.0 // indirect
 	github.com/ashanbrown/forbidigo v1.3.0 // indirect
 	github.com/ashanbrown/makezero v1.1.1 // indirect
@@ -103,14 +103,13 @@ require (
 	github.com/dghubble/go-twitter v0.0.0-20210609183100-2fdbf421508e // indirect
 	github.com/dghubble/oauth1 v0.7.0 // indirect
 	github.com/dghubble/sling v1.3.0 // indirect
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/dimchansky/utfbom v1.1.1 // indirect
 	github.com/dnephin/pflag v1.0.7 // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/esimonov/ifshort v1.0.4 // indirect
 	github.com/ettle/strcase v0.1.1 // indirect
 	github.com/fatih/color v1.13.0 // indirect
-	github.com/fatih/structs v1.0.0 // indirect
+	github.com/fatih/structs v1.1.0 // indirect
 	github.com/fatih/structtag v1.2.0 // indirect
 	github.com/firefart/nonamedreturns v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
@@ -129,6 +128,7 @@ require (
 	github.com/go-xmlfmt/xmlfmt v0.0.0-20191208150333-d5b6f63a941b // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gofrs/flock v0.8.1 // indirect
+	github.com/golang-jwt/jwt v3.2.1+incompatible // indirect
 	github.com/golang-jwt/jwt/v4 v4.0.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
@@ -267,7 +267,7 @@ require (
 	github.com/timonwong/loggercheck v0.9.3 // indirect
 	github.com/tomarrell/wrapcheck/v2 v2.7.0 // indirect
 	github.com/tommy-muehle/go-mnd/v2 v2.5.1 // indirect
-	github.com/trivago/tgo v1.0.1 // indirect
+	github.com/trivago/tgo v1.0.7 // indirect
 	github.com/tsuyoshiwada/go-gitcmd v0.0.0-20180205145712-5f1f5f9475df // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/ultraware/funlen v0.0.3 // indirect
