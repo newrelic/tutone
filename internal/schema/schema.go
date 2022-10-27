@@ -422,12 +422,13 @@ func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string,
 // including formatting for List and NonNull
 //
 // Example:
-// {
-//   "name": "tags",
-//   "type": { "kind": "NON_NULL", "ofType": { "kind": "LIST", "ofType": { "kind": "NON_NULL", "ofType": { "name": "TaggingTagInput", "kind": "INPUT_OBJECT" } } } }
-// }
-//   [TaggingTagInput!]!
 //
+//	{
+//	  "name": "tags",
+//	  "type": { "kind": "NON_NULL", "ofType": { "kind": "LIST", "ofType": { "kind": "NON_NULL", "ofType": { "name": "TaggingTagInput", "kind": "INPUT_OBJECT" } } } }
+//	}
+//
+//	[TaggingTagInput!]!
 func (s *Schema) GetQueryArg(field Field) QueryArg {
 	queryArg := QueryArg{
 		Key:   field.Name,

@@ -55,7 +55,8 @@ func (r *TypeRef) GetTypeName() string {
 }
 
 // GetType resolves the given SchemaInputField into a field name to use on a go struct.
-//  type, recurse, error
+//
+//	type, recurse, error
 func (r *TypeRef) GetType() (string, bool, error) {
 	if r == nil {
 		return "", false, fmt.Errorf("can not get type of nil TypeRef")
@@ -110,25 +111,26 @@ func (r *TypeRef) IsScalarID() bool {
 // IsNonNull walks down looking for NON_NULL kind, however that can appear
 // multiple times, so this is likely a bit deceiving...
 // Example:
-// {
-//    "name": "tags",
-//    "description": "An array of key-values pairs to represent a tag. For example:  Team:TeamName.",
-//    "type": {
-//     "kind": "NON_NULL",
-//     "ofType": {
-//      "kind": "LIST",
-//      "ofType": {
-//       "kind": "NON_NULL",
-//       "ofType": {
-//        "name": "TaggingTagInput",
-//        "kind": "INPUT_OBJECT"
-//       }
-//      }
-//     }
-//    }
-//   }
-//  ]
-// }
+//
+//	{
+//	   "name": "tags",
+//	   "description": "An array of key-values pairs to represent a tag. For example:  Team:TeamName.",
+//	   "type": {
+//	    "kind": "NON_NULL",
+//	    "ofType": {
+//	     "kind": "LIST",
+//	     "ofType": {
+//	      "kind": "NON_NULL",
+//	      "ofType": {
+//	       "name": "TaggingTagInput",
+//	       "kind": "INPUT_OBJECT"
+//	      }
+//	     }
+//	    }
+//	   }
+//	  }
+//	 ]
+//	}
 func (r *TypeRef) IsNonNull() bool {
 	kinds := r.GetKinds()
 
