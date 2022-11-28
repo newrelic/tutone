@@ -99,8 +99,10 @@ func (f *Field) buildStructTags(fieldName string, structTags []string) string {
 
 		tagsString = tagsString + tagType + ":\"" + f.Name
 
-		if f.Type.IsInputObject() || !f.Type.IsNonNull() {
-			tagsString = tagsString + ",omitempty"
+		if !f.IsBoolean() {
+			if f.Type.IsInputObject() || !f.Type.IsNonNull() {
+				tagsString = tagsString + ",omitempty"
+			}
 		}
 
 		tagsString = tagsString + tagEnd
@@ -120,17 +122,13 @@ func (f *Field) GetTags() string {
 
 	jsonTag := "`json:\"" + f.Name
 
-	if f.Type.IsInputObject() || !f.Type.IsNonNull() {
-		jsonTag += ",omitempty"
+	if !f.IsBoolean() {
+		if f.Type.IsInputObject() || !f.Type.IsNonNull() {
+			jsonTag += ",omitempty"
+		}
 	}
 
 	tags := jsonTag + "\"`"
-
-	// log.Print("\n\n **************************** \n")
-	// log.Printf("\n Struct Tags:  %s \n", f)
-	// log.Printf("\n Struct Tags:  %s \n", jsonTag)
-	// log.Print("\n **************************** \n\n")
-	// time.Sleep(5 * time.Second)
 
 	return tags
 }
@@ -180,4 +178,8 @@ func (f *Field) HasRequiredArg() bool {
 	}
 
 	return false
+}
+
+func (f *Field) IsBoolean() bool {
+	return f.Type.IsBoolean()
 }

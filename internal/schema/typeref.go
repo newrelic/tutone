@@ -171,3 +171,7 @@ func (r *TypeRef) IsInterface() bool {
 
 	return false
 }
+
+func (r *TypeRef) IsBoolean() bool {
+	return strings.EqualFold("boolean", r.GetTypeName())
+}
