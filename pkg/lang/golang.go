@@ -20,6 +20,7 @@ type GolangGenerator struct {
 	Imports     []string
 	Scalars     []GoScalar
 	Interfaces  []GoInterface
+	Unions      []GoUnion
 	Mutations   []GoMethod
 	Queries     []GoMethod
 }
@@ -63,6 +64,14 @@ type GoScalar struct {
 }
 
 type GoInterface struct {
+	Name          string
+	Description   string
+	Type          string
+	PossibleTypes []GoInterfacePossibleType
+	Methods       []string
+}
+
+type GoUnion struct {
 	Name          string
 	Description   string
 	Type          string
@@ -184,7 +193,7 @@ func GenerateGoMethodMutationsForPackage(s *schema.Schema, genConfig *config.Gen
 	return nil, fmt.Errorf("no methods for package")
 }
 
-func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig, expandedTypes *[]*schema.Type) (*[]GoStruct, *[]GoEnum, *[]GoScalar, *[]GoInterface, error) {
+func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig, expandedTypes *[]*schema.Type) (*[]GoStruct, *[]GoEnum, *[]GoScalar, *[]GoInterface, *[]GoUnion, error) {
 	// TODO: Putting the types in the specified path should be optional
 	//       Should we use a flag or allow the user to omit that field in the config? ¿Por que no lost dos?
 
@@ -192,6 +201,7 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 	var enumsForGen []GoEnum
 	var scalarsForGen []GoScalar
 	var interfacesForGen []GoInterface
+	var unionsForGen []GoUnion
 
 	configNames := make(map[string]config.TypeConfig, len(pkgConfig.Types))
 
@@ -235,7 +245,7 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 		}
 
 		switch t.Kind {
-		case schema.KindInputObject, schema.KindObject, schema.KindInterface:
+		case schema.KindInputObject, schema.KindObject, schema.KindInterface, schema.KindUnion:
 			xxx := GoStruct{
 				Name:            t.GetName(),
 				Description:     t.GetDescription(),
@@ -261,7 +271,7 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 				// If any of the fields for this type are an interface type, then we
 				// need to signal to the template an UnmarshalJSON() should be
 				// rendered.
-				if f.Type.IsInterface() {
+				if f.Type.IsInterface() || f.Type.IsUnion() {
 					xxx.SpecialUnmarshal = true
 				}
 
@@ -279,7 +289,7 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 
 			xxx.Implements = implements
 
-			if t.Kind == schema.KindInterface {
+			if t.Kind == schema.KindInterface || t.Kind == schema.KindUnion {
 				// Modify the struct type to avoid conflict with the interface type by the same name.
 				// xxx.Name += "Type"
 
@@ -348,13 +358,6 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 
 				scalarsForGen = append(scalarsForGen, xxx)
 			}
-		// case schema.KindInterface:
-		// 	xxx := GoInterface{
-		// 		Description: t.GetDescription(),
-		// 		Name:        t.GetName(),
-		// 	}
-		//
-		// 	interfacesForGen = append(interfacesForGen, xxx)
 		default:
 			log.WithFields(log.Fields{
 				"name": t.Name,
@@ -381,7 +384,7 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 		return interfacesForGen[i].Name < interfacesForGen[j].Name
 	})
 
-	return &structsForGen, &enumsForGen, &scalarsForGen, &interfacesForGen, nil
+	return &structsForGen, &enumsForGen, &scalarsForGen, &interfacesForGen, &unionsForGen, nil
 }
 
 func getStructField(f schema.Field, pkgConfig *config.PackageConfig, parentType *schema.Type) GoStructField {

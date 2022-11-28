@@ -31,7 +31,7 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 		log.Error(err)
 	}
 
-	structsForGen, enumsForGen, scalarsForGen, interfacesForGen, err := lang.GenerateGoTypesForPackage(s, genConfig, pkgConfig, expandedTypes)
+	structsForGen, enumsForGen, scalarsForGen, interfacesForGen, unionsForGen, err := lang.GenerateGoTypesForPackage(s, genConfig, pkgConfig, expandedTypes)
 	if err != nil {
 		return err
 	}
@@ -54,6 +54,10 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 
 	if interfacesForGen != nil {
 		g.Interfaces = *interfacesForGen
+	}
+
+	if unionsForGen != nil {
+		g.Unions = *unionsForGen
 	}
 
 	return nil

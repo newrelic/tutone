@@ -156,13 +156,27 @@ func (r *TypeRef) IsList() bool {
 	return false
 }
 
-// IsList determines if a TypeRef is of a KIND INTERFACE.
+// IsInterface determines if a TypeRef is of a KIND INTERFACE.
 func (r *TypeRef) IsInterface() bool {
 	kinds := r.GetKinds()
 
 	// Lots of kinds
 	for _, k := range kinds {
 		if k == KindInterface {
+			return true
+		}
+	}
+
+	return false
+}
+
+// IsUnion determines if a TypeRef is of a KIND INTERFACE.
+func (r *TypeRef) IsUnion() bool {
+	kinds := r.GetKinds()
+
+	// Lots of kinds
+	for _, k := range kinds {
+		if k == KindUnion {
 			return true
 		}
 	}

@@ -10,4 +10,5 @@ const (
 	KindNonNull     Kind = "NON_NULL"
 	KindObject      Kind = "OBJECT"
 	KindScalar      Kind = "SCALAR"
+	KindUnion       Kind = "UNION"
 )
