@@ -145,6 +145,8 @@ type TypeConfig struct {
 	GenerateStructGetters bool `yaml:"generate_struct_getters,omitempty"`
 	// Applies to all fields of the struct
 	StructTags []string `yaml:"struct_tags,omitempty"`
+	// Defines the fields that should be pointers
+	CreateAsPointer bool `yaml:"create_as_pointer,omitempty"`
 }
 
 const (
