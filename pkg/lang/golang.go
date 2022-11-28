@@ -396,10 +396,14 @@ func getStructField(f schema.Field, pkgConfig *config.PackageConfig, parentType 
 		log.Error(err)
 	}
 
+	if f.HasPointerOverride(pkgConfig) {
+		typeNamePrefix = "*"
+	}
+
 	// In the case we have a LIST type, we need to prefix the type with the slice
 	// descriptor.
 	if f.Type.IsList() {
-		typeNamePrefix = "[]"
+		typeNamePrefix = fmt.Sprintf("%s%s", typeNamePrefix, "[]")
 		isList = true
 	}
 

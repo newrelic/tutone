@@ -67,6 +67,19 @@ func (f *Field) GetName() string {
 	return formatGoName(f.Name)
 }
 
+func (f *Field) HasPointerOverride(pkgConfig *config.PackageConfig) bool {
+	var hasPointerOverride bool
+
+	nameToMatch := f.Type.GetTypeName()
+	for _, p := range pkgConfig.Types {
+		if p.Name == nameToMatch {
+			hasPointerOverride = p.CreateAsPointer
+		}
+	}
+
+	return hasPointerOverride
+}
+
 func (f *Field) GetTagsWithOverrides(parentType Type, pkgConfig *config.PackageConfig) string {
 	if f == nil {
 		return ""
