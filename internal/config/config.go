@@ -60,6 +60,13 @@ type PackageConfig struct {
 	Commands []Command `yaml:"commands,omitempty"`
 
 	Queries []Query `yaml:"queries,omitempty"`
+
+	Resources []ResourceConfig `yaml:"resources,omitempty"`
+}
+
+type ResourceConfig struct {
+	Name     string `yaml:"name"`
+	FileName string `yaml:"fileName"`
 }
 
 // Query is the information necessary to build a query method.  The Paths
