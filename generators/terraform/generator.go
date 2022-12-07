@@ -10,27 +10,11 @@ import (
 	"github.com/newrelic/tutone/internal/codegen"
 	"github.com/newrelic/tutone/internal/config"
 	"github.com/newrelic/tutone/internal/schema"
+	"github.com/newrelic/tutone/pkg/lang"
 )
 
 type Generator struct {
-	TerraformResourceGenerator
-}
-
-type TerraformResourceGenerator struct {
-	PackageName string
-	Imports     []string
-	Resources   []Resource
-}
-
-type Resource struct {
-	Name       string
-	FileName   string
-	Attributes []TerraformSchemaAttribute
-}
-
-type TerraformSchemaAttribute struct {
-	Key  string
-	Type string
+	lang.TerraformResourceGenerator
 }
 
 func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig) error {
@@ -51,10 +35,20 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 	g.TerraformResourceGenerator.Imports = pkgConfig.Imports
 
 	for _, r := range pkgConfig.Resources {
-		g.TerraformResourceGenerator.Resources = append(g.TerraformResourceGenerator.Resources, Resource{
+		resrc := lang.Resource{
 			Name:     r.Name,
 			FileName: r.FileName,
-		})
+		}
+
+		attrs, err := lang.GenerateSchemaAttributes(s, &r)
+		if err != nil {
+			return err
+		}
+
+		resrc.Attributes = *attrs
+
+		g.TerraformResourceGenerator.Resources = append(g.TerraformResourceGenerator.Resources, resrc)
+
 	}
 	return nil
 }

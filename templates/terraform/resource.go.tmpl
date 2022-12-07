@@ -20,6 +20,13 @@ import(
       Importer: &schema.ResourceImporter{
         StateContext: schema.ImportStatePassthroughContext,
       },
+      Schema: map[string]*schema.Schema{
+        {{- range .Attributes }}
+        "{{.Key}}": {
+          Type: {{.Type}},
+        },
+        {{- end}}
+      },
     }
   }
 {{- end}}
