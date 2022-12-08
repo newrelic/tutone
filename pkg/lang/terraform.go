@@ -32,7 +32,7 @@ type TerraformSchemaAttribute struct {
 func GenerateSchemaAttributes(s *schema.Schema, resourceConfig *config.ResourceConfig, pkgConfig *config.PackageConfig) (*[]TerraformSchemaAttribute, error) {
 	var attributes []TerraformSchemaAttribute
 
-	fields := s.LookupMutationsByPattern("alertsPolicyCreate")
+	fields := s.LookupMutationsByPattern("logConfigurationsCreateObfuscationExpression")
 
 	var args []schema.Field
 	for _, f := range fields {
