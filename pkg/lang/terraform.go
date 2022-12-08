@@ -17,9 +17,12 @@ type TerraformResourceGenerator struct {
 }
 
 type Resource struct {
-	Name       string
-	FileName   string
-	Attributes []TerraformSchemaAttribute
+	Name              string
+	FileName          string
+	Attributes        []TerraformSchemaAttribute
+	ClientPackageName string
+	ClientMethod      string
+	InputObject       string
 }
 
 type TerraformSchemaAttribute struct {
@@ -29,10 +32,43 @@ type TerraformSchemaAttribute struct {
 	Description string
 }
 
+type TerraformResourceTemplateData struct {
+	Resource
+
+	Imports     []string
+	PackageName string
+}
+
+func GetMutationInputType(s *schema.Schema, resourceConfig *config.ResourceConfig, pkgConfig *config.PackageConfig) string {
+	fields := s.LookupMutationsByPattern(resourceConfig.CreateMutation)
+
+	var args []schema.Field
+	for _, f := range fields {
+		args = append(args, f.Args...)
+	}
+
+	for _, arg := range args {
+		typeName, _ := arg.GetTypeNameWithOverride(pkgConfig)
+		t, _ := s.LookupTypeByName(typeName)
+
+		if t == nil {
+			log.Debugf("no type name found for %s", arg)
+			continue
+		}
+
+		switch t.Kind {
+		case schema.KindInputObject:
+			return t.Name
+		}
+	}
+
+	return ""
+}
+
 func GenerateSchemaAttributes(s *schema.Schema, resourceConfig *config.ResourceConfig, pkgConfig *config.PackageConfig) (*[]TerraformSchemaAttribute, error) {
 	var attributes []TerraformSchemaAttribute
 
-	fields := s.LookupMutationsByPattern("alertsPolicyCreate")
+	fields := s.LookupMutationsByPattern(resourceConfig.CreateMutation)
 
 	var args []schema.Field
 	for _, f := range fields {

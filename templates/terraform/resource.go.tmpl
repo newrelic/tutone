@@ -10,27 +10,48 @@ import(
 )
 {{- end}}
 
-{{- range .Resources}}
-  func resource{{$packageName | title}}{{.Name | title}}() *schema.Resource {
-    return &schema.Resource{
-      CreateContext: resource{{$packageName | title}}{{.Name | title}}Create,
-      ReadContext:   resource{{$packageName | title}}{{.Name | title}}Read,
-      UpdateContext: resource{{$packageName | title}}{{.Name | title}}Update,
-      DeleteContext: resource{{$packageName | title}}{{.Name | title}}Delete,
-      Importer: &schema.ResourceImporter{
-        StateContext: schema.ImportStatePassthroughContext,
-      },
-      Schema: map[string]*schema.Schema{
-        {{- range .Attributes }}
+{{$pkgResourceName := list $packageName .Name | join "" }}
+
+func resource{{$pkgResourceName}}() *schema.Resource {
+  return &schema.Resource{
+    CreateContext: resource{{$pkgResourceName}}Create,
+    ReadContext:   resource{{$pkgResourceName}}Read,
+    UpdateContext: resource{{$pkgResourceName}}Update,
+    DeleteContext: resource{{$pkgResourceName}}Delete,
+    Importer: &schema.ResourceImporter{
+      StateContext: schema.ImportStatePassthroughContext,
+    },
+    Schema: map[string]*schema.Schema{
+      {{- range .Attributes }}
         "{{.Key}}": {
           Type: {{.Type}},
           Description: {{.Description | quote}},
           {{- if .Required }}
           Required: true,
+          {{- else }}
+          Optional: true,
           {{- end }}
         },
         {{- end}}
       },
     }
+}
+
+func resource{{$pkgResourceName}}Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+  providerConfig := meta.(*ProviderConfig)
+  client := providerConfig.NewClient
+
+  accountID := selectAccountID(providerConfig, d)
+
+  createInput := {{.ClientPackageName | lower }}.{{.InputObject | title }}{}
+  created, err := client.{{.ClientPackageName | title}}.{{.ClientMethod}}(ctx, accountID, createInput)
+  if err != nil {
+    return diag.FromErr(err)
   }
-{{- end}}
+
+  if created == nil {
+    return diag.Errorf("err: {{.ClientMethod }} result wasn't returned or not created.")
+  }
+  d.SetId(created.ID)
+  return resource{{$pkgResourceName}}Read(ctx, d, meta)
+}
