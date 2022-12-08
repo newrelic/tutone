@@ -1,5 +1,6 @@
 .DS_Store
 .vscode/
+.idea/
 bin/*
 coverage/*
 dist/*
@@ -8,5 +9,5 @@ tmp/*
 vendor/*
 *.json
 *.yaml
-*.yml
+^(g)*.yml
 testdata/schema.json

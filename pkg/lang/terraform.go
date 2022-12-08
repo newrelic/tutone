@@ -21,7 +21,7 @@ type Resource struct {
 	FileName          string
 	Attributes        []TerraformSchemaAttribute
 	ClientPackageName string
-	ClientMethod      string
+	ClientMethod      []string
 	InputObject       string
 }
 

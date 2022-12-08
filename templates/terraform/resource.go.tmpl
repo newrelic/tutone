@@ -43,15 +43,57 @@ func resource{{$pkgResourceName}}Create(ctx context.Context, d *schema.ResourceD
 
   accountID := selectAccountID(providerConfig, d)
 
+  log.Printf("[INFO] Creating New Relic One {{.Name}}")
+
   createInput := {{.ClientPackageName | lower }}.{{.InputObject | title }}{}
-  created, err := client.{{.ClientPackageName | title}}.{{.ClientMethod}}(ctx, accountID, createInput)
+  created, err := client.{{.ClientPackageName | title}}.{{index .ClientMethod 0}}(ctx, accountID, createInput)
   if err != nil {
     return diag.FromErr(err)
   }
 
   if created == nil {
-    return diag.Errorf("err: {{.ClientMethod }} result wasn't returned or not created.")
+    return diag.Errorf("err: {{index .ClientMethod 0}} result wasn't returned or not created.")
   }
   d.SetId(created.ID)
   return resource{{$pkgResourceName}}Read(ctx, d, meta)
+}
+
+func resource{{$pkgResourceName}}Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+  providerConfig := meta.(*ProviderConfig)
+  client := providerConfig.NewClient
+
+  accountID := selectAccountID(providerConfig, d)
+
+  log.Printf("[INFO] Updating New Relic One {{.Name}}")
+
+  updateInput := {{.ClientPackageName | lower }}.{{.InputObject | title }}{}
+  updated, err := client.{{.ClientPackageName | title}}.{{index .ClientMethod 1}}(ctx, accountID, updateInput)
+  if err != nil {
+    return diag.FromErr(err)
+  }
+
+  if updated == nil {
+    return diag.Errorf("err: {{index .ClientMethod 1}} result wasn't returned or not updated.")
+  }
+ 
+  return resource{{$pkgResourceName}}Read(ctx, d, meta)
+}
+
+func resource{{$pkgResourceName}}Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+  providerConfig := meta.(*ProviderConfig)
+  client := providerConfig.NewClient
+
+  accountID := selectAccountID(providerConfig, d)
+
+  log.Printf("[INFO] Deleting New Relic One {{.Name}}")
+
+  resourceID := d.Id()
+
+  _, err :=  client.{{.ClientPackageName | title}}.{{index .ClientMethod 2}}(ctx, accountID, resourceID)
+ 
+  if err != nil {
+    return diag.FromErr(err)
+  }
+
+  return nil
 }
