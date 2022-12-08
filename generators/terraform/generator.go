@@ -18,10 +18,6 @@ type Generator struct {
 }
 
 func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig) error {
-	fmt.Print("\n****************************\n")
-	fmt.Printf("\n TF Generate:  %+v \n", genConfig)
-	fmt.Print("\n****************************\n")
-
 	if genConfig == nil {
 		return fmt.Errorf("unable to Generate with nil genConfig")
 	}
@@ -40,7 +36,7 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 			FileName: r.FileName,
 		}
 
-		attrs, err := lang.GenerateSchemaAttributes(s, &r)
+		attrs, err := lang.GenerateSchemaAttributes(s, &r, pkgConfig)
 		if err != nil {
 			return err
 		}

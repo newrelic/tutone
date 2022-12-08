@@ -1,8 +1,9 @@
 package lang
 
 import (
-	"fmt"
+	"strings"
 
+	"github.com/apex/log"
 	"github.com/iancoleman/strcase"
 
 	"github.com/newrelic/tutone/internal/config"
@@ -22,42 +23,66 @@ type Resource struct {
 }
 
 type TerraformSchemaAttribute struct {
-	Key  string
-	Type string
+	Key         string
+	Type        string
+	Required    bool
+	Description string
 }
 
-func GenerateSchemaAttributes(s *schema.Schema, resourceConfig *config.ResourceConfig) (*[]TerraformSchemaAttribute, error) {
+func GenerateSchemaAttributes(s *schema.Schema, resourceConfig *config.ResourceConfig, pkgConfig *config.PackageConfig) (*[]TerraformSchemaAttribute, error) {
 	var attributes []TerraformSchemaAttribute
 
 	fields := s.LookupMutationsByPattern("alertsPolicyCreate")
 
-	// The terraform attributes will likely be generated based on the GraphQL args
-
-	fmt.Print("\n****************************\n")
-
 	var args []schema.Field
 	for _, f := range fields {
-		fmt.Printf("\n GenerateSchemaAttributes:  %+v \n", f.Args)
-
 		args = append(args, f.Args...)
 	}
 
 	for _, arg := range args {
 		if arg.Type.OfType.Kind == schema.KindScalar {
 			attr := TerraformSchemaAttribute{
-				Key:  strcase.ToSnake(arg.Name),
-				Type: "schema.TypeInt",
+				Key:         strcase.ToSnake(arg.Name),
+				Type:        "schema.TypeInt",
+				Description: arg.Description,
+			}
+
+			if arg.IsRequired() {
+				attr.Required = true
 			}
 
 			attributes = append(attributes, attr)
 		}
+
+		typeName, _ := arg.GetTypeNameWithOverride(pkgConfig)
+		t, _ := s.LookupTypeByName(typeName)
+
+		if t == nil {
+			log.Debugf("no type name found for %s", arg)
+			continue
+		}
+
+		switch t.Kind {
+		case schema.KindInputObject:
+			for _, field := range t.InputFields {
+				attr := TerraformSchemaAttribute{
+					Key:         strcase.ToSnake(field.Name),
+					Type:        "schema.TypeString",
+					Description: strings.Trim(field.GetDescription(), "/ "),
+				}
+
+				if field.IsEnum() {
+					attr.Type = "schema.TypeString"
+				}
+
+				if field.IsRequired() {
+					attr.Required = true
+				}
+
+				attributes = append(attributes, attr)
+			}
+		}
 	}
-
-	fmt.Printf("\n GenerateSchemaAttributes - attrs:  %+v \n", attributes)
-
-	fmt.Print("\n****************************\n")
-
-	// baseResourceType // Find the type from the schema.json file
 
 	return &attributes, nil
 }
