@@ -32,8 +32,11 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 
 	for _, r := range pkgConfig.Resources {
 		resrc := lang.Resource{
-			Name:     r.Name,
-			FileName: r.FileName,
+			Name:              r.Name,
+			FileName:          r.FileName,
+			ClientPackageName: r.ClientPackageName,
+			ClientMethod:      r.ClientMethod,
+			InputObject:       lang.GetMutationInputType(s, &r, pkgConfig),
 		}
 
 		attrs, err := lang.GenerateSchemaAttributes(s, &r, pkgConfig)
@@ -99,7 +102,13 @@ func (g *Generator) Execute(genConfig *config.GeneratorConfig, pkgConfig *config
 			DestinationDir:  destinationPath,
 		}
 
-		err = c.WriteFile(g)
+		data := lang.TerraformResourceTemplateData{
+			Imports:     g.Imports,
+			PackageName: g.PackageName,
+			Resource:    resource,
+		}
+
+		err = c.RenderTerraformTemplate(data)
 	}
 
 	return err

@@ -65,8 +65,11 @@ type PackageConfig struct {
 }
 
 type ResourceConfig struct {
-	Name     string `yaml:"name"`
-	FileName string `yaml:"fileName"`
+	Name              string `yaml:"name"`
+	FileName          string `yaml:"fileName"`
+	ClientPackageName string `yaml:"clientPackageName"`
+	ClientMethod      string `yaml:"clientMethod,omitempty"`
+	CreateMutation    string `yaml:"createMutation,omitempty"`
 }
 
 // Query is the information necessary to build a query method.  The Paths
