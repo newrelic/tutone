@@ -12,6 +12,7 @@ import (
 
 	"github.com/newrelic/tutone/internal/output"
 	"github.com/newrelic/tutone/internal/util"
+	"github.com/newrelic/tutone/pkg/lang"
 )
 
 type CodeGen struct {
@@ -117,6 +118,57 @@ func (c *CodeGen) WriteFileFromTemplateString(g Generator, templateString string
 	if err != nil {
 		log.Error(resultBuf.String())
 		return fmt.Errorf("failed to format buffer: %s", err)
+	}
+
+	_, err = file.WriteAt(formatted, 0)
+	if err != nil {
+		return err
+	}
+
+	output.PrintSuccessMessage(c.DestinationDir, c.DestinationFile)
+
+	return nil
+}
+
+func (c *CodeGen) RenderTerraformTemplate(g lang.TerraformResourceTemplateData) error {
+	var err error
+
+	if _, err = os.Stat(c.DestinationDir); os.IsNotExist(err) {
+		if err = os.Mkdir(c.DestinationDir, 0755); err != nil {
+			return err
+		}
+	}
+
+	file, err := os.Create(c.DestinationFile)
+	if err != nil {
+		return err
+	}
+
+	defer file.Close()
+
+	templatePath := path.Join(c.TemplateDir, c.TemplateName)
+	templateName := path.Base(templatePath)
+
+	tmpl, err := template.New(templateName).Funcs(util.GetTemplateFuncs()).ParseFiles(templatePath)
+	if err != nil {
+		return err
+	}
+
+	var resultBuf bytes.Buffer
+
+	err = tmpl.Execute(&resultBuf, g)
+	if err != nil {
+		return err
+	}
+
+	formatted, err := imports.Process(file.Name(), resultBuf.Bytes(), nil)
+	if err != nil {
+		log.Error(resultBuf.String())
+
+		_, err = file.WriteAt(resultBuf.Bytes(), 0)
+		if err != nil {
+			log.Error(err)
+		}
 	}
 
 	_, err = file.WriteAt(formatted, 0)
