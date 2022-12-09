@@ -24,7 +24,7 @@ func resource{{$pkgResourceName}}() *schema.Resource {
     Schema: map[string]*schema.Schema{
       {{- range .Attributes }}
         "{{.Key}}": {
-          Type: {{.Type}},
+          Type: schema.Type{{.Type}},
           Description: {{.Description | quote}},
           {{- if .Required }}
           Required: true,
@@ -46,6 +46,12 @@ func resource{{$pkgResourceName}}Create(ctx context.Context, d *schema.ResourceD
   log.Printf("[INFO] Creating New Relic One {{.Name}}")
 
   createInput := {{.ClientPackageName | lower }}.{{.InputObject | title }}{}
+  {{- range .Attributes }}
+  if attr, ok := d.GetOK({{.Key | quote}}); ok{
+  createInput.{{.Key | camelcase}} = attr.({{.Type | lower}})
+  }
+  {{- end}}
+
   created, err := client.{{.ClientPackageName | title}}.{{index .ClientMethod 0}}(ctx, accountID, createInput)
   if err != nil {
     return diag.FromErr(err)
@@ -58,6 +64,33 @@ func resource{{$pkgResourceName}}Create(ctx context.Context, d *schema.ResourceD
   return resource{{$pkgResourceName}}Read(ctx, d, meta)
 }
 
+func resource{{$pkgResourceName}}Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+  providerConfig := meta.(*ProviderConfig)
+  client := providerConfig.NewClient
+
+  accountID := selectAccountID(providerConfig, d)
+
+  log.Printf("[INFO] Getting New Relic One {{.Name}}")
+
+  resourceID := d.Id()
+
+  resp, err :=  client.{{.ClientPackageName | title}}.{{index .ClientMethod 1}}(ctx, accountID, resourceID)
+ 
+  if err != nil && resp == nil {
+    d.SetId("")
+    return nil
+  }
+
+  //Set values for import
+  //err = set{{$pkgResourceName}}Attributes(d, map[string]string{
+  {{- range .Attributes }}
+  //  {{.Key | quote}}: ,
+  {{- end}}
+  //})
+  //return diag.FromErr(flatten{{$pkgResourceName}}(resp, d))
+  return diag.FromErr(err)
+}
+
 func resource{{$pkgResourceName}}Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
   providerConfig := meta.(*ProviderConfig)
   client := providerConfig.NewClient
@@ -67,13 +100,15 @@ func resource{{$pkgResourceName}}Update(ctx context.Context, d *schema.ResourceD
   log.Printf("[INFO] Updating New Relic One {{.Name}}")
 
   updateInput := {{.ClientPackageName | lower }}.{{.InputObject | title }}{}
-  updated, err := client.{{.ClientPackageName | title}}.{{index .ClientMethod 1}}(ctx, accountID, updateInput)
+  //Check for the values to be updated
+
+  updated, err := client.{{.ClientPackageName | title}}.{{index .ClientMethod 2}}(ctx, accountID, updateInput)
   if err != nil {
     return diag.FromErr(err)
   }
 
   if updated == nil {
-    return diag.Errorf("err: {{index .ClientMethod 1}} result wasn't returned or not updated.")
+    return diag.Errorf("err: {{index .ClientMethod 2}} result wasn't returned or not updated.")
   }
  
   return resource{{$pkgResourceName}}Read(ctx, d, meta)
@@ -89,11 +124,22 @@ func resource{{$pkgResourceName}}Delete(ctx context.Context, d *schema.ResourceD
 
   resourceID := d.Id()
 
-  _, err :=  client.{{.ClientPackageName | title}}.{{index .ClientMethod 2}}(ctx, accountID, resourceID)
+  _, err :=  client.{{.ClientPackageName | title}}.{{index .ClientMethod 3}}(ctx, accountID, resourceID)
  
   if err != nil {
     return diag.FromErr(err)
   }
 
   return nil
+}
+
+func set{{$pkgResourceName}}Attributes(d *schema.ResourceData, attributes map[string]string) error {
+	for key := range attributes {
+		err := d.Set(key, attributes[key])
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

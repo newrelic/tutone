@@ -40,6 +40,7 @@ packages:
         clientPackageName: alerts
         clientMethod: 
         - CreatePolicyMutationWithContext
+        - GetPolicyMutationWithContext
         - UpdatePolicyMutationWithContext
         - DeletePolicyMutationWithContext
         createMutation: "alertsPolicyCreate"

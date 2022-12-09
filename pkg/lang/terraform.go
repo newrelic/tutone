@@ -79,7 +79,7 @@ func GenerateSchemaAttributes(s *schema.Schema, resourceConfig *config.ResourceC
 		if arg.Type.OfType.Kind == schema.KindScalar {
 			attr := TerraformSchemaAttribute{
 				Key:         strcase.ToSnake(arg.Name),
-				Type:        "schema.TypeInt",
+				Type:        arg.Type.OfType.Name,
 				Description: arg.Description,
 			}
 
@@ -103,12 +103,12 @@ func GenerateSchemaAttributes(s *schema.Schema, resourceConfig *config.ResourceC
 			for _, field := range t.InputFields {
 				attr := TerraformSchemaAttribute{
 					Key:         strcase.ToSnake(field.Name),
-					Type:        "schema.TypeString",
+					Type:        "String",
 					Description: strings.Trim(field.GetDescription(), "/ "),
 				}
 
 				if field.IsEnum() {
-					attr.Type = "schema.TypeString"
+					attr.Type = "String"
 				}
 
 				if field.IsRequired() {
