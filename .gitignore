@@ -9,5 +9,5 @@ tmp/*
 vendor/*
 *.json
 *.yaml
-*.yml
+^(g)*.yml
 testdata/schema.json

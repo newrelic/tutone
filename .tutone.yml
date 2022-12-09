@@ -1,0 +1,61 @@
+---
+# Log level for running tutone
+# Default: info
+log_level: debug
+
+# Cache for storing a GraphQL schema
+cache:
+  # Default: schema.json
+  schema_file: schema.json
+
+# GraphQL endpoint to query for schema
+# Required
+endpoint: https://api.newrelic.com/graphql
+
+# How to authenticate to the API
+auth:
+  # Header set with the API key for authentication
+  # Default: Api-Key
+  header: Api-Key
+
+  # Environment variable to get the API key from
+  # Default: TUTONE_API_KEY
+  api_key_env_var: NEW_RELIC_API_KEY
+
+packages:
+  - name: newrelic
+    path: tmp
+    generators:
+      - terraform
+    imports:
+      - "github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+      - "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+      - "github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+      - "github.com/newrelic/newrelic-client-go/v2/newrelic"
+      - "github.com/newrelic/newrelic-client-go/v2/pkg/alerts"
+      # - nrErrors "github.com/newrelic/newrelic-client-go/v2/pkg/errors"
+    resources:
+      - name: AlertsPolicy
+        fileName: resource_alert_policy.go
+        clientPackageName: alerts
+        clientMethod: 
+        - CreatePolicyMutationWithContext
+        - GetPolicyMutationWithContext
+        - UpdatePolicyMutationWithContext
+        - DeletePolicyMutationWithContext
+        createMutation: "alertsPolicyCreate"
+        #   graphqlPath: ""
+        #   clientPackage: "alerts"
+        #   clientMethod: "CreatePolicyMutation"
+        # read:
+        # update:
+        # delete:
+
+generators:
+  - name: typegen
+    fileName: "types.go"
+  - name: nerdgraphclient
+    fileName: "{{.PackageName}}_api.go"
+  - name: terraform
+    templateDir: "templates/terraform"
+    templateName: "resource.go.tmpl"
