@@ -76,8 +76,8 @@ func (f *Field) GetTagsWithOverrides(parentType Type, pkgConfig *config.PackageC
 	parentTypeConfig := pkgConfig.GetTypeConfigByName(parentType.Name)
 
 	var tags string
-	if parentTypeConfig != nil && len(parentTypeConfig.StructTags) > 0 {
-		tags = f.buildStructTags(f.Name, parentTypeConfig.StructTags)
+	if parentTypeConfig != nil && parentTypeConfig.StructTags != nil {
+		tags = f.buildStructTags(f.Name, *parentTypeConfig.StructTags)
 	}
 
 	if tags == "" {
@@ -87,11 +87,24 @@ func (f *Field) GetTagsWithOverrides(parentType Type, pkgConfig *config.PackageC
 	return tags
 }
 
-func (f *Field) buildStructTags(fieldName string, structTags []string) string {
+func (f *Field) buildStructTags(fieldName string, structTags config.StructTags) string {
 	tagsString := "`"
-	tagsCount := len(structTags)
 
-	for i, tagType := range structTags {
+	tagsCount := len(structTags.Tags)
+	if tagsCount == 0 && structTags.OmitEmpty == nil {
+		return f.GetTags()
+	}
+
+	if tagsCount == 0 && structTags.OmitEmpty != nil {
+		structTags.Tags = []string{"json"} // default is to include json struct tags
+	}
+
+	canIncludeOmitEmpty := true // default is to add `omitempty` to struct tags
+	if structTags.OmitEmpty != nil {
+		canIncludeOmitEmpty = *structTags.OmitEmpty
+	}
+
+	for i, tagType := range structTags.Tags {
 		tagEnd := "\" "
 		if i == tagsCount-1 {
 			tagEnd = "\"" // no trailing space if last tag
@@ -99,7 +112,7 @@ func (f *Field) buildStructTags(fieldName string, structTags []string) string {
 
 		tagsString = tagsString + tagType + ":\"" + f.Name
 
-		if f.Type.IsInputObject() || !f.Type.IsNonNull() {
+		if canIncludeOmitEmpty && (f.Type.IsInputObject() || !f.Type.IsNonNull()) {
 			tagsString = tagsString + ",omitempty"
 		}
 
@@ -125,12 +138,6 @@ func (f *Field) GetTags() string {
 	}
 
 	tags := jsonTag + "\"`"
-
-	// log.Print("\n\n **************************** \n")
-	// log.Printf("\n Struct Tags:  %s \n", f)
-	// log.Printf("\n Struct Tags:  %s \n", jsonTag)
-	// log.Print("\n **************************** \n\n")
-	// time.Sleep(5 * time.Second)
 
 	return tags
 }
