@@ -144,7 +144,17 @@ type TypeConfig struct {
 	// i.e. if a struct has a field `name` then a function would be created called `GetName()`
 	GenerateStructGetters bool `yaml:"generate_struct_getters,omitempty"`
 	// Applies to all fields of the struct
-	StructTags []string `yaml:"struct_tags,omitempty"`
+	StructTags *StructTags `yaml:"struct_tags,omitempty"`
+}
+
+type StructTags struct {
+	// Set the type of struct tags - e.g. ["json"] or for multiple ["json", "yaml", etc...]
+	// Note this will apply to ALL fields within the struct. Use with caution.
+	Tags []string `yaml:"tags"`
+
+	// Set to `false` to exclude `omitempty` from struct tags
+	// Note this will apply to ALL fields within the struct. Use with caution.
+	OmitEmpty *bool `yaml:"omitempty"`
 }
 
 const (
