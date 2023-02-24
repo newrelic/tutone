@@ -269,13 +269,35 @@ disabledIntegrations {
 		metricsPollingInterval
 		resourceGroups
 	}
+	... on CloudAzureMonitorIntegration {
+		__typename
+		enabled
+		excludeTags
+		includeTags
+		inventoryPollingInterval
+		metricsPollingInterval
+		resourceGroups
+		resourceTypes
+	}
 	... on CloudAzureMysqlIntegration {
 		__typename
 		inventoryPollingInterval
 		metricsPollingInterval
 		resourceGroups
 	}
+	... on CloudAzureMysqlflexibleIntegration {
+		__typename
+		inventoryPollingInterval
+		metricsPollingInterval
+		resourceGroups
+	}
 	... on CloudAzurePostgresqlIntegration {
+		__typename
+		inventoryPollingInterval
+		metricsPollingInterval
+		resourceGroups
+	}
+	... on CloudAzurePostgresqlflexibleIntegration {
 		__typename
 		inventoryPollingInterval
 		metricsPollingInterval
@@ -294,12 +316,6 @@ disabledIntegrations {
 		resourceGroups
 	}
 	... on CloudAzureServicebusIntegration {
-		__typename
-		inventoryPollingInterval
-		metricsPollingInterval
-		resourceGroups
-	}
-	... on CloudAzureServicefabricIntegration {
 		__typename
 		inventoryPollingInterval
 		metricsPollingInterval
@@ -392,6 +408,7 @@ disabledIntegrations {
 	... on CloudEc2Integration {
 		__typename
 		awsRegions
+		duplicateEc2Tags
 		fetchIpAddresses
 		inventoryPollingInterval
 		metricsPollingInterval
@@ -461,6 +478,11 @@ disabledIntegrations {
 		tagKey
 		tagValue
 	}
+	... on CloudGcpAlloydbIntegration {
+		__typename
+		inventoryPollingInterval
+		metricsPollingInterval
+	}
 	... on CloudGcpAppengineIntegration {
 		__typename
 		inventoryPollingInterval
@@ -468,6 +490,7 @@ disabledIntegrations {
 	}
 	... on CloudGcpBigqueryIntegration {
 		__typename
+		fetchTableMetrics
 		fetchTags
 		inventoryPollingInterval
 		metricsPollingInterval
