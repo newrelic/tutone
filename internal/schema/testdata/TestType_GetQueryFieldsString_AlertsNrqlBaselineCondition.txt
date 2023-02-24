@@ -121,6 +121,7 @@ signal {
 	aggregationMethod
 	aggregationTimer
 	aggregationWindow
+	evaluationDelay
 	evaluationOffset
 	fillOption
 	fillValue

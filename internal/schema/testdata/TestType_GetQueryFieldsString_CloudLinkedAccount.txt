@@ -284,13 +284,35 @@ integrations {
 				metricsPollingInterval
 				resourceGroups
 			}
+			... on CloudAzureMonitorIntegration {
+				__typename
+				enabled
+				excludeTags
+				includeTags
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+				resourceTypes
+			}
 			... on CloudAzureMysqlIntegration {
 				__typename
 				inventoryPollingInterval
 				metricsPollingInterval
 				resourceGroups
 			}
+			... on CloudAzureMysqlflexibleIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
 			... on CloudAzurePostgresqlIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+				resourceGroups
+			}
+			... on CloudAzurePostgresqlflexibleIntegration {
 				__typename
 				inventoryPollingInterval
 				metricsPollingInterval
@@ -309,12 +331,6 @@ integrations {
 				resourceGroups
 			}
 			... on CloudAzureServicebusIntegration {
-				__typename
-				inventoryPollingInterval
-				metricsPollingInterval
-				resourceGroups
-			}
-			... on CloudAzureServicefabricIntegration {
 				__typename
 				inventoryPollingInterval
 				metricsPollingInterval
@@ -407,6 +423,7 @@ integrations {
 			... on CloudEc2Integration {
 				__typename
 				awsRegions
+				duplicateEc2Tags
 				fetchIpAddresses
 				inventoryPollingInterval
 				metricsPollingInterval
@@ -476,6 +493,11 @@ integrations {
 				tagKey
 				tagValue
 			}
+			... on CloudGcpAlloydbIntegration {
+				__typename
+				inventoryPollingInterval
+				metricsPollingInterval
+			}
 			... on CloudGcpAppengineIntegration {
 				__typename
 				inventoryPollingInterval
@@ -483,6 +505,7 @@ integrations {
 			}
 			... on CloudGcpBigqueryIntegration {
 				__typename
+				fetchTableMetrics
 				fetchTags
 				inventoryPollingInterval
 				metricsPollingInterval
@@ -1911,6 +1934,36 @@ integrations {
 			updatedAt
 		}
 	}
+	... on CloudAzureMonitorIntegration {
+		__typename
+		enabled
+		excludeTags
+		includeTags
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			metricCollectionMode
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		resourceTypes
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
 	... on CloudAzureMysqlIntegration {
 		__typename
 		inventoryPollingInterval
@@ -1937,7 +1990,59 @@ integrations {
 			updatedAt
 		}
 	}
+	... on CloudAzureMysqlflexibleIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			metricCollectionMode
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
 	... on CloudAzurePostgresqlIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			metricCollectionMode
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		resourceGroups
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
+	... on CloudAzurePostgresqlflexibleIntegration {
 		__typename
 		inventoryPollingInterval
 		linkedAccount {
@@ -2016,32 +2121,6 @@ integrations {
 		}
 	}
 	... on CloudAzureServicebusIntegration {
-		__typename
-		inventoryPollingInterval
-		linkedAccount {
-			authLabel
-			createdAt
-			disabled
-			externalId
-			id
-			metricCollectionMode
-			name
-			nrAccountId
-			updatedAt
-		}
-		metricsPollingInterval
-		resourceGroups
-		service {
-			createdAt
-			icon
-			id
-			isEnabled
-			name
-			slug
-			updatedAt
-		}
-	}
-	... on CloudAzureServicefabricIntegration {
 		__typename
 		inventoryPollingInterval
 		linkedAccount {
@@ -2414,6 +2493,7 @@ integrations {
 	... on CloudEc2Integration {
 		__typename
 		awsRegions
+		duplicateEc2Tags
 		fetchIpAddresses
 		inventoryPollingInterval
 		linkedAccount {
@@ -2643,6 +2723,31 @@ integrations {
 		tagKey
 		tagValue
 	}
+	... on CloudGcpAlloydbIntegration {
+		__typename
+		inventoryPollingInterval
+		linkedAccount {
+			authLabel
+			createdAt
+			disabled
+			externalId
+			id
+			metricCollectionMode
+			name
+			nrAccountId
+			updatedAt
+		}
+		metricsPollingInterval
+		service {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+	}
 	... on CloudGcpAppengineIntegration {
 		__typename
 		inventoryPollingInterval
@@ -2670,6 +2775,7 @@ integrations {
 	}
 	... on CloudGcpBigqueryIntegration {
 		__typename
+		fetchTableMetrics
 		fetchTags
 		inventoryPollingInterval
 		linkedAccount {
