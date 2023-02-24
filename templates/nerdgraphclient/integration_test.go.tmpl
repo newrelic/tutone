@@ -1,0 +1,33 @@
+//go:build integration
+
+package {{.PackageName | lower}}
+{{$packageName := .PackageName}}
+
+import(
+  "testing"
+
+  "github.com/stretchr/testify/require"
+
+  "github.com/newrelic/newrelic-client-go/v2/pkg/testhelpers"
+)
+
+func Test{{$packageName | title}}(t *testing.T) {
+  t.Parallel()
+
+  client := new{{$packageName | title}}IntegrationTestClient(t)
+  require.NotNil(t, client)
+
+  // Add test cases below for CREATE, READ, UPDATE, and DELETE methods (if applicable).
+  // If your package includes any additional methods, please add integration tests for those as well.
+
+  // BELOW IS ONLY AN EXAMPLE TEST FOR "CREATE". PLEASE UPDATE ACCORDINGLY
+  // result, err := client.AgentApplicationCreateBrowser(testAccountID, appName, settings)
+	// require.NoError(t, err)
+	// require.NotNil(t, result)
+}
+
+func new{{$packageName | title}}IntegrationTestClient(t *testing.T) AgentApplications {
+	tc := testhelpers.NewIntegrationTestConfig(t)
+
+	return New(tc)
+}

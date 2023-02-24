@@ -77,8 +77,6 @@ func (c *CodeGen) WriteFile(g Generator) error {
 		return err
 	}
 
-	output.PrintSuccessMessage(c.DestinationDir, c.DestinationFile)
-
 	return nil
 }
 
@@ -124,7 +122,7 @@ func (c *CodeGen) WriteFileFromTemplateString(g Generator, templateString string
 		return err
 	}
 
-	output.PrintSuccessMessage(c.DestinationDir, c.DestinationFile)
+	output.PrintSuccessMessage(c.DestinationDir, []string{c.DestinationFile})
 
 	return nil
 }

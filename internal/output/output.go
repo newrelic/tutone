@@ -9,10 +9,14 @@ import (
 // package and file path for reference.
 //
 // Emoji unicode reference: http://www.unicode.org/emoji/charts/emoji-list.html
-func PrintSuccessMessage(packagePath string, filePath string) {
+func PrintSuccessMessage(packagePath string, filePaths []string) {
 	// Emoji = \u2705
 	fmt.Print("\n\u2705 Code generation complete: \n\n")
 	fmt.Printf("   Package:   %v \n", packagePath)
-	fmt.Printf("   File:      %v \n", filePath)
+
+	for _, f := range filePaths {
+		fmt.Printf("   File:      %v \n", f)
+	}
+
 	fmt.Println("")
 }
