@@ -3,7 +3,6 @@ package nerdgraphclient
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	log "github.com/sirupsen/logrus"
 
@@ -130,23 +129,23 @@ func (g *Generator) Execute(genConfig *config.GeneratorConfig, pkgConfig *config
 		}
 	}
 
-	fileName_ := fmt.Sprintf("%s_integration_test.go", strings.ToLower(pkgConfig.Name))
-	testFilePath, err := codegen.RenderStringFromGenerator(fmt.Sprintf("%s/%s", destinationPath, fileName_), g)
-	if err != nil {
-		return err
-	}
+	// fileName_ := fmt.Sprintf("%s_integration_test.go", strings.ToLower(pkgConfig.Name))
+	// testFilePath, err := codegen.RenderStringFromGenerator(fmt.Sprintf("%s/%s", destinationPath, fileName_), g)
+	// if err != nil {
+	// 	return err
+	// }
 
-	cg := codegen.CodeGen{
-		TemplateDir:     templateDir,
-		TemplateName:    "integration_test.go.tmpl",
-		DestinationFile: testFilePath,
-		DestinationDir:  destinationPath,
-	}
+	// cg := codegen.CodeGen{
+	// 	TemplateDir:     templateDir,
+	// 	TemplateName:    "integration_test.go.tmpl",
+	// 	DestinationFile: testFilePath,
+	// 	DestinationDir:  destinationPath,
+	// }
 
-	err = cg.WriteFile(g)
-	if err != nil {
-		return err
-	}
+	// err = cg.WriteFile(g)
+	// if err != nil {
+	// 	return err
+	// }
 
 	c := codegen.CodeGen{
 		TemplateDir:     templateDir,
@@ -160,7 +159,7 @@ func (g *Generator) Execute(genConfig *config.GeneratorConfig, pkgConfig *config
 		return err
 	}
 
-	output.PrintSuccessMessage(c.DestinationDir, []string{filePath, testFilePath})
+	output.PrintSuccessMessage(c.DestinationDir, []string{filePath})
 
 	return nil
 }
