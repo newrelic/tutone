@@ -17,8 +17,9 @@ import (
 )
 
 type GeneratorOptions struct {
-	PackageName string
-	Refetch     bool
+	PackageName            string
+	Refetch                bool
+	IncludeIntegrationTest bool
 }
 
 // Generate reads the configuration file and executes generators relevant to a particular package.
@@ -72,12 +73,12 @@ func Generate(options GeneratorOptions) error {
 
 	// Generate for a specific package
 	if options.PackageName != "" {
-		return generateForPackage(options.PackageName, cfg, s)
+		return generateForPackage(options.PackageName, cfg, s, options.IncludeIntegrationTest)
 	}
 
 	// Generate for all configured packages
 	for _, pkgConfig := range cfg.Packages {
-		if err := generateForPackage(pkgConfig.Name, cfg, s); err != nil {
+		if err := generateForPackage(pkgConfig.Name, cfg, s, options.IncludeIntegrationTest); err != nil {
 			return err
 		}
 	}
@@ -145,8 +146,9 @@ func generatePkgTypes(pkgConfig *config.PackageConfig, cfg *config.Config, s *sc
 	return nil
 }
 
-func generateForPackage(packageName string, cfg *config.Config, schema *schema.Schema) error {
+func generateForPackage(packageName string, cfg *config.Config, schema *schema.Schema, includeIntegrationTest bool) error {
 	pkg := findPackageConfigByName(packageName, cfg.Packages)
+	pkg.IncludeIntegrationTest = includeIntegrationTest
 
 	if pkg == nil {
 		return fmt.Errorf("[Error] package %v not found", packageName)
