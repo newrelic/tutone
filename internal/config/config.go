@@ -60,6 +60,9 @@ type PackageConfig struct {
 	Commands []Command `yaml:"commands,omitempty"`
 
 	Queries []Query `yaml:"queries,omitempty"`
+
+	// Transient property which is set by using the --include-integration-test flag.
+	IncludeIntegrationTest bool
 }
 
 // Query is the information necessary to build a query method.  The Paths

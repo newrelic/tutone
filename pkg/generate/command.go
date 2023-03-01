@@ -14,8 +14,9 @@ const (
 )
 
 var (
-	packageName string
-	refetch     bool
+	packageName            string
+	refetch                bool
+	includeIntegrationTest bool
 )
 
 var Command = &cobra.Command{
@@ -32,8 +33,9 @@ is up to date with your configured GraphQL API.
 	Example: "tutone generate --config .tutone.yml",
 	Run: func(cmd *cobra.Command, args []string) {
 		util.LogIfError(log.ErrorLevel, Generate(GeneratorOptions{
-			PackageName: packageName,
-			Refetch:     refetch,
+			PackageName:            packageName,
+			Refetch:                refetch,
+			IncludeIntegrationTest: includeIntegrationTest,
 		}))
 	},
 }
@@ -48,4 +50,5 @@ func init() {
 	util.LogIfError(log.ErrorLevel, viper.BindPFlag("generate.type_file", Command.Flags().Lookup("types")))
 
 	Command.Flags().BoolVar(&refetch, "refetch", false, "Force a refetch of your GraphQL schema to ensure the generated types are up to date.")
+	Command.Flags().BoolVar(&includeIntegrationTest, "include-integration-test", false, "Generate a basic scaffolded integration test file for the associated package.")
 }
