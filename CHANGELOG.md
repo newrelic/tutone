@@ -1,3 +1,15 @@
+<a name="v0.11.0"></a>
+## [v0.11.0] - 2023-03-15
+### Bug Fixes
+- **nerdgraphclient:** dont generate integration test file yet, needs more work before its ready
+
+### Documentation Updates
+- update README with installation command
+
+### Features
+- generate integration test file alongside client api file
+- **nerdgraphclient:** generate integration test file via --include-integration-test command flag
+
 <a name="v0.10.319"></a>
 ## [v0.10.319] - 2022-06-30
 ### Bug Fixes
@@ -722,17 +734,17 @@
 ### Bug Fixes
 - **golang:** Missing 0 == more allocations...
 - **golang:** interface method memory usage can be right-sized
-- **golang:** pass input prereqs for method signature
 - **golang:** skip_type_create should skip for all types, not just scalars
 - **golang:** ensure prefix for method arguments
+- **golang:** pass input prereqs for method signature
 - **schema:** ensure proper casing of mutation names
 - **schema:** reduce handling of query args to only non-null
 - **schema:** ensure proper handling of query args
 - **typegen:** Avoid panic on nil pointer unmarshal
 
 ### Features
-- **command:** use schema types to build CLI command
 - **command:** add ability to generate READ commands (amend this commit with cleanup)
+- **command:** use schema types to build CLI command
 - **format:** programmatically run goimports on generated code, template updates
 - **query:** Enable nullable fields in query (this enables all of them...)
 - **schema:** implement helper to gatehr input variables from path
@@ -787,9 +799,9 @@
 - **generate:** ensure correct generator client
 - **lang:** remove pointer reference from return type
 - **nerdgraphclient:** move condition block end to exclude mutation
+- **schema:** ensure proper handling of list interfaces
 - **schema:** avoid recursing forever when handling interface kinds
 - **schema:** ensure recursive expansion for additional Kinds
-- **schema:** ensure proper handling of list interfaces
 
 ### Features
 - **codegen:** implement sprig community template functions
@@ -820,14 +832,15 @@
 - **fetch:** Fetch root mutation type
 - **fetch:** Generic schema fetching and cache to file
 - **generate:** format the generated source code according Go standards
-- **generate:** WIP - first attempt at getting tutone to generate types
-- **generate:** Generate command reading configs
 - **generate:** implement --refetch flag
 - **generate:** fetch if schema not present
+- **generate:** WIP - first attempt at getting tutone to generate types
+- **generate:** Generate command reading configs
 - **generator:** introduce a generator concept
 - **tutone:** default path for tutone config file
 
-[Unreleased]: https://github.com/newrelic/tutone/compare/v0.10.319...HEAD
+[Unreleased]: https://github.com/newrelic/tutone/compare/v0.11.0...HEAD
+[v0.11.0]: https://github.com/newrelic/tutone/compare/v0.10.319...v0.11.0
 [v0.10.319]: https://github.com/newrelic/tutone/compare/v0.10.318...v0.10.319
 [v0.10.318]: https://github.com/newrelic/tutone/compare/v0.10.317...v0.10.318
 [v0.10.317]: https://github.com/newrelic/tutone/compare/v0.10.316...v0.10.317
