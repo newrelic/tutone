@@ -148,11 +148,11 @@ func generatePkgTypes(pkgConfig *config.PackageConfig, cfg *config.Config, s *sc
 
 func generateForPackage(packageName string, cfg *config.Config, schema *schema.Schema, includeIntegrationTest bool) error {
 	pkg := findPackageConfigByName(packageName, cfg.Packages)
-	pkg.IncludeIntegrationTest = includeIntegrationTest
-
 	if pkg == nil {
-		return fmt.Errorf("[Error] package %v not found", packageName)
+		return fmt.Errorf("[Error] package %s not found", packageName)
 	}
+
+	pkg.IncludeIntegrationTest = includeIntegrationTest
 
 	return generatePkgTypes(pkg, cfg, schema)
 }
