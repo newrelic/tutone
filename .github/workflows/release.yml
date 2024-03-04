@@ -13,7 +13,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.19.x
+          go-version: 1.20.x
 
       - name: Add GOBIN to PATH
         run: echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
@@ -28,7 +28,7 @@ jobs:
       - name: Publish Release
         shell: bash
         env:
-          GITHUB_TOKEN:    ${{ secrets.RELEASE_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         run: |
