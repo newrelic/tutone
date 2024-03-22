@@ -1,6 +1,8 @@
 module github.com/newrelic/newrelic-client-go/tools
 
-go 1.20
+go 1.21
+
+toolchain go1.21.4
 
 require (
 	github.com/caarlos0/svu v1.12.0
@@ -8,7 +10,6 @@ require (
 	github.com/git-chglog/git-chglog v0.15.4
 	github.com/golangci/golangci-lint v1.51.1
 	github.com/goreleaser/goreleaser v1.19.2
-	github.com/llorllale/go-gitlint v0.0.0-20210608233938-d6303cc52cc5
 	github.com/psampaz/go-mod-outdated v0.9.0
 	github.com/stretchr/testify v1.8.4
 	github.com/x-motemen/gobump v0.2.0
