@@ -45,8 +45,7 @@ Flags for running the typegen command:
     ```bash
     $ tutone fetch \
       --config path/to/tutone.yaml \
-      --cache \
-      --output path/to/schema.json
+      --schema path/to/schema.json
     ```
 
 3.  Add a `./path/to/package/typegen.yaml` configuration with the type you want generated:
