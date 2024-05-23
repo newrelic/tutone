@@ -11,20 +11,29 @@ import(
   "github.com/newrelic/newrelic-client-go/v2/pkg/testhelpers"
 )
 
-func Test{{$packageName | title}}(t *testing.T) {
+{{range $index, $_ := .Mutations}}
+func Test{{.Name | title}}(t *testing.T) {
   t.Parallel()
-
+t.Error("This test was generated but is incomplete. Please add the necessary code and additional test cases to cover the proper scenarios.")
   client := new{{$packageName | title}}IntegrationTestClient(t)
   require.NotNil(t, client)
 
-  // Add test cases below for CREATE, READ, UPDATE, and DELETE methods (if applicable).
-  // If your package includes any additional methods, please add integration tests for those as well.
+  {{range .Signature.Input -}}
+  {{.Name | untitle}} {{.Type}} := {{.Type}}{
+    // TODO: Add required variables to initialize instance of this input type
+  }
+  {{- end}}
 
-  // BELOW IS ONLY AN EXAMPLE TEST FOR "CREATE". PLEASE UPDATE ACCORDINGLY
-  // result, err := client.AgentApplicationCreateBrowser(testAccountID, appName, settings)
-	// require.NoError(t, err)
-	// require.NotNil(t, result)
+  result, err {{if (eq $index 0)}}:{{end}}= client.{{.Name | title}}(
+  {{- range .Signature.Input}}
+    {{.Name | untitle}},
+  {{- end}}
+  )
+
+  require.NoError(t, err)
+  require.NotNil(t, result)
 }
+{{end}}
 
 func new{{$packageName | title}}IntegrationTestClient(t *testing.T) AgentApplications {
 	tc := testhelpers.NewIntegrationTestConfig(t)
