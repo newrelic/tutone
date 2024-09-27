@@ -1,3 +1,11 @@
+<a name="v0.12.0"></a>
+## [v0.12.0] - 2024-09-27
+### Bug Fixes
+- **deps:** remove go-gitlint ([#241](https://github.com/newrelic/tutone/issues/241))
+
+### Features
+- **generate:** add ability to generate multiple targeted packages
+
 <a name="v0.11.0"></a>
 ## [v0.11.0] - 2023-03-15
 ### Bug Fixes
@@ -839,7 +847,8 @@
 - **generator:** introduce a generator concept
 - **tutone:** default path for tutone config file
 
-[Unreleased]: https://github.com/newrelic/tutone/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/newrelic/tutone/compare/v0.12.0...HEAD
+[v0.12.0]: https://github.com/newrelic/tutone/compare/v0.11.0...v0.12.0
 [v0.11.0]: https://github.com/newrelic/tutone/compare/v0.10.319...v0.11.0
 [v0.10.319]: https://github.com/newrelic/tutone/compare/v0.10.318...v0.10.319
 [v0.10.318]: https://github.com/newrelic/tutone/compare/v0.10.317...v0.10.318
