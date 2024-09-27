@@ -18,6 +18,7 @@ import (
 
 type GeneratorOptions struct {
 	PackageName            string
+	PackageNames           []string
 	Refetch                bool
 	IncludeIntegrationTest bool
 }
@@ -74,6 +75,16 @@ func Generate(options GeneratorOptions) error {
 	// Generate for a specific package
 	if options.PackageName != "" {
 		return generateForPackage(options.PackageName, cfg, s, options.IncludeIntegrationTest)
+	}
+
+	if options.PackageNames != nil {
+		for _, packageName := range options.PackageNames {
+			if err := generateForPackage(packageName, cfg, s, options.IncludeIntegrationTest); err != nil {
+				return err
+			}
+		}
+
+		return nil
 	}
 
 	// Generate for all configured packages
