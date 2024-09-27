@@ -15,6 +15,7 @@ const (
 
 var (
 	packageName            string
+	packageNames           []string
 	refetch                bool
 	includeIntegrationTest bool
 )
@@ -34,6 +35,7 @@ is up to date with your configured GraphQL API.
 	Run: func(cmd *cobra.Command, args []string) {
 		util.LogIfError(log.ErrorLevel, Generate(GeneratorOptions{
 			PackageName:            packageName,
+			PackageNames:           packageNames,
 			Refetch:                refetch,
 			IncludeIntegrationTest: includeIntegrationTest,
 		}))
@@ -42,6 +44,7 @@ is up to date with your configured GraphQL API.
 
 func init() {
 	Command.Flags().StringVarP(&packageName, "package", "p", "", "Go package name for the generated files")
+	Command.Flags().StringSliceVar(&packageNames, "packages", []string{}, "List of package names to generate. Example: --packages=package1,package2")
 
 	Command.Flags().StringP("schema", "s", fetch.DefaultSchemaCacheFile, "Schema file to read from")
 	util.LogIfError(log.ErrorLevel, viper.BindPFlag("schema_file", Command.Flags().Lookup("schema")))
