@@ -1,3 +1,8 @@
+<a name="v0.12.1"></a>
+## [v0.12.1] - 2024-10-03
+### Bug Fixes
+- **release:** remove 'archives.replacements' (deprecated + removed), replace w 'name_template'
+
 <a name="v0.12.0"></a>
 ## [v0.12.0] - 2024-09-27
 ### Bug Fixes
@@ -847,7 +852,8 @@
 - **generator:** introduce a generator concept
 - **tutone:** default path for tutone config file
 
-[Unreleased]: https://github.com/newrelic/tutone/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/newrelic/tutone/compare/v0.12.1...HEAD
+[v0.12.1]: https://github.com/newrelic/tutone/compare/v0.12.0...v0.12.1
 [v0.12.0]: https://github.com/newrelic/tutone/compare/v0.11.0...v0.12.0
 [v0.11.0]: https://github.com/newrelic/tutone/compare/v0.10.319...v0.11.0
 [v0.10.319]: https://github.com/newrelic/tutone/compare/v0.10.318...v0.10.319
