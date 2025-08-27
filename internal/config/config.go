@@ -126,6 +126,8 @@ type EndpointConfig struct {
 	MaxQueryFieldDepth int      `yaml:"max_query_field_depth,omitempty"`
 	IncludeArguments   []string `yaml:"include_arguments,omitempty"`
 	ExcludeFields      []string `yaml:"exclude_fields,omitempty"`
+	// IncludeImplementations allows picking specific implementations of an interface to include.
+	IncludeImplementations []string `yaml:"include_implementations,omitempty"`
 }
 
 // TypeConfig is the information about which types to render and any data specific to handling of the type.
@@ -148,6 +150,8 @@ type TypeConfig struct {
 	GenerateStructGetters bool `yaml:"generate_struct_getters,omitempty"`
 	// Applies to all fields of the struct
 	StructTags *StructTags `yaml:"struct_tags,omitempty"`
+	// IncludeImplementations allows picking specific implementations of an interface to include.
+	IncludeImplementations []string `yaml:"include_implementations,omitempty"`
 }
 
 type StructTags struct {

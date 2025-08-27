@@ -157,7 +157,7 @@ func generatePkgTypes(pkgConfig *config.PackageConfig, cfg *config.Config, s *sc
 	return nil
 }
 
-func generateForPackage(packageName string, cfg *config.Config, schema *schema.Schema, includeIntegrationTest bool) error {
+func generateForPackage(packageName string, cfg *config.Config, s *schema.Schema, includeIntegrationTest bool) error {
 	pkg := findPackageConfigByName(packageName, cfg.Packages)
 	if pkg == nil {
 		return fmt.Errorf("[Error] package %s not found", packageName)
@@ -165,7 +165,38 @@ func generateForPackage(packageName string, cfg *config.Config, schema *schema.S
 
 	pkg.IncludeIntegrationTest = includeIntegrationTest
 
-	return generatePkgTypes(pkg, cfg, schema)
+	// This loop filters the schema for the Type Generator and Expander.
+	for _, typeConfig := range pkg.Types {
+		if len(typeConfig.IncludeImplementations) > 0 {
+			interfaceType, err := s.LookupTypeByName(typeConfig.Name)
+			if err != nil {
+				log.Warnf("could not find interface '%s' specified in type config for filtering", typeConfig.Name)
+				continue
+			}
+
+			if interfaceType != nil && interfaceType.Kind == "INTERFACE" {
+				log.WithFields(log.Fields{
+					"interface": interfaceType.Name,
+					"include":   typeConfig.IncludeImplementations,
+				}).Info("applying central interface implementation filter to schema")
+
+				includeSet := make(map[string]bool)
+				for _, name := range typeConfig.IncludeImplementations {
+					includeSet[name] = true
+				}
+
+				var filteredImplementations []schema.TypeRef
+				for _, impl := range interfaceType.PossibleTypes {
+					if _, ok := includeSet[impl.Name]; ok {
+						filteredImplementations = append(filteredImplementations, impl)
+					}
+				}
+				// Overwrite the schema's list of possible types. This is the single source of truth.
+				interfaceType.PossibleTypes = filteredImplementations
+			}
+		}
+	}
+	return generatePkgTypes(pkg, cfg, s)
 }
 
 // getGeneratorConfigByName retrieve the *config.GeneratorConfig from the given set or errros.
