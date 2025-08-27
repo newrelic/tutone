@@ -110,8 +110,12 @@ func GenerateGoMethodQueriesForPackage(s *schema.Schema, genConfig *config.Gener
 	var methods []GoMethod
 
 	for _, pkgQuery := range pkgConfig.Queries {
+		log.Debugf("REACHED THIS POINT")
+		log.Debugf("%s", pkgQuery.Path)
+
 		typePath, err := s.LookupQueryTypesByFieldPath(pkgQuery.Path)
 		if err != nil {
+			log.Debugf("This led to an error: %s", pkgQuery.Path)
 			log.Error(err)
 			continue
 		}
@@ -131,14 +135,18 @@ func GenerateGoMethodQueriesForPackage(s *schema.Schema, genConfig *config.Gener
 		// actor { cloud { } }
 		// ... we want to generate the method based on the Type of the field 'cloud'.
 		for _, endpoint := range pkgQuery.Endpoints {
+			log.Debugf("ENDPOINT : %s", endpoint.Name)
 			for _, field := range t.Fields {
+				log.Debugf("FIELD : %s", field.Name)
 				if field.Name == endpoint.Name {
+					log.Debugf("SUCCESS")
 					method := goMethodForField(field, pkgConfig, inputFields)
 
 					method.QueryString = s.GetQueryStringForEndpoint(typePath, pkgQuery.Path, endpoint)
 					method.ResponseObjectType = fmt.Sprintf("%sResponse", endpoint.Name)
 					method.Signature.ReturnPath = returnPath
-
+					log.Debugf("REACHED QUERY STRING POINT")
+					log.Debugf("%s", method.QueryString)
 					methods = append(methods, method)
 				}
 			}
