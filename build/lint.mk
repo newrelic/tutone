@@ -18,37 +18,37 @@ PROJECT_MODULE  ?= $(shell $(GO) list -m)
 
 GO_MOD_OUTDATED ?= go-mod-outdated
 
-lint: deps spell-check gofmt golangci goimports outdated
-lint-fix: deps spell-check-fix gofmt-fix goimports
+lint: tools spell-check gofmt golangci goimports outdated
+lint-fix: tools spell-check-fix gofmt-fix goimports
 
 #
 # Check spelling on all the files, not just source code
 #
-spell-check: deps
+spell-check: tools
 	@echo "=== $(PROJECT_NAME) === [ spell-check      ]: Checking for spelling mistakes with $(MISSPELL)..."
 	@$(MISSPELL) -source text $(SPELL_FILES)
 
-spell-check-fix: deps
+spell-check-fix: tools
 	@echo "=== $(PROJECT_NAME) === [ spell-check-fix  ]: Fixing spelling mistakes with $(MISSPELL)..."
 	@$(MISSPELL) -source text -w $(SPELL_FILES)
 
-gofmt: deps
+gofmt: tools
 	@echo "=== $(PROJECT_NAME) === [ gofmt            ]: Checking file format with $(GOFMT)..."
 	@find . -path "$(EXCLUDEDIR)" -prune -print0 | xargs -0 $(GOFMT) -e -l -s -d ${SRCDIR}
 
-gofmt-fix: deps
+gofmt-fix: tools
 	@echo "=== $(PROJECT_NAME) === [ gofmt-fix        ]: Fixing file format with $(GOFMT)..."
 	@find . -path "$(EXCLUDEDIR)" -prune -print0 | xargs -0 $(GOFMT) -e -l -s -w ${SRCDIR}
 
-goimports: deps
+goimports: tools
 	@echo "=== $(PROJECT_NAME) === [ goimports        ]: Checking imports with $(GOIMPORTS)..."
 	@$(GOIMPORTS) -l -w -local $(PROJECT_MODULE) $(GO_FILES)
 
-golangci: deps
+golangci: tools
 	@echo "=== $(PROJECT_NAME) === [ golangci-lint    ]: Linting using $(GOLINTER) ($(COMMIT_LINT_CMD))..."
 	@$(GOLINTER) run
 
-outdated: deps tools-outdated
+outdated: tools tools-outdated
 	@echo "=== $(PROJECT_NAME) === [ outdated         ]: Finding outdated deps with $(GO_MOD_OUTDATED)..."
 	@$(GO) list -u -m -json all | $(GO_MOD_OUTDATED) -direct -update
 

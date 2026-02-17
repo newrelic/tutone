@@ -17,6 +17,7 @@ tools: check-version
 	@echo "=== $(PROJECT_NAME) === [ tools            ]: Installing tools required by the project..."
 	@cd $(TOOL_DIR) && $(GO) mod download
 	@cd $(TOOL_DIR) && $(GO) install $(GOTOOLS)
+	@cd $(TOOL_DIR) && $(GO) install github.com/psampaz/go-mod-outdated@v0.9.0
 	@cd $(TOOL_DIR) && $(GO) mod tidy
 
 tools-outdated: check-version
