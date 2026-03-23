@@ -135,8 +135,18 @@ func GenerateGoMethodQueriesForPackage(s *schema.Schema, genConfig *config.Gener
 				if field.Name == endpoint.Name {
 					method := goMethodForField(field, pkgConfig, inputFields)
 
+					// Override the method name if function_name is specified in config
+					if endpoint.FunctionName != "" {
+						method.Name = endpoint.FunctionName
+					}
+
 					method.QueryString = s.GetQueryStringForEndpoint(typePath, pkgQuery.Path, endpoint)
-					method.ResponseObjectType = fmt.Sprintf("%sResponse", endpoint.Name)
+					// Use the function name for the response type if it's overridden
+					responseName := endpoint.Name
+					if endpoint.FunctionName != "" {
+						responseName = endpoint.FunctionName
+					}
+					method.ResponseObjectType = fmt.Sprintf("%sResponse", responseName)
 					method.Signature.ReturnPath = returnPath
 
 					methods = append(methods, method)
@@ -168,6 +178,12 @@ func GenerateGoMethodMutationsForPackage(s *schema.Schema, genConfig *config.Gen
 
 		for _, field := range fields {
 			method := goMethodForField(field, pkgConfig, nil)
+
+			// Override the method name if function_name is specified in config
+			if pkgMutation.FunctionName != "" {
+				method.Name = pkgMutation.FunctionName
+			}
+
 			method.QueryString = s.GetQueryStringForMutation(&field, pkgMutation)
 
 			methods = append(methods, method)

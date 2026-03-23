@@ -119,6 +119,9 @@ type MutationConfig struct {
 	MaxQueryFieldDepth    int               `yaml:"max_query_field_depth,omitempty"`
 	ArgumentTypeOverrides map[string]string `yaml:"argument_type_overrides,omitempty"`
 	ExcludeFields         []string          `yaml:"exclude_fields,omitempty"`
+	// FunctionName allows overriding the generated Go function name while keeping the GraphQL mutation name the same.
+	// This is useful when multiple mutations share similar names or need custom naming for clarity.
+	FunctionName string `yaml:"function_name,omitempty"`
 }
 
 type EndpointConfig struct {
@@ -126,6 +129,10 @@ type EndpointConfig struct {
 	MaxQueryFieldDepth int      `yaml:"max_query_field_depth,omitempty"`
 	IncludeArguments   []string `yaml:"include_arguments,omitempty"`
 	ExcludeFields      []string `yaml:"exclude_fields,omitempty"`
+	// FunctionName allows overriding the generated Go function name while keeping the GraphQL endpoint name the same.
+	// This is useful when multiple endpoints share the same name but exist at different paths.
+	// Example: If two queries both have name: "workflow", you can set function_name: "accountWorkflow" and "organizationWorkflow"
+	FunctionName string `yaml:"function_name,omitempty"`
 }
 
 // TypeConfig is the information about which types to render and any data specific to handling of the type.
