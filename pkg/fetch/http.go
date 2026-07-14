@@ -166,7 +166,7 @@ func (e *Endpoint) fetch(query GraphqlQuery) (*schema.QueryResponse, error) {
 	if !e.Auth.Disable {
 		if e.Auth.APIKey != "" {
 			log.WithFields(log.Fields{
-				"header": req.Header,
+				"auth_header": e.Auth.Header,
 			}).Trace("setting API Key header")
 			req.Header.Set(e.Auth.Header, e.Auth.APIKey)
 		}
