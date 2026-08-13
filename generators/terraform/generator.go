@@ -59,6 +59,7 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 			return fmt.Errorf("terraform generator: create mutation %q not found: %w", createMutationName, err)
 		}
 		g.CreateInputType = lang.FindInputObjectArgTypeName(createMutation)
+		g.CreateHasAccountIDArg = lang.MutationHasAccountIDArg(createMutation)
 		// Return type from mutation
 		g.ReturnType = createMutation.Type.GetTypeName()
 	}
@@ -86,6 +87,7 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 		updateMutation, err := s.LookupMutationByName(updateMutationName)
 		if err == nil {
 			g.UpdateInputType = lang.FindInputObjectArgTypeName(updateMutation)
+			g.UpdateHasAccountIDArg = lang.MutationHasAccountIDArg(updateMutation)
 		}
 	}
 
@@ -96,6 +98,10 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 	}
 	if deleteMutationName != "" {
 		g.DeleteMethod = lang.DeriveMethodName(deleteMutationName)
+		deleteMutation, err := s.LookupMutationByName(deleteMutationName)
+		if err == nil {
+			g.DeleteHasAccountIDArg = lang.MutationHasAccountIDArg(deleteMutation)
+		}
 	}
 
 	// Read method from config

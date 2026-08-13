@@ -34,6 +34,12 @@ type TerraformGenerator struct {
 	UpdateInputType string
 	ReturnType      string
 
+	// Whether each mutation has a direct accountId arg in NerdGraph.
+	// When false, accountID is NOT passed to the go-client method even when RequiresAccountID is true.
+	CreateHasAccountIDArg bool
+	UpdateHasAccountIDArg bool
+	DeleteHasAccountIDArg bool
+
 	HasUpdate bool
 	Imports   []string
 }
@@ -179,6 +185,21 @@ func FindInputObjectArgTypeName(f *schema.Field) string {
 		}
 	}
 	return ""
+}
+
+// MutationHasAccountIDArg returns true when the mutation has a direct top-level
+// accountId (or accountID) argument — meaning the go-client method accepts it as
+// a positional parameter. When false the caller should not pass accountID.
+func MutationHasAccountIDArg(f *schema.Field) bool {
+	if f == nil {
+		return false
+	}
+	for _, arg := range f.Args {
+		if strings.EqualFold(arg.Name, "accountId") {
+			return true
+		}
+	}
+	return false
 }
 
 // DeriveClientService returns the default client service name from an import path.
