@@ -10,3 +10,4 @@ vendor/*
 *.yaml
 *.yml
 testdata/schema.json
+!generators/terraform/testdata/schema.json

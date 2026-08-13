@@ -1,0 +1,438 @@
+{
+  "mutationType": {
+    "name": "RootMutationType",
+    "kind": "OBJECT",
+    "fields": [
+      {
+        "name": "alertsMutingRuleCreate",
+        "description": "Create a muting rule.",
+        "args": [
+          {
+            "name": "accountId",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "SCALAR", "name": "Int", "ofType": null }
+            }
+          },
+          {
+            "name": "rule",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "INPUT_OBJECT", "name": "AlertsMutingRuleCreateInput", "ofType": null }
+            }
+          }
+        ],
+        "type": { "kind": "OBJECT", "name": "AlertsMutingRule", "ofType": null }
+      },
+      {
+        "name": "alertsMutingRuleUpdate",
+        "description": "Update a muting rule.",
+        "args": [
+          {
+            "name": "accountId",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "SCALAR", "name": "Int", "ofType": null }
+            }
+          },
+          {
+            "name": "id",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "SCALAR", "name": "Int", "ofType": null }
+            }
+          },
+          {
+            "name": "rule",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "INPUT_OBJECT", "name": "AlertsMutingRuleUpdateInput", "ofType": null }
+            }
+          }
+        ],
+        "type": { "kind": "SCALAR", "name": "Boolean", "ofType": null }
+      },
+      {
+        "name": "alertsMutingRuleDelete",
+        "description": "Delete a muting rule.",
+        "args": [
+          {
+            "name": "accountId",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "SCALAR", "name": "Int", "ofType": null }
+            }
+          },
+          {
+            "name": "id",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "SCALAR", "name": "Int", "ofType": null }
+            }
+          }
+        ],
+        "type": { "kind": "SCALAR", "name": "Boolean", "ofType": null }
+      },
+      {
+        "name": "aiNotificationsCreateDestination",
+        "description": "Create a notification destination.",
+        "args": [
+          {
+            "name": "accountId",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "SCALAR", "name": "Int", "ofType": null }
+            }
+          },
+          {
+            "name": "destination",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "INPUT_OBJECT", "name": "AiNotificationsCreateDestinationInput", "ofType": null }
+            }
+          }
+        ],
+        "type": { "kind": "OBJECT", "name": "AiNotificationsDestination", "ofType": null }
+      },
+      {
+        "name": "aiNotificationsUpdateDestination",
+        "description": "Update a notification destination.",
+        "args": [
+          {
+            "name": "accountId",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "SCALAR", "name": "Int", "ofType": null }
+            }
+          },
+          {
+            "name": "destination",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "INPUT_OBJECT", "name": "AiNotificationsUpdateDestinationInput", "ofType": null }
+            }
+          }
+        ],
+        "type": { "kind": "OBJECT", "name": "AiNotificationsDestination", "ofType": null }
+      },
+      {
+        "name": "aiNotificationsDeleteDestination",
+        "description": "Delete a notification destination.",
+        "args": [
+          {
+            "name": "accountId",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "SCALAR", "name": "Int", "ofType": null }
+            }
+          },
+          {
+            "name": "destinationId",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "SCALAR", "name": "ID", "ofType": null }
+            }
+          }
+        ],
+        "type": { "kind": "SCALAR", "name": "Boolean", "ofType": null }
+      },
+      {
+        "name": "entityManagementCreateScorecard",
+        "description": "Create a scorecard entity.",
+        "args": [
+          {
+            "name": "scorecard",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "INPUT_OBJECT", "name": "EntityManagementCreateScorecardInput", "ofType": null }
+            }
+          }
+        ],
+        "type": { "kind": "OBJECT", "name": "EntityManagementScorecardEntity", "ofType": null }
+      },
+      {
+        "name": "entityManagementUpdateScorecard",
+        "description": "Update a scorecard entity.",
+        "args": [
+          {
+            "name": "id",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "SCALAR", "name": "ID", "ofType": null }
+            }
+          },
+          {
+            "name": "scorecard",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "INPUT_OBJECT", "name": "EntityManagementUpdateScorecardInput", "ofType": null }
+            }
+          }
+        ],
+        "type": { "kind": "OBJECT", "name": "EntityManagementScorecardEntity", "ofType": null }
+      },
+      {
+        "name": "entityManagementDeleteScorecard",
+        "description": "Delete a scorecard entity.",
+        "args": [
+          {
+            "name": "id",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "SCALAR", "name": "ID", "ofType": null }
+            }
+          }
+        ],
+        "type": { "kind": "SCALAR", "name": "Boolean", "ofType": null }
+      }
+    ]
+  },
+  "queryType": {
+    "name": "RootQueryType",
+    "kind": "OBJECT",
+    "fields": []
+  },
+  "types": [
+    {
+      "name": "AlertsMutingRuleStatus",
+      "kind": "ENUM",
+      "enumValues": [
+        { "name": "ACTIVE", "description": "The muting rule is active." },
+        { "name": "INACTIVE", "description": "The muting rule is inactive." }
+      ]
+    },
+    {
+      "name": "AlertsMutingRuleConditionGroupInput",
+      "kind": "INPUT_OBJECT",
+      "inputFields": [
+        {
+          "name": "conditions",
+          "description": "List of conditions.",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": { "kind": "SCALAR", "name": "String", "ofType": null }
+              }
+            }
+          }
+        },
+        {
+          "name": "operator",
+          "description": "Logical operator.",
+          "type": { "kind": "SCALAR", "name": "String", "ofType": null }
+        }
+      ]
+    },
+    {
+      "name": "AlertsMutingRuleCreateInput",
+      "kind": "INPUT_OBJECT",
+      "inputFields": [
+        {
+          "name": "condition",
+          "description": "The condition group for the muting rule.",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": { "kind": "INPUT_OBJECT", "name": "AlertsMutingRuleConditionGroupInput", "ofType": null }
+          }
+        },
+        {
+          "name": "description",
+          "description": "A description of the muting rule.",
+          "type": { "kind": "SCALAR", "name": "String", "ofType": null }
+        },
+        {
+          "name": "enabled",
+          "description": "Whether the muting rule is enabled.",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": { "kind": "SCALAR", "name": "Boolean", "ofType": null }
+          }
+        },
+        {
+          "name": "name",
+          "description": "The name of the muting rule.",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": { "kind": "SCALAR", "name": "String", "ofType": null }
+          }
+        },
+        {
+          "name": "status",
+          "description": "The status of the muting rule.",
+          "type": { "kind": "ENUM", "name": "AlertsMutingRuleStatus", "ofType": null }
+        }
+      ]
+    },
+    {
+      "name": "AlertsMutingRuleUpdateInput",
+      "kind": "INPUT_OBJECT",
+      "inputFields": [
+        {
+          "name": "condition",
+          "description": "The condition group for the muting rule.",
+          "type": { "kind": "INPUT_OBJECT", "name": "AlertsMutingRuleConditionGroupInput", "ofType": null }
+        },
+        {
+          "name": "description",
+          "description": "A description of the muting rule.",
+          "type": { "kind": "SCALAR", "name": "String", "ofType": null }
+        },
+        {
+          "name": "enabled",
+          "description": "Whether the muting rule is enabled.",
+          "type": { "kind": "SCALAR", "name": "Boolean", "ofType": null }
+        },
+        {
+          "name": "name",
+          "description": "The name of the muting rule.",
+          "type": { "kind": "SCALAR", "name": "String", "ofType": null }
+        }
+      ]
+    },
+    {
+      "name": "AiNotificationsCreateDestinationInput",
+      "kind": "INPUT_OBJECT",
+      "inputFields": [
+        {
+          "name": "name",
+          "description": "Destination name.",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": { "kind": "SCALAR", "name": "String", "ofType": null }
+          }
+        },
+        {
+          "name": "type",
+          "description": "Destination type.",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": { "kind": "SCALAR", "name": "String", "ofType": null }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AiNotificationsUpdateDestinationInput",
+      "kind": "INPUT_OBJECT",
+      "inputFields": [
+        {
+          "name": "name",
+          "description": "Destination name.",
+          "type": { "kind": "SCALAR", "name": "String", "ofType": null }
+        }
+      ]
+    },
+    {
+      "name": "AiNotificationsDestinationFilter",
+      "kind": "INPUT_OBJECT",
+      "inputFields": [
+        {
+          "name": "id",
+          "description": "Filter by ID.",
+          "type": { "kind": "SCALAR", "name": "ID", "ofType": null }
+        }
+      ]
+    },
+    {
+      "name": "EntityManagementCreateScorecardInput",
+      "kind": "INPUT_OBJECT",
+      "inputFields": [
+        {
+          "name": "name",
+          "description": "Scorecard name.",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": { "kind": "SCALAR", "name": "String", "ofType": null }
+          }
+        },
+        {
+          "name": "description",
+          "description": "Scorecard description.",
+          "type": { "kind": "SCALAR", "name": "String", "ofType": null }
+        }
+      ]
+    },
+    {
+      "name": "EntityManagementUpdateScorecardInput",
+      "kind": "INPUT_OBJECT",
+      "inputFields": [
+        {
+          "name": "name",
+          "description": "Scorecard name.",
+          "type": { "kind": "SCALAR", "name": "String", "ofType": null }
+        }
+      ]
+    },
+    {
+      "name": "AlertsMutingRule",
+      "kind": "OBJECT",
+      "fields": [
+        {
+          "name": "id",
+          "type": { "kind": "SCALAR", "name": "Int", "ofType": null }
+        },
+        {
+          "name": "name",
+          "type": { "kind": "SCALAR", "name": "String", "ofType": null }
+        }
+      ]
+    },
+    {
+      "name": "AiNotificationsDestination",
+      "kind": "OBJECT",
+      "fields": [
+        {
+          "name": "id",
+          "type": { "kind": "SCALAR", "name": "ID", "ofType": null }
+        },
+        {
+          "name": "name",
+          "type": { "kind": "SCALAR", "name": "String", "ofType": null }
+        }
+      ]
+    },
+    {
+      "name": "EntityManagementScorecardEntity",
+      "kind": "OBJECT",
+      "fields": [
+        {
+          "name": "guid",
+          "type": { "kind": "SCALAR", "name": "ID", "ofType": null }
+        },
+        {
+          "name": "name",
+          "type": { "kind": "SCALAR", "name": "String", "ofType": null }
+        }
+      ]
+    }
+  ]
+}
