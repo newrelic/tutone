@@ -61,8 +61,61 @@ type PackageConfig struct {
 
 	Queries []Query `yaml:"queries,omitempty"`
 
+	// Terraform holds the per-package configuration for the terraform generator.
+	Terraform *TerraformConfig `yaml:"terraform,omitempty"`
+
 	// Transient property which is set by using the --include-integration-test flag.
 	IncludeIntegrationTest bool
+}
+
+// TerraformConfig holds the per-package configuration for the terraform generator.
+type TerraformConfig struct {
+	ResourceName      string `yaml:"resource_name"`
+	RequiresAccountID bool   `yaml:"requires_account_id"`
+	RequiresOrgID     bool   `yaml:"requires_org_id"`
+	IDType            string `yaml:"id_type"`    // "int" (default) or "string"
+	IDFields          []string `yaml:"id_fields"` // override id field names
+
+	// ClientService is the field name on the provider's NR client struct.
+	// Defaults to TitleCase(last segment of import_path). Override when convention doesn't match.
+	ClientService string `yaml:"client_service,omitempty"`
+
+	// GoClientRepo is the GitHub repo used for --schema-branch downloads.
+	GoClientRepo string `yaml:"go_client_repo,omitempty"`
+
+	// CRUD mutation names (explicit — do not auto-detect).
+	CreateMutation string `yaml:"create_mutation"`
+	UpdateMutation string `yaml:"update_mutation"`
+	DeleteMutation string `yaml:"delete_mutation"`
+
+	// Create variants
+	ReadAfterCreate bool `yaml:"read_after_create"`
+	BatchCreate     bool `yaml:"batch_create"`
+
+	// Read
+	ReadMethod         string `yaml:"read_method"`
+	ReadType           string `yaml:"read_type"` // direct|list_filter|list_search|entity_management
+	ReadListMethod     string `yaml:"read_list_method"`
+	ReadDeletedField   string `yaml:"read_deleted_field"`
+	ReadFilterType     string `yaml:"read_filter_type"`
+	ReadFilterIDField  string `yaml:"read_filter_id_field"`
+	ReadResultPath     string `yaml:"read_result_path"`
+	ReadEntityType     string `yaml:"read_entity_type"`
+	ReadRetry          bool   `yaml:"read_retry"`
+	ReadNotFoundString string `yaml:"read_not_found_string"`
+
+	// Update
+	NoUpdateMutation  bool       `yaml:"no_update_mutation"`
+	ImmutableFields   []string   `yaml:"immutable_fields"`
+	ConflictingFields [][]string `yaml:"conflicting_fields"`
+
+	// Delete variants
+	BatchDelete bool `yaml:"batch_delete"`
+
+	// Schema overrides
+	ComputedFields  []string `yaml:"computed_fields"`
+	SensitiveFields []string `yaml:"sensitive_fields"`
+	SkipSetOnRead   []string `yaml:"skip_set_on_read"`
 }
 
 // Query is the information necessary to build a query method.  The Paths
