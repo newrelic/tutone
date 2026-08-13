@@ -3,21 +3,22 @@ package newrelic
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"{{ .ImportPath }}"
 )
 
-func expandNewRelic{{ .ResourceTypeName }}CreateInput(d *schema.ResourceData) interface{} {
-	// TUTONE:MANUAL — replace return type with {{ .CreateInputType }} and implement expansion
-	return nil
+func expandNewRelic{{ .ResourceTypeName }}CreateInput(d *schema.ResourceData) {{ .PackageName }}.{{ .CreateInputType }} {
+	// TUTONE:MANUAL — implement expansion
+	return {{ .PackageName }}.{{ .CreateInputType }}{}
 }
 
 {{ if .HasUpdate -}}
-func expandNewRelic{{ .ResourceTypeName }}UpdateInput(d *schema.ResourceData) interface{} {
-	// TUTONE:MANUAL — replace return type with {{ .UpdateInputType }} and implement expansion
-	return nil
+func expandNewRelic{{ .ResourceTypeName }}UpdateInput(d *schema.ResourceData) {{ .PackageName }}.{{ .UpdateInputType }} {
+	// TUTONE:MANUAL — implement expansion
+	return {{ .PackageName }}.{{ .UpdateInputType }}{}
 }
 {{ end -}}
 
-func flattenNewRelic{{ .ResourceTypeName }}(obj interface{}, d *schema.ResourceData) error {
+func flattenNewRelic{{ .ResourceTypeName }}(obj *{{ .PackageName }}.{{ .ReturnType }}, d *schema.ResourceData) error {
 	if obj == nil {
 		return nil
 	}
@@ -32,12 +33,12 @@ func flattenNewRelic{{ .ResourceTypeName }}(obj interface{}, d *schema.ResourceD
 
 {{ range .SchemaFields -}}
 {{ if .IsNested -}}
-func expandNewRelic{{ $.ResourceTypeName }}{{ .GoName }}(in []interface{}) interface{} {
+func expandNewRelic{{ $.ResourceTypeName }}{{ .GoName }}(in []interface{}) {{ $.PackageName }}.{{ .GoName }} {
 	if len(in) == 0 || in[0] == nil {
-		return nil
+		return {{ $.PackageName }}.{{ .GoName }}{}
 	}
 	// TUTONE:MANUAL — expand {{ .Name }}
-	return nil
+	return {{ $.PackageName }}.{{ .GoName }}{}
 }
 {{ end -}}
 {{ end -}}

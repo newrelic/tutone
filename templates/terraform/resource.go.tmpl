@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/newrelic/newrelic-client-go/v2/pkg/errors"
 	nrErrors "github.com/newrelic/newrelic-client-go/v2/pkg/errors"
+	"{{ .ImportPath }}"
 )
 
 func resourceNewRelic{{ .ResourceTypeName }}() *schema.Resource {
@@ -141,7 +142,7 @@ func resourceNewRelic{{ .ResourceTypeName }}Read(ctx context.Context, d *schema.
 	}
 	return diag.FromErr(flattenNewRelic{{ .ResourceTypeName }}(result, d))
 	{{ else if eq .TerraformConfig.ReadType "list_filter" -}}
-	filter := {{ .TerraformConfig.ReadFilterType }}{
+	filter := {{ .PackageName }}.{{ .TerraformConfig.ReadFilterType }}{
 		{{ .TerraformConfig.ReadFilterIDField }}: d.Id(),
 	}
 	response, err := client.{{ .ClientService }}.{{ .ReadMethod }}(ctx{{ if .TerraformConfig.RequiresAccountID }}, accountID{{ end }}, filter)
@@ -183,7 +184,7 @@ func resourceNewRelic{{ .ResourceTypeName }}Read(ctx context.Context, d *schema.
 		}
 		return diag.FromErr(err)
 	}
-	entity, ok := result.(*{{ .TerraformConfig.ReadEntityType }})
+	entity, ok := result.(*{{ .PackageName }}.{{ .TerraformConfig.ReadEntityType }})
 	if !ok {
 		return diag.Errorf("unexpected entity type for id %s", d.Id())
 	}
