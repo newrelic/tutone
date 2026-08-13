@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"path"
+	"strings"
 	"text/template"
 
 	log "github.com/sirupsen/logrus"
@@ -98,8 +99,12 @@ func resolveTemplate(templateName, templatePath string) (*template.Template, err
 	}
 
 	// 2. Fall back to embedded FS — keeps the binary self-contained.
-	log.Debugf("template not found locally at %q — using embedded copy", templatePath)
-	return template.New(templateName).Funcs(funcs).ParseFS(templates.FS, templatePath)
+	// The embed.FS in templates/tmpl.go is rooted at the templates/ directory,
+	// so paths inside it are "terraform/resource.go.tmpl" (no "templates/" prefix).
+	// Strip the leading "templates/" segment before looking up in the embedded FS.
+	embeddedPath := strings.TrimPrefix(templatePath, "templates/")
+	log.Debugf("template not found locally at %q — using embedded copy at %q", templatePath, embeddedPath)
+	return template.New(templateName).Funcs(funcs).ParseFS(templates.FS, embeddedPath)
 }
 
 // resolveTemplateFromFS parses a template from an explicit fs.FS (used by tests).
