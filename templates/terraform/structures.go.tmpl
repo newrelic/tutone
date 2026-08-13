@@ -33,12 +33,12 @@ func flattenNewRelic{{ .ResourceTypeName }}(obj *{{ .PackageName }}.{{ .ReturnTy
 
 {{ range .SchemaFields -}}
 {{ if .IsNested -}}
-func expandNewRelic{{ $.ResourceTypeName }}{{ .GoName }}(in []interface{}) {{ $.PackageName }}.{{ .GoName }} {
+func expandNewRelic{{ $.ResourceTypeName }}{{ .GoName }}(in []interface{}) {{ $.PackageName }}.{{ .GoTypeName }} {
 	if len(in) == 0 || in[0] == nil {
-		return {{ $.PackageName }}.{{ .GoName }}{}
+		return {{ $.PackageName }}.{{ .GoTypeName }}{}
 	}
 	// TUTONE:MANUAL — expand {{ .Name }}
-	return {{ $.PackageName }}.{{ .GoName }}{}
+	return {{ $.PackageName }}.{{ .GoTypeName }}{}
 }
 {{ end -}}
 {{ end -}}

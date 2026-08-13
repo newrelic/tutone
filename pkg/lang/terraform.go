@@ -42,6 +42,7 @@ type TerraformGenerator struct {
 type TerraformField struct {
 	Name              string
 	GoName            string
+	GoTypeName        string // NerdGraph INPUT_OBJECT type name, e.g. "MaintenanceWindowConfigScopeInput"
 	TFType            string
 	Required          bool
 	Optional          bool
@@ -147,6 +148,7 @@ func buildTerraformField(s *schema.Schema, field schema.Field) TerraformField {
 	case schema.KindInputObject:
 		tf.TFType = "TypeList"
 		tf.IsNested = true
+		tf.GoTypeName = baseName // NerdGraph type name used as the Go return type in expand functions
 		if !isList {
 			tf.MaxItems = 1
 		}
