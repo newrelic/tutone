@@ -1,0 +1,55 @@
+---
+# Test config for terraform-provider-newrelic
+# Drop this file at the root of terraform-provider-newrelic as .tutone.yml
+# Then run:
+#   export NEW_RELIC_API_KEY=<your-key>
+#   go run /path/to/tutone/cmd/tutone/main.go fetch -s schema.json -c .tutone.yml
+#   go run /path/to/tutone/cmd/tutone/main.go generate --config .tutone.yml --package alertmutingrule
+
+log_level: debug
+
+cache:
+  schema_file: schema.json
+
+endpoint: https://api.newrelic.com/graphql
+
+auth:
+  header: Api-Key
+  api_key_env_var: NEW_RELIC_API_KEY
+
+generators:
+  - name: terraform
+    templateDir: /Users/bhoomikars/workspace/tutone/templates/terraform
+
+packages:
+  - name: alertmutingrule
+    path: newrelic/
+    generators:
+      - terraform
+    mutations:
+      - name: alertsMutingRuleCreate
+        max_query_field_depth: 4
+      - name: alertsMutingRuleUpdate
+        max_query_field_depth: 4
+      - name: alertsMutingRuleDelete
+        max_query_field_depth: 4
+    terraform:
+      resource_name: alert_muting_rule
+
+      # Explicit client-go method names (NerdGraph mutation names differ from client-go method names)
+      create_method: CreateMutingRuleWithContext
+      update_method: UpdateMutingRuleWithContext
+      delete_method: DeleteMutingRuleWithContext
+      read_method:   GetMutingRuleWithContext
+
+      read_type: direct
+      id_fields: [account_id, id]
+      id_type: int
+      requires_account_id: true
+      computed_fields: [account_id]
+      immutable_fields: []
+      skip_set_on_read: []
+      sensitive_fields: []
+      build_tags: [integration, unit, ALERTS]
+      client_packages:
+        - github.com/newrelic/newrelic-client-go/v2/pkg/alerts

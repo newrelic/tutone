@@ -65,6 +65,81 @@ packages:
           accounts: "[CloudRenameAccountsInput!]!"
       - name: cloudUnlinkAccount
 
+  - name: alertmutingrule
+    path: newrelic/
+    generators:
+      - terraform
+    mutations:
+      - name: alertsMutingRuleCreate
+        max_query_field_depth: 4
+      - name: alertsMutingRuleUpdate
+        max_query_field_depth: 4
+      - name: alertsMutingRuleDelete
+        max_query_field_depth: 4
+    terraform:
+      # Required: terraform resource name (without "newrelic_" prefix)
+      resource_name: alert_muting_rule
+
+      # Required: client-go method used for Read
+      read_method: GetMutingRuleWithContext
+
+      # How to locate the resource during Read
+      # Options: direct | list_search | list_filter | guid_collection_search | entity_management | nested_traversal
+      read_type: direct
+
+      # Fields that form d.SetId() — serialized in order
+      id_fields: [account_id, id]
+
+      # Inject accountID into every CRUD call via selectAccountID()
+      requires_account_id: true
+
+      # Fields the API sets (Computed: true in schema)
+      computed_fields: [account_id]
+
+      # Fields that force resource recreation on change (ForceNew: true)
+      immutable_fields: []
+
+      # Fields never passed to d.Set() during Read (e.g. write-only inputs)
+      skip_set_on_read: []
+
+      # Fields with Sensitive: true
+      sensitive_fields: []
+
+      # true: no UpdateContext generated; all non-computed fields get ForceNew
+      no_update_mutation: false
+
+      # true: create mutation wraps input in a slice
+      batch_create: false
+
+      # true: delete mutation wraps ID in a slice
+      batch_delete: false
+
+      # true: call Read at the end of Create (when Create returns only an ID)
+      read_after_create: false
+
+      # String to match in error message for not-found (R12 pattern)
+      # read_not_found_string: "Key not found"
+
+      # Field name that signals soft-delete (R4 list_search pattern)
+      # read_deleted_field: Deleted
+
+      # For list_search: the method that fetches all items
+      # read_list_method: ListMutingRulesWithContext
+
+      # For list_filter: filter struct type and field
+      # read_filter_type: AlertsMutingRulesFilter
+      # read_filter_id_field: ID
+
+      # true: retry Read until response is non-nil (R10b eventual consistency)
+      read_retry: false
+
+      # Build tags emitted on the generated test file
+      build_tags: [integration, unit, ALERTS]
+
+      # client-go packages to import in the generated resource file
+      client_packages:
+        - github.com/newrelic/newrelic-client-go/v2/pkg/alerts
+
 generators:
   - name: typegen
     fileName: "types.go"

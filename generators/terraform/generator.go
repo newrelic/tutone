@@ -1,16 +1,874 @@
 package terraform
 
 import (
+	"bufio"
+	"fmt"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"unicode"
+
 	log "github.com/sirupsen/logrus"
 
+	"github.com/newrelic/tutone/internal/codegen"
+	"github.com/newrelic/tutone/internal/config"
+	"github.com/newrelic/tutone/internal/output"
 	"github.com/newrelic/tutone/internal/schema"
 )
 
+// Generator implements codegen.Generator for Terraform provider resources.
 type Generator struct {
+	TerraformGenerator
 }
 
-func (g *Generator) Generate(s *schema.Schema) error {
-	log.Debugf("s: %+v", *s)
+// TerraformGenerator holds all template data for a single Terraform resource.
+type TerraformGenerator struct {
+	// Identity
+	PackageName    string
+	ResourceName   string // e.g. "alert_muting_rule"
+	TFResourceName string // e.g. "newrelic_alert_muting_rule"
+	ResourceFunc   string // e.g. "resourceNewRelicAlertMutingRule"
+	ExpandFunc     string // e.g. "expandNewRelicAlertMutingRuleCreateInput"
+	ExpandUpdateFunc string // e.g. "expandNewRelicAlertMutingRuleUpdateInput"
+	FlattenFunc    string // e.g. "flattenNewRelicAlertMutingRule"
+
+	// Client
+	ClientPackages     []string
+	ClientPackageAlias string // e.g. "alerts"  (last segment of first client_package)
+	ClientAccessor     string // e.g. "Alerts"  (TitleCase of alias, used as client.<Accessor>.Method)
+
+	// Type names (qualified with package alias for Go code)
+	InputTypeName       string // e.g. "alerts.MutingRuleCreateInput"
+	UpdateInputTypeName string // e.g. "alerts.MutingRuleUpdateInput"
+	OutputTypeName      string // e.g. "alerts.MutingRule"
+
+	// CRUD
+	CreateMethod string
+	ReadMethod   string
+	UpdateMethod string
+	DeleteMethod string
+	HasUpdate    bool
+
+	// Read behaviour
+	ReadType          string
+	IDFields          []string
+	IDType            string // "int" | "string"
+	RequiresAccountID bool
+	RequiresOrgID     bool
+	NoUpdateMutation  bool
+	BatchCreate       bool
+	BatchDelete       bool
+	ReadAfterCreate   bool
+	ReadRetry         bool
+	RetryOnCreate     bool
+	RetryTimeoutSec   int
+
+	// Not-found signals
+	ReadNotFoundString  string
+	ReadNotFoundAsError bool
+	ReadDeletedField    string
+
+	// List / filter
+	ReadListMethod    string
+	ReadFilterType    string
+	ReadFilterIDField string
+	ReadResultPath    string
+	ReadFilterIDPath  string
+
+	// Specialised read types
+	ReadEntityType    string
+	ReadTraversalPath string
+
+	// Parent-child (R3)
+	ParentVerifyMethod string
+	ParentIDField      string
+
+	// Two-step create (C4)
+	PostCreateUpdateFields []string
+
+	// Cross-field constraints
+	ConflictingFields [][]string
+	IDFallback        bool
+
+	// Schema fields
+	SchemaFields []TerraformSchemaField
+
+	// Build tags for test file
+	BuildTags []string
+
+	// HasManualFields is true when at least one field requires a TUTONE:MANUAL stub.
+	// Used by templates to emit the file-level automation status banner.
+	HasManualFields bool
+}
+
+// TerraformSchemaField is one attribute in the generated schema.Schema map.
+type TerraformSchemaField struct {
+	Name            string // snake_case Terraform attribute name (e.g. "action_on_muting_rule_window_ended")
+	GoFieldName     string // PascalCase Go struct field name (e.g. "ActionOnMutingRuleWindowEnded")
+	TFType          string // schema.TypeString | TypeInt | TypeBool | TypeFloat | TypeList | TypeSet
+	GoTypeAssertion string // .(string) | .(int) | .(bool) | .(float64) — for d.GetOk()
+	Required        bool
+	Optional        bool
+	Computed        bool
+	ForceNew        bool
+	Sensitive       bool
+	Description     string
+	IsNested        bool // TypeList/TypeSet wrapping a &schema.Resource{} Elem
+	NestedFields    []TerraformSchemaField
+	GoNestedTypeName string // qualified Go type for nested expand/flatten, e.g. "alerts.AlertsMutingRuleConditionGroup"
+	MaxItems        int
+	IsEnum          bool     // single scalar ENUM — ValidateFunc on the field itself
+	IsEnumList      bool     // [ENUM] list — use TypeSet; ValidateFunc goes on Elem, not the list
+	EnumValues      []string // enum values for ValidateFunc
+	EnumGoType      string   // e.g. "alerts.AlertsActionOnMutingRuleWindowEnded"
+	ConflictsWith   []string
+	// NeedsManual: true only for custom SCALAR types needing domain-specific parsing
+	// (e.g. NaiveDateTime, EpochMilliseconds). Standard scalars/enums/nested are generated.
+	NeedsManual    bool
+	CustomTypeName string
+}
+
+func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig) error {
+	if pkgConfig.Terraform == nil {
+		return fmt.Errorf("package %q has no terraform: config block", pkgConfig.Name)
+	}
+
+	tf := pkgConfig.Terraform
+
+	g.PackageName = pkgConfig.Name
+	g.ResourceName = tf.ResourceName
+	g.TFResourceName = "newrelic_" + tf.ResourceName
+	g.ResourceFunc = toResourceFuncName(g.TFResourceName)
+	g.FlattenFunc = toFlattenFuncName(g.TFResourceName)
+
+	g.ClientPackages = tf.ClientPackages
+	g.ClientPackageAlias = derivePackageAlias(tf.ClientPackages)
+	g.ClientAccessor = toClientAccessor(g.ClientPackageAlias)
+
+	g.ReadType = tf.ReadType
+	if g.ReadType == "" {
+		g.ReadType = "direct"
+	}
+	g.ReadMethod = tf.ReadMethod
+	g.IDFields = tf.IDFields
+	g.IDType = tf.IDType
+	if g.IDType == "" {
+		g.IDType = "int"
+	}
+	g.RequiresAccountID = tf.RequiresAccountID
+	g.RequiresOrgID = tf.RequiresOrgID
+	g.NoUpdateMutation = tf.NoUpdateMutation
+	g.BatchCreate = tf.BatchCreate
+	g.BatchDelete = tf.BatchDelete
+	g.ReadAfterCreate = tf.ReadAfterCreate
+	g.ReadRetry = tf.ReadRetry
+	g.RetryOnCreate = tf.RetryOnCreate
+	g.RetryTimeoutSec = tf.RetryTimeoutSec
+	g.ReadNotFoundString = tf.ReadNotFoundString
+	g.ReadNotFoundAsError = tf.ReadNotFoundAsError
+	g.ReadDeletedField = tf.ReadDeletedField
+	g.ReadListMethod = tf.ReadListMethod
+	g.ReadFilterType = tf.ReadFilterType
+	g.ReadFilterIDField = tf.ReadFilterIDField
+	g.ReadResultPath = tf.ReadResultPath
+	g.ReadFilterIDPath = tf.ReadFilterIDPath
+	g.ReadEntityType = tf.ReadEntityType
+	g.ReadTraversalPath = tf.ReadTraversalPath
+	g.ParentVerifyMethod = tf.ParentVerifyMethod
+	g.ParentIDField = tf.ParentIDField
+	g.PostCreateUpdateFields = tf.PostCreateUpdateFields
+	g.ConflictingFields = tf.ConflictingFields
+	g.IDFallback = tf.IDFallback
+	g.BuildTags = tf.BuildTags
+
+	mutations := pkgConfig.Mutations
+
+	// CRUD method names — use explicit config values if set, else derive
+	if tf.CreateMethod != "" {
+		g.CreateMethod = tf.CreateMethod
+	} else if len(mutations) >= 1 {
+		g.CreateMethod = camelToClientCall(mutations[0].Name)
+	}
+	if tf.UpdateMethod != "" {
+		g.UpdateMethod = tf.UpdateMethod
+	} else if len(mutations) >= 2 {
+		g.UpdateMethod = camelToClientCall(mutations[1].Name)
+	}
+	if tf.DeleteMethod != "" {
+		g.DeleteMethod = tf.DeleteMethod
+	} else if len(mutations) >= 3 {
+		g.DeleteMethod = camelToClientCall(mutations[2].Name)
+	}
+	g.HasUpdate = !tf.NoUpdateMutation && g.UpdateMethod != ""
+
+	// Derive input/output type names from schema
+	if len(mutations) >= 1 {
+		inputType, outputType := deriveTypes(s, mutations[0].Name)
+		if inputType != "" {
+			g.InputTypeName = g.ClientPackageAlias + "." + inputType
+			g.ExpandFunc = "expandNewRelic" + snakeToCamel(tf.ResourceName) + "CreateInput"
+		}
+		if outputType != "" {
+			g.OutputTypeName = g.ClientPackageAlias + "." + outputType
+		}
+	}
+	if g.HasUpdate && len(mutations) >= 2 {
+		_, updateInputType := deriveUpdateInputType(s, mutations[1].Name)
+		if updateInputType != "" {
+			g.UpdateInputTypeName = g.ClientPackageAlias + "." + updateInputType
+			g.ExpandUpdateFunc = "expandNewRelic" + snakeToCamel(tf.ResourceName) + "UpdateInput"
+		}
+	}
+
+	// Derive automation status after fields are built — used for file-level banner
+	g.HasManualFields = false
+
+	// Build schema fields
+	if len(mutations) >= 1 {
+		computedSet := stringSet(tf.ComputedFields)
+		sensitiveSet := stringSet(tf.SensitiveFields)
+		immutableSet := stringSet(tf.ImmutableFields)
+
+		fields, err := g.buildSchemaFields(s, mutations[0].Name, g.ClientPackageAlias, computedSet, sensitiveSet, immutableSet)
+		if err != nil {
+			log.Warnf("could not derive schema fields for %s: %s", tf.ResourceName, err)
+		} else {
+			g.SchemaFields = fields
+		}
+	}
+
+	// Determine overall automation status
+	for _, f := range g.SchemaFields {
+		if f.NeedsManual || hasManualNested(f) {
+			g.HasManualFields = true
+			break
+		}
+	}
+
+	// Distribute ConflictingFields pairs onto individual schema fields
+	for _, pair := range tf.ConflictingFields {
+		for _, fieldName := range pair {
+			// strip nested path prefix (e.g. "schedule.0.end_repeat" → "end_repeat") for matching
+			base := fieldName
+			if idx := strings.LastIndex(fieldName, "."); idx >= 0 {
+				base = fieldName[idx+1:]
+			}
+			applyConflictsWithDeep(g.SchemaFields, base, pair)
+		}
+	}
+
+	// Always inject account_id if required and not derived from input type
+	if tf.RequiresAccountID && !fieldsContain(g.SchemaFields, "account_id") {
+		g.SchemaFields = append(g.SchemaFields, TerraformSchemaField{
+			Name:            "account_id",
+			GoFieldName:     "AccountID",
+			TFType:          "schema.TypeInt",
+			GoTypeAssertion: ".(int)",
+			Optional:        true,
+			Computed:        true,
+			Description:     "The New Relic account ID to operate on. Defaults to the account set in the provider.",
+		})
+	}
 
 	return nil
 }
+
+func (g *Generator) Execute(genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig) error {
+	destDir := "./"
+	if pkgConfig.Path != "" {
+		destDir = pkgConfig.Path
+	}
+
+	if err := os.MkdirAll(destDir, 0755); err != nil {
+		return err
+	}
+
+	templateDir := "templates/terraform"
+	if genConfig.TemplateDir != "" {
+		templateDir = genConfig.TemplateDir
+	}
+
+	var generated []string
+
+	// 1. resource_newrelic_<name>.go
+	resourceFile := fmt.Sprintf("%s/resource_%s.go", destDir, g.TFResourceName)
+	if err := renderTemplate(templateDir, "resource.go.tmpl", resourceFile, destDir, g); err != nil {
+		return fmt.Errorf("resource template: %w", err)
+	}
+	generated = append(generated, resourceFile)
+
+	// 2. structures_newrelic_<name>.go
+	structuresFile := fmt.Sprintf("%s/structures_%s.go", destDir, g.TFResourceName)
+	if err := renderTemplate(templateDir, "structures.go.tmpl", structuresFile, destDir, g); err != nil {
+		return fmt.Errorf("structures template: %w", err)
+	}
+	generated = append(generated, structuresFile)
+
+	// 3. resource_newrelic_<name>_test.go — scaffold-once (never overwrite)
+	testFile := fmt.Sprintf("%s/resource_%s_test.go", destDir, g.TFResourceName)
+	if !fileExists(testFile) {
+		if err := renderTemplate(templateDir, "test.go.tmpl", testFile, destDir, g); err != nil {
+			log.Warnf("test template: %s", err)
+		} else {
+			generated = append(generated, testFile)
+		}
+	}
+
+	// 4. provider_registration.txt — copy-paste snippet
+	regFile := fmt.Sprintf("%s/provider_registration.txt", destDir)
+	if err := appendProviderRegistration(regFile, g.TFResourceName, g.ResourceFunc); err != nil {
+		log.Warnf("provider_registration.txt: %s", err)
+	} else {
+		generated = append(generated, regFile)
+	}
+
+	// 5. provider_newrelic.go — auto-patch ResourcesMap if file exists
+	providerFile := filepath.Join(destDir, "provider_newrelic.go")
+	if fileExists(providerFile) {
+		if err := patchProviderFile(providerFile, g.TFResourceName, g.ResourceFunc); err != nil {
+			log.Warnf("could not auto-patch provider_newrelic.go: %s", err)
+		} else {
+			generated = append(generated, providerFile)
+		}
+	}
+
+	output.PrintSuccessMessage(destDir, generated)
+	return nil
+}
+
+// ── Schema field derivation ──────────────────────────────────────────────────
+
+// buildSchemaFields derives TerraformSchemaField list from the create mutation's input type.
+func (g *Generator) buildSchemaFields(
+	s *schema.Schema,
+	createMutationName string,
+	pkgAlias string,
+	computedSet, sensitiveSet, immutableSet map[string]bool,
+) ([]TerraformSchemaField, error) {
+	mutation, err := s.LookupMutationByName(createMutationName)
+	if err != nil {
+		return nil, fmt.Errorf("mutation %q: %w", createMutationName, err)
+	}
+
+	inputTypeName := ""
+	for _, arg := range mutation.Args {
+		n := strings.ToLower(arg.Name)
+		if n == "accountid" || n == "orgid" || n == "organizationid" {
+			continue
+		}
+		inputTypeName = arg.Type.GetTypeName()
+		break
+	}
+	if inputTypeName == "" {
+		return nil, nil
+	}
+
+	inputType, err := s.LookupTypeByName(inputTypeName)
+	if err != nil {
+		return nil, fmt.Errorf("input type %q: %w", inputTypeName, err)
+	}
+
+	rawFields := inputType.InputFields
+	if len(rawFields) == 0 {
+		rawFields = inputType.Fields
+	}
+
+	return buildFieldsFromRaw(s, rawFields, pkgAlias, computedSet, sensitiveSet, immutableSet), nil
+}
+
+func buildFieldsFromRaw(
+	s *schema.Schema,
+	rawFields []schema.Field,
+	pkgAlias string,
+	computedSet, sensitiveSet, immutableSet map[string]bool,
+) []TerraformSchemaField {
+	var fields []TerraformSchemaField
+
+	for _, f := range rawFields {
+		typeName := f.Type.GetTypeName()
+		isEnum := isEnumField(f, s)
+		isEnumList := f.Type.IsList() && isListOfEnum(f, s)
+		nested := isNestedType(f.Type) && !isEnumList
+
+		tfType := typeRefToTFType(f.Type, isEnum, isEnumList, nested)
+		goTypeAssertion := tfTypeToGoAssertion(tfType)
+
+		// Issue 6: snake_case attribute names (GraphQL is camelCase, Terraform is snake_case)
+		snakeName := camelToSnake(f.Name)
+		// GoFieldName stays as PascalCase for Go struct access
+		goFieldName := upperFirst(f.Name)
+
+		// Issue 12: strip internal content from descriptions
+		desc := filterDescription(strings.TrimSpace(f.Description))
+
+		tf := TerraformSchemaField{
+			Name:            snakeName,
+			GoFieldName:     goFieldName,
+			TFType:          tfType,
+			GoTypeAssertion: goTypeAssertion,
+			Description:     desc,
+			IsNested:        nested,
+			IsEnum:          isEnum && !f.Type.IsList(),
+			IsEnumList:      isEnumList,
+		}
+
+		// Issue 7: TypeSet for unordered enum lists; MaxItems:1 for single nested objects
+		if nested && !f.Type.IsList() {
+			tf.MaxItems = 1
+		}
+
+		// Enum handling (scalar enum)
+		if isEnum && !f.Type.IsList() {
+			tf.EnumValues = lookupEnumValues(s, typeName)
+			tf.EnumGoType = pkgAlias + "." + typeName
+			tf.GoTypeAssertion = ".(string)"
+		}
+		// Enum list
+		if isEnumList {
+			tf.EnumValues = lookupEnumValues(s, typeName)
+			tf.EnumGoType = pkgAlias + "." + typeName
+		}
+
+		// Computed / Optional / Required — use snake name for lookup
+		if computedSet[snakeName] || computedSet[f.Name] {
+			tf.Computed = true
+			tf.Optional = true
+		} else if f.IsRequired() {
+			tf.Required = true
+		} else {
+			tf.Optional = true
+		}
+
+		if immutableSet[snakeName] || immutableSet[f.Name] {
+			tf.ForceNew = true
+		}
+		if sensitiveSet[snakeName] || sensitiveSet[f.Name] {
+			tf.Sensitive = true
+		}
+
+		// Nested: recurse to build child schema + set concrete Go type name
+		if nested {
+			tf.GoNestedTypeName = pkgAlias + "." + typeName
+			nestedType, err := s.LookupTypeByName(typeName)
+			if err == nil {
+				nestedRaw := nestedType.InputFields
+				if len(nestedRaw) == 0 {
+					nestedRaw = nestedType.Fields
+				}
+				tf.NestedFields = buildFieldsFromRaw(s, nestedRaw, pkgAlias,
+					map[string]bool{}, map[string]bool{}, map[string]bool{})
+				for _, nf := range tf.NestedFields {
+					if nf.NeedsManual {
+						tf.NeedsManual = true
+						break
+					}
+				}
+			}
+		}
+
+		// Custom SCALAR — needs manual parsing (NaiveDateTime, EpochMilliseconds, etc.)
+		if !nested && !isEnum && !isEnumList && isCustomScalar(f, s) {
+			tf.NeedsManual = true
+			tf.CustomTypeName = typeName
+			tf.TFType = "schema.TypeString"
+			tf.GoTypeAssertion = ".(string)"
+		}
+
+		fields = append(fields, tf)
+	}
+
+	return fields
+}
+
+func hasManualNested(f TerraformSchemaField) bool {
+	for _, nf := range f.NestedFields {
+		if nf.NeedsManual || hasManualNested(nf) {
+			return true
+		}
+	}
+	return false
+}
+
+// applyConflictsWithDeep walks the field tree and adds the full conflict pair list to the
+// field whose base name matches targetBase, excluding itself from its own ConflictsWith list.
+func applyConflictsWithDeep(fields []TerraformSchemaField, targetBase string, pair []string) {
+	for i := range fields {
+		if fields[i].Name == targetBase {
+			others := make([]string, 0, len(pair)-1)
+			for _, p := range pair {
+				base := p
+				if idx := strings.LastIndex(p, "."); idx >= 0 {
+					base = p[idx+1:]
+				}
+				if base != targetBase {
+					others = append(others, p)
+				}
+			}
+			fields[i].ConflictsWith = others
+		}
+		if len(fields[i].NestedFields) > 0 {
+			applyConflictsWithDeep(fields[i].NestedFields, targetBase, pair)
+		}
+	}
+}
+
+// isCustomScalar returns true for SCALAR types that aren't the five standard GraphQL scalars.
+// These need hand-written time.Parse / strconv / custom marshalling.
+func isCustomScalar(f schema.Field, s *schema.Schema) bool {
+	typeName := f.Type.GetTypeName()
+	// Standard scalars — fully automatable
+	switch typeName {
+	case "String", "Int", "Float", "Boolean", "ID":
+		return false
+	}
+	t, err := s.LookupTypeByName(typeName)
+	if err != nil {
+		return false
+	}
+	return t.Kind == schema.KindScalar
+}
+
+// ── Type helpers ─────────────────────────────────────────────────────────────
+
+func typeRefToTFType(ref schema.TypeRef, isEnum, isEnumList, nested bool) string {
+	if isEnumList {
+		// Issue 7: unordered enum arrays → TypeSet
+		return "schema.TypeSet"
+	}
+	if ref.IsList() {
+		return "schema.TypeList"
+	}
+	switch ref.GetTypeName() {
+	case "Int":
+		return "schema.TypeInt"
+	case "Float":
+		return "schema.TypeFloat"
+	case "Boolean":
+		return "schema.TypeBool"
+	case "String", "ID":
+		return "schema.TypeString"
+	default:
+		if nested {
+			return "schema.TypeList"
+		}
+		return "schema.TypeString"
+	}
+}
+
+// isListOfEnum returns true when a LIST field's element type is an ENUM.
+func isListOfEnum(f schema.Field, s *schema.Schema) bool {
+	if !f.Type.IsList() {
+		return false
+	}
+	typeName := f.Type.GetTypeName()
+	t, err := s.LookupTypeByName(typeName)
+	if err != nil || t == nil {
+		return false
+	}
+	return t.Kind == schema.KindENUM
+}
+
+// camelToSnake converts "actionOnMutingRuleWindowEnded" → "action_on_muting_rule_window_ended"
+func camelToSnake(s string) string {
+	var result []rune
+	runes := []rune(s)
+	for i, r := range runes {
+		if unicode.IsUpper(r) {
+			if i > 0 && !unicode.IsUpper(runes[i-1]) {
+				result = append(result, '_')
+			} else if i > 0 && unicode.IsUpper(runes[i-1]) && i+1 < len(runes) && unicode.IsLower(runes[i+1]) {
+				result = append(result, '_')
+			}
+			result = append(result, unicode.ToLower(r))
+		} else {
+			result = append(result, r)
+		}
+	}
+	return string(result)
+}
+
+// filterDescription strips NR-internal content from field descriptions.
+// Anything after "---\n**NR Internal" or "---\n**Internal" is dropped.
+// Slack URLs, issue tracker links and team IDs should not appear in public Terraform docs.
+var (
+	internalMarker  = regexp.MustCompile(`(?s)\s*---\s*\*{0,2}(NR\s+)?[Ii]nternal.*$`)
+	slackURLPattern = regexp.MustCompile(`https?://newrelic\.slack\.com\S*`)
+	issueURLPattern = regexp.MustCompile(`https?://[a-z0-9-]+\.atlassian\.net\S*`)
+)
+
+func filterDescription(desc string) string {
+	desc = internalMarker.ReplaceAllString(desc, "")
+	desc = slackURLPattern.ReplaceAllString(desc, "")
+	desc = issueURLPattern.ReplaceAllString(desc, "")
+	return strings.TrimSpace(desc)
+}
+
+func tfTypeToGoAssertion(tfType string) string {
+	switch tfType {
+	case "schema.TypeInt":
+		return ".(int)"
+	case "schema.TypeBool":
+		return ".(bool)"
+	case "schema.TypeFloat":
+		return ".(float64)"
+	default:
+		return ".(string)"
+	}
+}
+
+func isNestedType(ref schema.TypeRef) bool {
+	if ref.IsList() {
+		inner := ref.GetTypeName()
+		switch inner {
+		case "String", "Int", "Float", "Boolean", "ID":
+			return false
+		}
+		for _, k := range ref.GetKinds() {
+			if k == schema.KindInputObject || k == schema.KindObject || k == schema.KindInterface {
+				return true
+			}
+		}
+	}
+	for _, k := range ref.GetKinds() {
+		if k == schema.KindInputObject || k == schema.KindObject || k == schema.KindInterface {
+			return true
+		}
+	}
+	return false
+}
+
+func isEnumField(f schema.Field, s *schema.Schema) bool {
+	if f.IsEnum() {
+		return true
+	}
+	typeName := f.Type.GetTypeName()
+	t, err := s.LookupTypeByName(typeName)
+	if err != nil {
+		return false
+	}
+	return t.Kind == schema.KindENUM
+}
+
+func lookupEnumValues(s *schema.Schema, typeName string) []string {
+	t, err := s.LookupTypeByName(typeName)
+	if err != nil || t == nil {
+		return nil
+	}
+	vals := make([]string, 0, len(t.EnumValues))
+	for _, ev := range t.EnumValues {
+		vals = append(vals, ev.Name)
+	}
+	return vals
+}
+
+// deriveTypes returns (inputTypeName, outputTypeName) from a mutation.
+func deriveTypes(s *schema.Schema, mutationName string) (string, string) {
+	mutation, err := s.LookupMutationByName(mutationName)
+	if err != nil {
+		return "", ""
+	}
+	var inputType string
+	for _, arg := range mutation.Args {
+		n := strings.ToLower(arg.Name)
+		if n == "accountid" || n == "orgid" || n == "organizationid" {
+			continue
+		}
+		inputType = arg.Type.GetTypeName()
+		break
+	}
+	outputType := mutation.Type.GetTypeName()
+	return inputType, outputType
+}
+
+// deriveUpdateInputType returns the update mutation's input type.
+func deriveUpdateInputType(s *schema.Schema, mutationName string) (string, string) {
+	return deriveTypes(s, mutationName)
+}
+
+// ── Name helpers ─────────────────────────────────────────────────────────────
+
+func toResourceFuncName(tfName string) string {
+	return "resource" + snakeToCamel(tfName)
+}
+
+func toFlattenFuncName(tfName string) string {
+	return "flattenNewRelic" + snakeToCamel(strings.TrimPrefix(tfName, "newrelic_"))
+}
+
+// snakeToCamel: "newrelic_alert_muting_rule" → "NewRelicAlertMutingRule"
+// Handles compound proper nouns: "newrelic" → "NewRelic".
+func snakeToCamel(s string) string {
+	// Expand known compound segments before splitting
+	s = strings.ReplaceAll(s, "newrelic", "new_relic")
+	parts := strings.Split(s, "_")
+	var b strings.Builder
+	for _, p := range parts {
+		if len(p) == 0 {
+			continue
+		}
+		b.WriteString(strings.ToUpper(p[:1]) + p[1:])
+	}
+	return b.String()
+}
+
+func upperFirst(s string) string {
+	if s == "" {
+		return ""
+	}
+	return strings.ToUpper(s[:1]) + s[1:]
+}
+
+// camelToClientCall: "alertsMutingRuleCreate" → "AlertsMutingRuleCreateWithContext"
+func camelToClientCall(mutationName string) string {
+	if mutationName == "" {
+		return ""
+	}
+	return strings.ToUpper(mutationName[:1]) + mutationName[1:] + "WithContext"
+}
+
+// derivePackageAlias returns "alerts" from "github.com/.../pkg/alerts"
+func derivePackageAlias(packages []string) string {
+	if len(packages) == 0 {
+		return ""
+	}
+	parts := strings.Split(packages[0], "/")
+	return parts[len(parts)-1]
+}
+
+// toClientAccessor: "alerts" → "Alerts"
+func toClientAccessor(alias string) string {
+	return upperFirst(alias)
+}
+
+// ── Provider file patching ───────────────────────────────────────────────────
+
+// patchProviderFile inserts a ResourcesMap entry into provider_newrelic.go if not already present.
+func patchProviderFile(providerFile, tfName, funcName string) error {
+	content, err := os.ReadFile(providerFile)
+	if err != nil {
+		return err
+	}
+
+	line := fmt.Sprintf("\t\t\t\"%s\":%s%s(),", tfName, "\t\t\t\t\t\t\t\t", funcName)
+	// Simpler alignment
+	line = fmt.Sprintf("\t\t\t\"%s\": %s(),", tfName, funcName)
+
+	if strings.Contains(string(content), `"`+tfName+`"`) {
+		log.Infof("provider_newrelic.go already contains %q — skipping patch", tfName)
+		return nil
+	}
+
+	anchor := "ResourcesMap: map[string]*schema.Resource{"
+	if !strings.Contains(string(content), anchor) {
+		return fmt.Errorf("could not find ResourcesMap anchor in %s", providerFile)
+	}
+
+	// Insert alphabetically after the opening brace
+	patched := insertAlphabetically(string(content), anchor, line, tfName)
+	return os.WriteFile(providerFile, []byte(patched), 0644)
+}
+
+// insertAlphabetically finds the right position inside the ResourcesMap block.
+func insertAlphabetically(content, anchor, newLine, tfName string) string {
+	lines := strings.Split(content, "\n")
+	anchorIdx := -1
+	for i, l := range lines {
+		if strings.Contains(l, anchor) {
+			anchorIdx = i
+			break
+		}
+	}
+	if anchorIdx < 0 {
+		return content
+	}
+
+	insertAt := anchorIdx + 1
+	for i := anchorIdx + 1; i < len(lines); i++ {
+		trimmed := strings.TrimSpace(lines[i])
+		if trimmed == "" || trimmed == "}" || trimmed == "}," {
+			break
+		}
+		// Extract the key from lines like `"newrelic_foo": ...`
+		if strings.HasPrefix(trimmed, `"`) {
+			end := strings.Index(trimmed[1:], `"`)
+			if end >= 0 {
+				existingKey := trimmed[1 : end+1]
+				if existingKey < tfName {
+					insertAt = i + 1
+				} else {
+					break
+				}
+			}
+		}
+	}
+
+	result := make([]string, 0, len(lines)+1)
+	result = append(result, lines[:insertAt]...)
+	result = append(result, newLine)
+	result = append(result, lines[insertAt:]...)
+	return strings.Join(result, "\n")
+}
+
+func appendProviderRegistration(regFile, tfName, funcName string) error {
+	// Read existing to avoid duplicates
+	if existing, err := os.ReadFile(regFile); err == nil {
+		if strings.Contains(string(existing), `"`+tfName+`"`) {
+			return nil
+		}
+	}
+	line := fmt.Sprintf("// Add to ResourcesMap in provider_newrelic.go:\n\"%s\": %s(),\n\n", tfName, funcName)
+	f, err := os.OpenFile(regFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	_, err = f.WriteString(line)
+	return err
+}
+
+// ── Utilities ────────────────────────────────────────────────────────────────
+
+func stringSet(ss []string) map[string]bool {
+	m := make(map[string]bool, len(ss))
+	for _, s := range ss {
+		m[s] = true
+	}
+	return m
+}
+
+func fieldsContain(fields []TerraformSchemaField, name string) bool {
+	for _, f := range fields {
+		if f.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+	return !os.IsNotExist(err)
+}
+
+func renderTemplate(templateDir, templateName, destFile, destDir string, g *Generator) error {
+	c := codegen.CodeGen{
+		TemplateDir:     templateDir,
+		TemplateName:    templateName,
+		DestinationFile: destFile,
+		DestinationDir:  destDir,
+	}
+	return c.WriteFile(g)
+}
+
+// scanLines is a helper used in tests.
+func scanLines(s string) []string {
+	var lines []string
+	sc := bufio.NewScanner(strings.NewReader(s))
+	for sc.Scan() {
+		lines = append(lines, sc.Text())
+	}
+	return lines
+}
+
+var _ = scanLines // suppress unused warning; used in tests

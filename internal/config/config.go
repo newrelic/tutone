@@ -63,6 +63,80 @@ type PackageConfig struct {
 
 	// Transient property which is set by using the --include-integration-test flag.
 	IncludeIntegrationTest bool
+
+	// Terraform holds the configuration for the terraform generator for this package.
+	Terraform *TerraformConfig `yaml:"terraform,omitempty"`
+}
+
+// TerraformConfig is the specification for generating a Terraform resource from this package.
+type TerraformConfig struct {
+	ResourceName string `yaml:"resource_name"`
+
+	// Explicit client-go method names for CRUD — use these because NerdGraph mutation
+	// names don't match client-go method names (e.g. alertsMutingRuleCreate → CreateMutingRuleWithContext).
+	// If omitted, the generator falls back to camelCase conversion of the mutations[] names.
+	CreateMethod string `yaml:"create_method,omitempty"`
+	UpdateMethod string `yaml:"update_method,omitempty"`
+	DeleteMethod string `yaml:"delete_method,omitempty"`
+
+	ReadMethod string `yaml:"read_method"`
+
+	// id_type controls how d.SetId() and d.Id() are handled.
+	// "int"    → serializeIDs([]int{accountID, result.ID}) / parseHashedIDs(d.Id())
+	// "string" → d.SetId(result.ID) / id := d.Id()   (default)
+	IDType string `yaml:"id_type,omitempty"`
+	ReadType          string   `yaml:"read_type,omitempty"`           // direct | list_search | list_filter | guid_collection_search | entity_management | nested_traversal
+	IDFields          []string `yaml:"id_fields,omitempty"`           // fields that form the Terraform resource ID
+	RequiresAccountID bool     `yaml:"requires_account_id,omitempty"` // inject account_id into CRUD calls
+	RequiresOrgID     bool     `yaml:"requires_org_id,omitempty"`     // pre-fetch org ID before CRUD calls
+	ComputedFields    []string `yaml:"computed_fields,omitempty"`     // API-set fields (Computed: true)
+	SensitiveFields   []string `yaml:"sensitive_fields,omitempty"`    // fields with Sensitive: true
+	ImmutableFields   []string `yaml:"immutable_fields,omitempty"`    // fields with ForceNew: true
+	SkipSetOnRead     []string `yaml:"skip_set_on_read,omitempty"`    // fields to omit from d.Set() in Read
+	ReadAfterCreate   bool     `yaml:"read_after_create,omitempty"`   // call Read at end of Create
+	NoUpdateMutation  bool     `yaml:"no_update_mutation,omitempty"`  // no Update exists; all non-computed fields become ForceNew
+	BatchCreate       bool     `yaml:"batch_create,omitempty"`        // create mutation takes a slice input
+	BatchDelete       bool     `yaml:"batch_delete,omitempty"`        // delete mutation takes a slice input
+
+	// Not-found signal variants (see R1–R18 matrix)
+	ReadNotFoundString  string `yaml:"read_not_found_string,omitempty"`   // string-match not-found (R12)
+	ReadNotFoundAsError bool   `yaml:"read_not_found_as_error,omitempty"` // treat explicit error as not-found (R6)
+	ReadDeletedField    string `yaml:"read_deleted_field,omitempty"`      // soft-delete field name (R4)
+
+	// List / filter read variants
+	ReadListMethod    string `yaml:"read_list_method,omitempty"`    // method for list_search (R4)
+	ReadFilterType    string `yaml:"read_filter_type,omitempty"`    // filter struct type for list_filter (R5)
+	ReadFilterIDField string `yaml:"read_filter_id_field,omitempty"` // field name on filter struct (R5)
+	ReadResultPath    string `yaml:"read_result_path,omitempty"`    // dot-path to result within response (R5)
+	ReadFilterIDPath  string `yaml:"read_filter_id_path,omitempty"` // nested path for ID in filter (R9)
+
+	// Specialised read types
+	ReadEntityType    string `yaml:"read_entity_type,omitempty"`    // entity management type assertion (R7)
+	ReadTraversalPath string `yaml:"read_traversal_path,omitempty"` // dot-path for nested collection traversal (R16)
+
+	// Retry
+	ReadRetry       bool `yaml:"read_retry,omitempty"`        // retry read until non-nil / field populated (R10b)
+	RetryOnCreate   bool `yaml:"retry_on_create,omitempty"`   // poll after create for eventual consistency (C5)
+	RetryTimeoutSec int  `yaml:"retry_timeout_sec,omitempty"` // timeout for retry loops
+
+	// Parent-child verification (R3)
+	ParentVerifyMethod string `yaml:"parent_verify_method,omitempty"`
+	ParentIDField      string `yaml:"parent_id_field,omitempty"`
+
+	// Two-step create: create + immediate update (C4)
+	PostCreateUpdateFields []string `yaml:"post_create_update_fields,omitempty"`
+
+	// Cross-field constraints (U5a)
+	ConflictingFields [][]string `yaml:"conflicting_fields,omitempty"` // [[fieldA, fieldB], ...]
+
+	// Composite ID fallback (R2)
+	IDFallback bool `yaml:"id_fallback,omitempty"`
+
+	// Build tags emitted on the generated test file
+	BuildTags []string `yaml:"build_tags,omitempty"`
+
+	// Client packages to import in the generated file
+	ClientPackages []string `yaml:"client_packages,omitempty"`
 }
 
 // Query is the information necessary to build a query method.  The Paths

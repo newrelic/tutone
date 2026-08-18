@@ -9,6 +9,7 @@ import (
 
 	"github.com/newrelic/tutone/generators/command"
 	"github.com/newrelic/tutone/generators/nerdgraphclient"
+	terraformgen "github.com/newrelic/tutone/generators/terraform"
 	"github.com/newrelic/tutone/generators/typegen"
 	"github.com/newrelic/tutone/internal/codegen"
 	"github.com/newrelic/tutone/internal/config"
@@ -109,10 +110,10 @@ func findPackageConfigByName(name string, packages []config.PackageConfig) *conf
 
 func generatePkgTypes(pkgConfig *config.PackageConfig, cfg *config.Config, s *schema.Schema) error {
 	allGenerators := map[string]codegen.Generator{
-		// &terraform.Generator{},
 		"typegen":         &typegen.Generator{},
 		"nerdgraphclient": &nerdgraphclient.Generator{},
 		"command":         &command.Generator{},
+		"terraform":       &terraformgen.Generator{},
 	}
 
 	log.WithFields(log.Fields{
