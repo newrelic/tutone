@@ -18,13 +18,21 @@ func {{ .ExpandFunc }}(d *schema.ResourceData) {{ .InputTypeName }} {
 	{{- range .SchemaFields }}
 	{{- if not .Computed }}
 	{{- if .NeedsManual }}
-	// TUTONE:MANUAL — "{{ .Name }}" is a custom scalar type ({{ .CustomTypeName }}) requiring domain-specific parsing
-	// Example for NaiveDateTime: time.Parse("2006-01-02T15:04:05", d.Get("{{ .Name }}").(string))
+	// TUTONE:MANUAL — "{{ .Name }}" is a custom scalar ({{ .CustomTypeName }}), no custom_scalar_mappings entry provided
+	{{- else if .CustomExpand }}
+	if v, ok := d.GetOk("{{ .Name }}"); ok {
+		input.{{ .GoFieldName }} = {{ .CustomExpand }}
+	}
 	{{- else if .IsNested }}
 	if v, ok := d.GetOk("{{ .Name }}"); ok {
 		list := v.([]interface{})
 		if len(list) > 0 {
+			{{- if .IsPointer }}
+			expanded := expand{{ $.ResourceFunc }}{{ .GoFieldName }}(list[0].(map[string]interface{}))
+			input.{{ .GoFieldName }} = &expanded
+			{{- else }}
 			input.{{ .GoFieldName }} = expand{{ $.ResourceFunc }}{{ .GoFieldName }}(list[0].(map[string]interface{}))
+			{{- end }}
 		}
 	}
 	{{- else if .IsEnum }}
@@ -85,12 +93,23 @@ func {{ .FlattenFunc }}(result *{{ .OutputTypeName }}, d *schema.ResourceData) e
 	{{- range .SchemaFields }}
 	{{- if not .ForceNew }}
 	{{- if .NeedsManual }}
-	// TUTONE:MANUAL — "{{ .Name }}" is a custom scalar type ({{ .CustomTypeName }})
-	// Example: d.Set("{{ .Name }}", result.{{ .GoFieldName }}.String())
+	// TUTONE:MANUAL — "{{ .Name }}" is a custom scalar ({{ .CustomTypeName }}), no custom_scalar_mappings entry provided
+	{{- else if .CustomFlatten }}
+	if err := d.Set("{{ .Name }}", {{ .CustomFlatten | replace "$FIELD" (printf "result.%s" .GoFieldName) }}); err != nil {
+		return err
+	}
 	{{- else if .IsNested }}
+	{{- if .IsPointer }}
+	if result.{{ .GoFieldName }} != nil {
+		if err := d.Set("{{ .Name }}", flatten{{ $.ResourceFunc }}{{ .GoFieldName }}(result.{{ .GoFieldName }})); err != nil {
+			return err
+		}
+	}
+	{{- else }}
 	if err := d.Set("{{ .Name }}", flatten{{ $.ResourceFunc }}{{ .GoFieldName }}(result.{{ .GoFieldName }})); err != nil {
 		return err
 	}
+	{{- end }}
 	{{- else if .IsEnum }}
 	if err := d.Set("{{ .Name }}", string(result.{{ .GoFieldName }})); err != nil {
 		return err

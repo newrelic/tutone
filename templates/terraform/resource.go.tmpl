@@ -110,12 +110,16 @@ func {{ .ResourceFunc }}Create(ctx context.Context, d *schema.ResourceData, meta
 	}
 	{{- end }}
 
+	{{- if .CreateInputVars }}
+	{{- range .CreateInputVars }}
+	{{ .VarName }} := {{ .ExpandFunc }}(d)
+	{{- end }}
+	{{- else }}
 	input := {{ .ExpandFunc }}(d)
+	{{- end }}
 
 	{{- if .BatchCreate }}
-	result, err := client.{{ .ClientAccessor }}.{{ .CreateMethod }}(ctx,
-		{{- if .RequiresAccountID }} accountID,{{ end }}
-		{{- if .RequiresOrgID }} orgID,{{ end }}
+	result, err := client.{{ .ClientAccessor }}.{{ .CreateMethod }}({{ join .CreateCallArgs ", " }},
 		[]interface{}{input})
 	if err != nil {
 		return diag.FromErr(err)
@@ -130,10 +134,7 @@ func {{ .ResourceFunc }}Create(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(r.ID)
 	{{- end }}
 	{{- else }}
-	result, err := client.{{ .ClientAccessor }}.{{ .CreateMethod }}(ctx,
-		{{- if .RequiresAccountID }} accountID,{{ end }}
-		{{- if .RequiresOrgID }} orgID,{{ end }}
-		input)
+	result, err := client.{{ .ClientAccessor }}.{{ .CreateMethod }}({{ join .CreateCallArgs ", " }})
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -224,8 +225,7 @@ func {{ .ResourceFunc }}Read(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("unexpected entity type returned for id %s", d.Id())
 	}
 	{{- else }}
-	result, err := client.{{ .ClientAccessor }}.{{ .ReadMethod }}(ctx,
-		{{- if .RequiresAccountID }} accountID,{{ end }} id)
+	result, err := client.{{ .ClientAccessor }}.{{ .ReadMethod }}({{ join .ReadCallArgs ", " }})
 	if err != nil {
 		{{- if .ReadNotFoundString }}
 		if strings.Contains(err.Error(), "{{ .ReadNotFoundString }}") {
@@ -272,8 +272,7 @@ func {{ .ResourceFunc }}Update(ctx context.Context, d *schema.ResourceData, meta
 
 	input := {{ .ExpandUpdateFunc }}(d)
 
-	_, updateErr := client.{{ .ClientAccessor }}.{{ .UpdateMethod }}(ctx,
-		{{- if .RequiresAccountID }} accountID,{{ end }} id, input)
+	_, updateErr := client.{{ .ClientAccessor }}.{{ .UpdateMethod }}({{ join .UpdateCallArgs ", " }}, input)
 	if updateErr != nil {
 		return diag.FromErr(updateErr)
 	}
@@ -304,18 +303,10 @@ func {{ .ResourceFunc }}Delete(ctx context.Context, d *schema.ResourceData, meta
 	log.Printf("[INFO] Deleting {{ .TFResourceName }} %v", id)
 
 	{{- if .BatchDelete }}
-	{{- if eq .IDType "int" }}
-	deleteErr := client.{{ .ClientAccessor }}.{{ .DeleteMethod }}(ctx,
-		{{- if .RequiresAccountID }} accountID,{{ end }}
-		[]int{id})
+	deleteErr := client.{{ .ClientAccessor }}.{{ .DeleteMethod }}({{ join .DeleteCallArgs ", " }},
+		[]string{fmt.Sprintf("%v", id)})
 	{{- else }}
-	deleteErr := client.{{ .ClientAccessor }}.{{ .DeleteMethod }}(ctx,
-		{{- if .RequiresAccountID }} accountID,{{ end }}
-		[]string{id})
-	{{- end }}
-	{{- else }}
-	deleteErr := client.{{ .ClientAccessor }}.{{ .DeleteMethod }}(ctx,
-		{{- if .RequiresAccountID }} accountID,{{ end }} id)
+	deleteErr := client.{{ .ClientAccessor }}.{{ .DeleteMethod }}({{ join .DeleteCallArgs ", " }})
 	{{- end }}
 	if deleteErr != nil {
 		if _, ok := deleteErr.(*nrErrors.NotFound); ok {

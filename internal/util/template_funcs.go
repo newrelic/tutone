@@ -14,6 +14,7 @@ func GetTemplateFuncs() template.FuncMap {
 	funcs["hasField"] = hasField
 	funcs["snakeToCamelExport"] = SnakeToCamelExport
 	funcs["join"] = strings.Join
+	funcs["replace"] = strings.ReplaceAll
 
 	return funcs
 }

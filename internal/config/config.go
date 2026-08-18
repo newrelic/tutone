@@ -137,6 +137,51 @@ type TerraformConfig struct {
 
 	// Client packages to import in the generated file
 	ClientPackages []string `yaml:"client_packages,omitempty"`
+
+	// Gap 1: multi-arg create (e.g. pathpoint takes both PathPointFlowInput + PathPointScopeInput)
+	CreateInputs []CreateInputConfig `yaml:"create_inputs,omitempty"`
+
+	// Gap 2: fields that use pointer types in client-go structs (*T instead of T)
+	PointerFields []string `yaml:"pointer_fields,omitempty"`
+
+	// Gap 3: custom GraphQL scalar types that need domain-specific expand/flatten logic
+	CustomScalarMappings map[string]ScalarMapping `yaml:"custom_scalar_mappings,omitempty"`
+
+	// Gap 4: explicit argument lists per CRUD operation — overrides default accountID+id pattern
+	CRUDArgs *CRUDArgsConfig `yaml:"crud_args,omitempty"`
+}
+
+// CreateInputConfig describes one argument to a multi-arg create mutation.
+type CreateInputConfig struct {
+	// Arg is the GraphQL mutation argument name (e.g. "pathpoint", "scope")
+	Arg string `yaml:"arg"`
+	// Type is the Go type name without package prefix (e.g. "PathPointFlowInput")
+	Type string `yaml:"type"`
+	// Source controls how the Terraform schema maps to this arg:
+	//   "nested_block" (default) — sourced from a TypeList block named after Arg
+	//   "flat"                   — sourced directly from top-level d.GetOk() fields
+	Source string `yaml:"source,omitempty"`
+}
+
+// ScalarMapping defines how a custom GraphQL SCALAR maps to a Terraform schema type
+// and the Go expressions used in expand/flatten.
+// Use $VALUE in Expand as placeholder for the extracted d.GetOk value.
+// Use $FIELD in Flatten as placeholder for result.FieldName.
+type ScalarMapping struct {
+	TFType  string `yaml:"tf_type"`  // e.g. "schema.TypeInt"
+	GoType  string `yaml:"go_type"`  // e.g. "nrtime.EpochMilliseconds"
+	Expand  string `yaml:"expand"`   // e.g. "nrtime.EpochMilliseconds($VALUE)"
+	Flatten string `yaml:"flatten"`  // e.g. "int64($FIELD)"
+}
+
+// CRUDArgsConfig provides explicit argument lists for each CRUD operation,
+// controlling which variables are passed in each client call.
+// Valid tokens: account_id, org_id, id, input, and any arg name from create_inputs.
+type CRUDArgsConfig struct {
+	Create []string `yaml:"create,omitempty"`
+	Read   []string `yaml:"read,omitempty"`
+	Update []string `yaml:"update,omitempty"`
+	Delete []string `yaml:"delete,omitempty"`
 }
 
 // Query is the information necessary to build a query method.  The Paths

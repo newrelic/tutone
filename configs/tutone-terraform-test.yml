@@ -1,10 +1,11 @@
 ---
 # Test config for terraform-provider-newrelic
 # Drop this file at the root of terraform-provider-newrelic as .tutone.yml
-# Then run:
+# Run from terraform-provider-newrelic root:
 #   export NEW_RELIC_API_KEY=<your-key>
-#   go run /path/to/tutone/cmd/tutone/main.go fetch -s schema.json -c .tutone.yml
-#   go run /path/to/tutone/cmd/tutone/main.go generate --config .tutone.yml --package alertmutingrule
+#   go run /Users/bhoomikars/workspace/tutone/cmd/tutone/main.go fetch -s schema.json -c .tutone.yml
+#   go run /Users/bhoomikars/workspace/tutone/cmd/tutone/main.go generate --config .tutone.yml --package alertmutingrule
+#   go run /Users/bhoomikars/workspace/tutone/cmd/tutone/main.go generate --config .tutone.yml --package pathpoint
 
 log_level: debug
 
@@ -22,6 +23,8 @@ generators:
     templateDir: /Users/bhoomikars/workspace/tutone/templates/terraform
 
 packages:
+
+  # ── Example 1: Standard CRUD (~70% auto without gap fixes) ───────────────
   - name: alertmutingrule
     path: newrelic/
     generators:
@@ -32,24 +35,85 @@ packages:
       - name: alertsMutingRuleUpdate
         max_query_field_depth: 4
       - name: alertsMutingRuleDelete
-        max_query_field_depth: 4
+        max_query_field_depth: 2
     terraform:
       resource_name: alert_muting_rule
-
-      # Explicit client-go method names (NerdGraph mutation names differ from client-go method names)
       create_method: CreateMutingRuleWithContext
       update_method: UpdateMutingRuleWithContext
       delete_method: DeleteMutingRuleWithContext
       read_method:   GetMutingRuleWithContext
-
-      read_type: direct
-      id_fields: [account_id, id]
-      id_type: int
+      read_type:     direct
+      id_type:       int
+      id_fields:     [account_id, id]
       requires_account_id: true
-      computed_fields: [account_id]
-      immutable_fields: []
-      skip_set_on_read: []
-      sensitive_fields: []
+      computed_fields:  [account_id]
       build_tags: [integration, unit, ALERTS]
       client_packages:
         - github.com/newrelic/newrelic-client-go/v2/pkg/alerts
+
+  # ── Example 2: New import — pathpoint (100% auto with all 4 gap fixes) ───
+  # Based on: https://github.com/newrelic/newrelic-client-go/pull/1443
+  - name: pathpoint
+    path: newrelic/
+    generators:
+      - terraform
+    mutations:
+      - name: pathPointCreate
+        max_query_field_depth: 8
+      - name: pathPointUpdate
+        max_query_field_depth: 8
+      - name: pathPointDelete
+        max_query_field_depth: 2
+    terraform:
+      resource_name: pathpoint_flow
+      create_method: PathPointCreateWithContext
+      update_method: PathPointUpdateWithContext
+      delete_method: PathPointDeleteWithContext
+      read_method:   GetFlowWithContext
+
+      # GUID-based ID (string, not numeric int pair)
+      id_type:   string
+      id_fields: [id]
+      requires_account_id: true
+      computed_fields: [account_id]
+
+      # ── Gap 1: multi-arg create ─────────────────────────────────────────
+      # pathPointCreate takes TWO separate inputs: pathpoint + scope
+      create_inputs:
+        - arg: pathpoint
+          type: PathPointFlowInput
+          source: nested_block    # sourced from a "pathpoint" TypeList block in schema
+        - arg: scope
+          type: PathPointScopeInput
+          source: nested_block    # sourced from a "scope" TypeList block in schema
+
+      # ── Gap 2: pointer fields ────────────────────────────────────────────
+      # These fields use *T in client-go structs (optional nested objects)
+      pointer_fields:
+        - kpi_time_window
+        - signal_query
+        - relative_range
+
+      # ── Gap 3: custom scalar mappings ────────────────────────────────────
+      # Without these, EpochMilliseconds would be TUTONE:MANUAL.
+      # With these, fully generated using the expressions below.
+      custom_scalar_mappings:
+        EpochMilliseconds:
+          tf_type:  schema.TypeInt
+          go_type:  nrtime.EpochMilliseconds
+          expand:   "nrtime.EpochMilliseconds($VALUE)"
+          flatten:  "int64($FIELD)"
+
+      # ── Gap 4: explicit CRUD arg lists ───────────────────────────────────
+      # pathPointDelete takes only a GUID — no accountID
+      # pathPointUpdate takes GUID + input — no accountID
+      crud_args:
+        create: [account_id, pathpoint, scope]
+        read:   [account_id, id]
+        update: [id, input]
+        delete: [id]
+
+      build_tags: [integration, unit, PATHPOINT]
+      client_packages:
+        - github.com/newrelic/newrelic-client-go/v2/pkg/pathpoint
+        - github.com/newrelic/newrelic-client-go/v2/pkg/nrtime

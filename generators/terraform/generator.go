@@ -98,33 +98,53 @@ type TerraformGenerator struct {
 	BuildTags []string
 
 	// HasManualFields is true when at least one field requires a TUTONE:MANUAL stub.
-	// Used by templates to emit the file-level automation status banner.
 	HasManualFields bool
+
+	// Gap 1: multi-arg create support
+	CreateInputVars []CreateInputVar // one per create_inputs entry
+	// Pre-resolved ctx-prefixed arg lists for each CRUD client call
+	CreateCallArgs []string
+	ReadCallArgs   []string
+	UpdateCallArgs []string
+	DeleteCallArgs []string
+}
+
+// CreateInputVar is the runtime representation of one CreateInputConfig entry.
+type CreateInputVar struct {
+	ArgName    string // GraphQL arg name, e.g. "pathpoint"
+	VarName    string // Go variable name, e.g. "pathpointInput"
+	ExpandFunc string // e.g. "expandNewRelicPathpointFlowCreateInput"
+	Type       string // qualified Go type, e.g. "pathpoint.PathPointFlowInput"
+	Source     string // "nested_block" | "flat"
 }
 
 // TerraformSchemaField is one attribute in the generated schema.Schema map.
 type TerraformSchemaField struct {
-	Name            string // snake_case Terraform attribute name (e.g. "action_on_muting_rule_window_ended")
-	GoFieldName     string // PascalCase Go struct field name (e.g. "ActionOnMutingRuleWindowEnded")
+	Name            string // snake_case Terraform attribute name
+	GoFieldName     string // PascalCase Go struct field name
 	TFType          string // schema.TypeString | TypeInt | TypeBool | TypeFloat | TypeList | TypeSet
-	GoTypeAssertion string // .(string) | .(int) | .(bool) | .(float64) — for d.GetOk()
+	GoTypeAssertion string // .(string) | .(int) | .(bool) | .(float64)
 	Required        bool
 	Optional        bool
 	Computed        bool
 	ForceNew        bool
 	Sensitive       bool
 	Description     string
-	IsNested        bool // TypeList/TypeSet wrapping a &schema.Resource{} Elem
+	IsNested        bool
 	NestedFields    []TerraformSchemaField
-	GoNestedTypeName string // qualified Go type for nested expand/flatten, e.g. "alerts.AlertsMutingRuleConditionGroup"
+	GoNestedTypeName string
 	MaxItems        int
-	IsEnum          bool     // single scalar ENUM — ValidateFunc on the field itself
-	IsEnumList      bool     // [ENUM] list — use TypeSet; ValidateFunc goes on Elem, not the list
-	EnumValues      []string // enum values for ValidateFunc
-	EnumGoType      string   // e.g. "alerts.AlertsActionOnMutingRuleWindowEnded"
+	IsEnum          bool
+	IsEnumList      bool
+	EnumValues      []string
+	EnumGoType      string
 	ConflictsWith   []string
-	// NeedsManual: true only for custom SCALAR types needing domain-specific parsing
-	// (e.g. NaiveDateTime, EpochMilliseconds). Standard scalars/enums/nested are generated.
+	// Gap 2: pointer field — use &expanded in expand, nil-guard in flatten
+	IsPointer bool
+	// Gap 3: custom scalar — non-empty means fully generated using these expressions
+	CustomExpand  string // Go expand expression, $VALUE replaced with d.GetOk result
+	CustomFlatten string // Go flatten expression, $FIELD replaced with result.FieldName
+	// NeedsManual: true only when no CustomScalarMapping exists for this custom SCALAR
 	NeedsManual    bool
 	CustomTypeName string
 }
@@ -221,6 +241,19 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 		}
 	}
 
+	// Gap 1: build CreateInputVars from create_inputs config
+	g.CreateInputVars = buildCreateInputVars(tf.CreateInputs, g.ClientPackageAlias, snakeToCamel(tf.ResourceName))
+	// If no explicit create_inputs, use single default input
+	if len(g.CreateInputVars) == 0 {
+		g.ExpandFunc = "expandNewRelic" + snakeToCamel(tf.ResourceName) + "CreateInput"
+	}
+
+	// Gap 4: resolve CRUD call arg lists
+	g.CreateCallArgs = resolveCallArgs(tf.CRUDArgs, "create", g)
+	g.ReadCallArgs = resolveCallArgs(tf.CRUDArgs, "read", g)
+	g.UpdateCallArgs = resolveCallArgs(tf.CRUDArgs, "update", g)
+	g.DeleteCallArgs = resolveCallArgs(tf.CRUDArgs, "delete", g)
+
 	// Derive automation status after fields are built — used for file-level banner
 	g.HasManualFields = false
 
@@ -230,7 +263,9 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 		sensitiveSet := stringSet(tf.SensitiveFields)
 		immutableSet := stringSet(tf.ImmutableFields)
 
-		fields, err := g.buildSchemaFields(s, mutations[0].Name, g.ClientPackageAlias, computedSet, sensitiveSet, immutableSet)
+		pointerSet := stringSet(tf.PointerFields)
+		fields, err := g.buildSchemaFields(s, mutations[0].Name, g.ClientPackageAlias,
+			computedSet, sensitiveSet, immutableSet, pointerSet, tf.CustomScalarMappings)
 		if err != nil {
 			log.Warnf("could not derive schema fields for %s: %s", tf.ResourceName, err)
 		} else {
@@ -344,7 +379,8 @@ func (g *Generator) buildSchemaFields(
 	s *schema.Schema,
 	createMutationName string,
 	pkgAlias string,
-	computedSet, sensitiveSet, immutableSet map[string]bool,
+	computedSet, sensitiveSet, immutableSet, pointerSet map[string]bool,
+	scalarMappings map[string]config.ScalarMapping,
 ) ([]TerraformSchemaField, error) {
 	mutation, err := s.LookupMutationByName(createMutationName)
 	if err != nil {
@@ -374,14 +410,15 @@ func (g *Generator) buildSchemaFields(
 		rawFields = inputType.Fields
 	}
 
-	return buildFieldsFromRaw(s, rawFields, pkgAlias, computedSet, sensitiveSet, immutableSet), nil
+	return buildFieldsFromRaw(s, rawFields, pkgAlias, computedSet, sensitiveSet, immutableSet, pointerSet, scalarMappings), nil
 }
 
 func buildFieldsFromRaw(
 	s *schema.Schema,
 	rawFields []schema.Field,
 	pkgAlias string,
-	computedSet, sensitiveSet, immutableSet map[string]bool,
+	computedSet, sensitiveSet, immutableSet, pointerSet map[string]bool,
+	scalarMappings map[string]config.ScalarMapping,
 ) []TerraformSchemaField {
 	var fields []TerraformSchemaField
 
@@ -447,6 +484,11 @@ func buildFieldsFromRaw(
 			tf.Sensitive = true
 		}
 
+		// Gap 2: pointer field detection
+		if pointerSet[snakeName] || pointerSet[f.Name] {
+			tf.IsPointer = true
+		}
+
 		// Nested: recurse to build child schema + set concrete Go type name
 		if nested {
 			tf.GoNestedTypeName = pkgAlias + "." + typeName
@@ -457,7 +499,8 @@ func buildFieldsFromRaw(
 					nestedRaw = nestedType.Fields
 				}
 				tf.NestedFields = buildFieldsFromRaw(s, nestedRaw, pkgAlias,
-					map[string]bool{}, map[string]bool{}, map[string]bool{})
+					map[string]bool{}, map[string]bool{}, map[string]bool{},
+					pointerSet, scalarMappings)
 				for _, nf := range tf.NestedFields {
 					if nf.NeedsManual {
 						tf.NeedsManual = true
@@ -467,12 +510,21 @@ func buildFieldsFromRaw(
 			}
 		}
 
-		// Custom SCALAR — needs manual parsing (NaiveDateTime, EpochMilliseconds, etc.)
+		// Gap 3: custom scalar — check mapping before marking NeedsManual
 		if !nested && !isEnum && !isEnumList && isCustomScalar(f, s) {
-			tf.NeedsManual = true
-			tf.CustomTypeName = typeName
-			tf.TFType = "schema.TypeString"
-			tf.GoTypeAssertion = ".(string)"
+			if mapping, ok := scalarMappings[typeName]; ok {
+				// Fully generated using the provided mapping expressions
+				tf.TFType = mapping.TFType
+				tf.GoTypeAssertion = tfTypeToGoAssertion(mapping.TFType)
+				tf.CustomExpand = strings.ReplaceAll(mapping.Expand, "$VALUE", "v"+tf.GoTypeAssertion)
+				tf.CustomFlatten = mapping.Flatten // $FIELD substituted in template
+			} else {
+				// No mapping provided — still needs manual
+				tf.NeedsManual = true
+				tf.CustomTypeName = typeName
+				tf.TFType = "schema.TypeString"
+				tf.GoTypeAssertion = ".(string)"
+			}
 		}
 
 		fields = append(fields, tf)
@@ -859,6 +911,114 @@ func renderTemplate(templateDir, templateName, destFile, destDir string, g *Gene
 		DestinationDir:  destDir,
 	}
 	return c.WriteFile(g)
+}
+
+// ── Gap 1: CreateInputVar helpers ────────────────────────────────────────────
+
+func buildCreateInputVars(inputs []config.CreateInputConfig, pkgAlias, resourceCamel string) []CreateInputVar {
+	vars := make([]CreateInputVar, 0, len(inputs))
+	for i, inp := range inputs {
+		varName := camelToSnake(inp.Arg) // arg name → snake for var prefix
+		varName = strings.ReplaceAll(varName, "_", "") + "Input"
+		// First input's expand function is the primary ExpandFunc
+		expandFunc := "expandNewRelic" + resourceCamel
+		if i == 0 {
+			expandFunc += "CreateInput"
+		} else {
+			expandFunc += upperFirst(inp.Arg) + "Input"
+		}
+		vars = append(vars, CreateInputVar{
+			ArgName:    inp.Arg,
+			VarName:    varName,
+			ExpandFunc: expandFunc,
+			Type:       pkgAlias + "." + inp.Type,
+			Source:     inp.Source,
+		})
+	}
+	return vars
+}
+
+// ── Gap 4: CRUDArgs resolution ───────────────────────────────────────────────
+
+// resolveCallArgs builds the ctx-prefixed arg list for a CRUD client call.
+// It maps logical token names to their Go variable names.
+func resolveCallArgs(crud *config.CRUDArgsConfig, op string, g *Generator) []string {
+	var tokens []string
+
+	if crud != nil {
+		switch op {
+		case "create":
+			tokens = crud.Create
+		case "read":
+			tokens = crud.Read
+		case "update":
+			tokens = crud.Update
+		case "delete":
+			tokens = crud.Delete
+		}
+	}
+
+	// Default token lists when crud_args not specified
+	if len(tokens) == 0 {
+		switch op {
+		case "create":
+			if g.RequiresAccountID {
+				tokens = append(tokens, "account_id")
+			}
+			if g.RequiresOrgID {
+				tokens = append(tokens, "org_id")
+			}
+			for _, civ := range g.CreateInputVars {
+				tokens = append(tokens, civ.ArgName)
+			}
+			if len(g.CreateInputVars) == 0 {
+				tokens = append(tokens, "input")
+			}
+		case "read":
+			if g.RequiresAccountID {
+				tokens = append(tokens, "account_id")
+			}
+			tokens = append(tokens, "id")
+		case "update":
+			if g.RequiresAccountID {
+				tokens = append(tokens, "account_id")
+			}
+			tokens = append(tokens, "id", "input")
+		case "delete":
+			if g.RequiresAccountID {
+				tokens = append(tokens, "account_id")
+			}
+			tokens = append(tokens, "id")
+		}
+	}
+
+	args := []string{"ctx"}
+	for _, tok := range tokens {
+		args = append(args, tokenToGoVar(tok, g))
+	}
+	return args
+}
+
+// tokenToGoVar maps a config token to its Go variable name.
+func tokenToGoVar(tok string, g *Generator) string {
+	switch tok {
+	case "account_id":
+		return "accountID"
+	case "org_id":
+		return "orgID"
+	case "id":
+		return "id"
+	case "input":
+		return "input"
+	default:
+		// Check create input vars by arg name
+		for _, civ := range g.CreateInputVars {
+			if civ.ArgName == tok {
+				return civ.VarName
+			}
+		}
+		return tok
+	}
 }
 
 // scanLines is a helper used in tests.
