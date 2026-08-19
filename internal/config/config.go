@@ -154,6 +154,15 @@ type TerraformConfig struct {
 	// Defaults to "website". Used for generating docs/r/<name>.html.markdown and
 	// patching newrelic.erb.
 	WebsiteDir string `yaml:"website_dir,omitempty"`
+
+	// ImportIDFormat overrides the auto-derived import ID format string shown in
+	// the generated docs (e.g. "<id>" for GUID-based resources instead of
+	// "<account_id>:<id>"). Leave blank to use the derived value.
+	ImportIDFormat string `yaml:"import_id_format,omitempty"`
+
+	// ImportExample overrides the auto-derived import example value shown in
+	// the generated docs. Leave blank to use the derived value.
+	ImportExample string `yaml:"import_example,omitempty"`
 }
 
 // CreateInputConfig describes one argument to a multi-arg create mutation.

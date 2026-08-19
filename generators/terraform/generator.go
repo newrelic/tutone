@@ -321,6 +321,12 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 		g.WebsiteDir = "website"
 	}
 	g.ImportIDFormat, g.ImportExample = deriveImportFormat(g.ResourceName, g.IDType, g.IDFields, g.RequiresAccountID)
+	if tf.ImportIDFormat != "" {
+		g.ImportIDFormat = tf.ImportIDFormat
+	}
+	if tf.ImportExample != "" {
+		g.ImportExample = tf.ImportExample
+	}
 
 	return nil
 }
@@ -413,6 +419,30 @@ func (g *Generator) Execute(genConfig *config.GeneratorConfig, pkgConfig *config
 
 // ── Schema field derivation ──────────────────────────────────────────────────
 
+// lookupMutationDeep finds a mutation by name searching both the root mutation type and one
+// level of namespace objects (e.g. "pathpoint" → pathPointCreate). NerdGraph namespaces most
+// mutations under a namespace object on the root mutation type.
+func lookupMutationDeep(s *schema.Schema, name string) (*schema.Field, error) {
+	// Fast path: top-level mutation (e.g. legacy resources)
+	if m, err := s.LookupMutationByName(name); err == nil {
+		return m, nil
+	}
+
+	// Slow path: search one level of namespaces
+	for _, ns := range s.MutationType.Fields {
+		nsType, err := s.LookupTypeByName(ns.Type.GetTypeName())
+		if err != nil || nsType == nil {
+			continue
+		}
+		for i, f := range nsType.Fields {
+			if f.Name == name {
+				return &nsType.Fields[i], nil
+			}
+		}
+	}
+	return nil, fmt.Errorf("mutation %q not found at root or one namespace level deep", name)
+}
+
 // buildSchemaFields derives TerraformSchemaField list from the create mutation's input type.
 func (g *Generator) buildSchemaFields(
 	s *schema.Schema,
@@ -421,7 +451,7 @@ func (g *Generator) buildSchemaFields(
 	computedSet, sensitiveSet, immutableSet, pointerSet map[string]bool,
 	scalarMappings map[string]config.ScalarMapping,
 ) ([]TerraformSchemaField, error) {
-	mutation, err := s.LookupMutationByName(createMutationName)
+	mutation, err := lookupMutationDeep(s, createMutationName)
 	if err != nil {
 		return nil, fmt.Errorf("mutation %q: %w", createMutationName, err)
 	}
@@ -908,7 +938,7 @@ func appendProviderRegistration(regFile, tfName, funcName string) error {
 			return nil
 		}
 	}
-	line := fmt.Sprintf("// Add to ResourcesMap in provider_newrelic.go:\n\"%s\": %s(),\n\n", tfName, funcName)
+	line := fmt.Sprintf("\"%s\": %s(),\n", tfName, funcName)
 	f, err := os.OpenFile(regFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err

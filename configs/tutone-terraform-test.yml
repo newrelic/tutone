@@ -113,6 +113,10 @@ packages:
         update: [id, input]
         delete: [id]
 
+      # Import by GUID — not the default "<account_id>:<id>" format
+      import_id_format: "<id>"
+      import_example: "MjUyMDUyOHxBUE18QVBQTElDQVRJT058MjE1MDM3Nzk1"
+
       build_tags: [integration, unit, PATHPOINT]
       client_packages:
         - github.com/newrelic/newrelic-client-go/v2/pkg/pathpoint
