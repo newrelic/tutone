@@ -107,6 +107,13 @@ type TerraformGenerator struct {
 	ReadCallArgs   []string
 	UpdateCallArgs []string
 	DeleteCallArgs []string
+
+	// Website / documentation fields (used by docs.html.markdown.tmpl)
+	SidebarCurrent string // e.g. "docs-newrelic-resource-alert-muting-rule"
+	ResourceTitle  string // e.g. "alert muting rule"
+	ImportIDFormat string // e.g. "<account_id>:<id>" or "<id>"
+	ImportExample  string // e.g. "12345678:67890" or "example_id"
+	WebsiteDir     string // base path for website output, defaults to "website"
 }
 
 // CreateInputVar is the runtime representation of one CreateInputConfig entry.
@@ -306,6 +313,15 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 		})
 	}
 
+	// Website / documentation fields
+	g.SidebarCurrent = "docs-newrelic-resource-" + strings.ReplaceAll(g.ResourceName, "_", "-")
+	g.ResourceTitle = strings.ReplaceAll(g.ResourceName, "_", " ")
+	g.WebsiteDir = tf.WebsiteDir
+	if g.WebsiteDir == "" {
+		g.WebsiteDir = "website"
+	}
+	g.ImportIDFormat, g.ImportExample = deriveImportFormat(g.ResourceName, g.IDType, g.IDFields, g.RequiresAccountID)
+
 	return nil
 }
 
@@ -365,6 +381,29 @@ func (g *Generator) Execute(genConfig *config.GeneratorConfig, pkgConfig *config
 			log.Warnf("could not auto-patch provider_newrelic.go: %s", err)
 		} else {
 			generated = append(generated, providerFile)
+		}
+	}
+
+	// 6. website/docs/r/<name>.html.markdown — scaffold-once (never overwrite)
+	docsDir := filepath.Join(g.WebsiteDir, "docs", "r")
+	docFile := filepath.Join(docsDir, g.ResourceName+".html.markdown")
+	if !fileExists(docFile) {
+		if err := os.MkdirAll(docsDir, 0755); err != nil {
+			log.Warnf("could not create %s: %s", docsDir, err)
+		} else if err := renderRawTemplate(templateDir, "docs.html.markdown.tmpl", docFile, docsDir, g); err != nil {
+			log.Warnf("docs template: %s", err)
+		} else {
+			generated = append(generated, docFile)
+		}
+	}
+
+	// 7. website/newrelic.erb — patch @resources array if file exists
+	erbFile := filepath.Join(g.WebsiteDir, "newrelic.erb")
+	if fileExists(erbFile) {
+		if err := patchNavERB(erbFile, g.ResourceName); err != nil {
+			log.Warnf("could not patch %s: %s", erbFile, err)
+		} else {
+			generated = append(generated, erbFile)
 		}
 	}
 
@@ -1032,3 +1071,95 @@ func scanLines(s string) []string {
 }
 
 var _ = scanLines // suppress unused warning; used in tests
+
+// ── Website / documentation helpers ─────────────────────────────────────────
+
+// deriveImportFormat returns the import ID format string and an example value.
+func deriveImportFormat(resourceName, idType string, idFields []string, requiresAccountID bool) (format, example string) {
+	if idType == "int" || (requiresAccountID && len(idFields) > 0) {
+		resourceID := resourceName + "_id"
+		if len(idFields) > 0 {
+			resourceID = idFields[len(idFields)-1]
+		}
+		return "<account_id>:<" + resourceID + ">", "12345678:67890"
+	}
+	if len(idFields) > 1 {
+		parts := make([]string, len(idFields))
+		for i, f := range idFields {
+			parts[i] = "<" + f + ">"
+		}
+		return strings.Join(parts, ":"), strings.Repeat("example:", len(idFields)-1) + "id"
+	}
+	return "<id>", "example_id"
+}
+
+// renderRawTemplate renders a template file without running goimports (for non-Go files).
+func renderRawTemplate(templateDir, templateName, destFile, destDir string, g *Generator) error {
+	c := codegen.CodeGen{
+		TemplateDir:     templateDir,
+		TemplateName:    templateName,
+		DestinationFile: destFile,
+		DestinationDir:  destDir,
+	}
+	return c.WriteRawFile(g)
+}
+
+// patchNavERB inserts resourceName into the @resources array in website/newrelic.erb
+// in alphabetical order. No-ops if the entry already exists.
+func patchNavERB(erbFile, resourceName string) error {
+	data, err := os.ReadFile(erbFile)
+	if err != nil {
+		return err
+	}
+	content := string(data)
+
+	if strings.Contains(content, `"`+resourceName+`"`) {
+		log.Infof("%s already contains %q — skipping", erbFile, resourceName)
+		return nil
+	}
+
+	startMarker := "@resources = ["
+	startIdx := strings.Index(content, startMarker)
+	if startIdx == -1 {
+		return fmt.Errorf("could not find @resources array in %s", erbFile)
+	}
+
+	bracketStart := strings.Index(content[startIdx:], "[") + startIdx
+	bracketEnd := strings.Index(content[bracketStart:], "]") + bracketStart
+	if bracketEnd <= bracketStart {
+		return fmt.Errorf("malformed @resources array in %s", erbFile)
+	}
+
+	arrayContent := content[bracketStart+1 : bracketEnd]
+	var resources []string
+	for _, line := range strings.Split(arrayContent, "\n") {
+		line = strings.TrimSpace(line)
+		line = strings.TrimRight(line, ",")
+		line = strings.Trim(line, `"`)
+		if line != "" {
+			resources = append(resources, line)
+		}
+	}
+
+	insertPos := len(resources)
+	for i, r := range resources {
+		if r > resourceName {
+			insertPos = i
+			break
+		}
+	}
+
+	newResources := make([]string, 0, len(resources)+1)
+	newResources = append(newResources, resources[:insertPos]...)
+	newResources = append(newResources, resourceName)
+	newResources = append(newResources, resources[insertPos:]...)
+
+	var newArray strings.Builder
+	for _, r := range newResources {
+		newArray.WriteString("\n    \"" + r + "\",")
+	}
+	newArray.WriteString("\n")
+
+	newContent := content[:bracketStart+1] + newArray.String() + content[bracketEnd:]
+	return os.WriteFile(erbFile, []byte(newContent), 0644)
+}

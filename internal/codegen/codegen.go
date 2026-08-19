@@ -80,6 +80,32 @@ func (c *CodeGen) WriteFile(g Generator) error {
 	return nil
 }
 
+// WriteRawFile writes a file from a template without running goimports.
+// Use this for non-Go files such as Markdown or YAML.
+func (c *CodeGen) WriteRawFile(g Generator) error {
+	if _, err := os.Stat(c.DestinationDir); os.IsNotExist(err) {
+		if err = os.MkdirAll(c.DestinationDir, 0755); err != nil {
+			return err
+		}
+	}
+
+	file, err := os.Create(c.DestinationFile)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	templatePath := path.Join(c.TemplateDir, c.TemplateName)
+	templateName := path.Base(templatePath)
+
+	tmpl, err := template.New(templateName).Funcs(util.GetTemplateFuncs()).ParseFiles(templatePath)
+	if err != nil {
+		return err
+	}
+
+	return tmpl.Execute(file, g)
+}
+
 func (c *CodeGen) WriteFileFromTemplateString(g Generator, templateString string) error {
 	var err error
 

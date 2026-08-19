@@ -149,6 +149,11 @@ type TerraformConfig struct {
 
 	// Gap 4: explicit argument lists per CRUD operation — overrides default accountID+id pattern
 	CRUDArgs *CRUDArgsConfig `yaml:"crud_args,omitempty"`
+
+	// WebsiteDir is the path to the provider's website directory relative to CWD.
+	// Defaults to "website". Used for generating docs/r/<name>.html.markdown and
+	// patching newrelic.erb.
+	WebsiteDir string `yaml:"website_dir,omitempty"`
 }
 
 // CreateInputConfig describes one argument to a multi-arg create mutation.

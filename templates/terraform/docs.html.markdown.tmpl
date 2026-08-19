@@ -1,0 +1,63 @@
+---
+layout: 'newrelic'
+page_title: 'New Relic: {{ .TFResourceName }}'
+sidebar_current: '{{ .SidebarCurrent }}'
+description: |-
+  Create and manage {{ .ResourceTitle }} in New Relic.
+---
+
+# Resource: {{ .TFResourceName }}
+
+Use this resource to create and manage New Relic {{ .ResourceTitle }}.
+
+## Example Usage
+
+```hcl
+resource "{{ .TFResourceName }}" "foo" {
+{{ if .RequiresAccountID }}  account_id = <your_account_id>
+{{ end -}}
+{{- range .SchemaFields -}}
+{{- if and (not .IsNested) (not .Computed) }}  # {{ .Name }} = {{ if .Required }}(Required) {{ end }}{{ if .Description }}# {{ .Description }}{{ end }}
+{{ end -}}
+{{- end -}}
+}
+```
+
+## Argument Reference
+
+The following arguments are supported:
+
+{{ range .SchemaFields -}}
+  * `{{ .Name }}` - ({{ if .Required }}Required{{ else if and .Computed (not .Optional) }}Computed{{ else }}Optional{{ end }}){{ if .Description }} {{ .Description }}{{ end }}{{ if .IsNested }} See [Nested `{{ .Name }}` blocks](#nested-{{ replace .Name "_" "-" }}-blocks) below for details.{{ end }}
+{{ end }}
+{{- range .SchemaFields -}}
+{{- if .IsNested }}
+
+### Nested `{{ .Name }}` blocks
+
+The following arguments are supported in the `{{ .Name }}` block:
+
+{{ range .NestedFields -}}
+  * `{{ .Name }}` - ({{ if .Required }}Required{{ else if and .Computed (not .Optional) }}Computed{{ else }}Optional{{ end }}){{ if .Description }} {{ .Description }}{{ end }}
+{{ end -}}
+{{- end -}}
+{{- end }}
+
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+  * `id` - The ID of the {{ .ResourceTitle }}.
+{{- range .SchemaFields -}}
+{{- if .Computed }}
+  * `{{ .Name }}` - {{ .Description }}
+{{- end -}}
+{{- end }}
+
+## Import
+
+{{ .ResourceTitle | title }} can be imported using the `{{ .ImportIDFormat }}`, e.g.
+
+```
+$ terraform import {{ .TFResourceName }}.foo {{ .ImportExample }}
+```
