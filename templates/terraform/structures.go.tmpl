@@ -51,6 +51,72 @@ func {{ .ExpandFunc }}(d *schema.ResourceData) {{ .InputTypeName }} {
 	return input
 }
 
+{{- /* Gap 1: emit secondary create expand functions (indices 1+) */}}
+{{- range $i, $civ := .CreateInputVars }}
+{{- if gt $i 0 }}
+
+// {{ $civ.ExpandFunc }} builds the {{ $civ.ArgName }} input from Terraform state.
+// TUTONE:AUTO — fully generated
+func {{ $civ.ExpandFunc }}(d *schema.ResourceData) {{ $civ.Type }} {
+	input := {{ $civ.Type }}{}
+	{{- if eq $civ.Source "nested_block" }}
+	if v, ok := d.GetOk("{{ $civ.ArgName }}"); ok {
+		list := v.([]interface{})
+		if len(list) > 0 {
+			cfg := list[0].(map[string]interface{})
+			{{- range $civ.SchemaFields }}
+			{{- if .NeedsManual }}
+			// TUTONE:MANUAL — "{{ .Name }}" is a custom scalar ({{ .CustomTypeName }})
+			{{- else if .CustomExpand }}
+			if v, ok := cfg["{{ .Name }}"]; ok {
+				input.{{ .GoFieldName }} = {{ .CustomExpand }}
+			}
+			{{- else if .IsEnum }}
+			if v, ok := cfg["{{ .Name }}"]; ok {
+				input.{{ .GoFieldName }} = {{ .EnumGoType }}(v.(string))
+			}
+			{{- else if .IsNested }}
+			if v, ok := cfg["{{ .Name }}"]; ok {
+				_ = v // TUTONE:MANUAL — sub-nested expand for {{ .Name }}
+			}
+			{{- else if .Required }}
+			input.{{ .GoFieldName }} = cfg["{{ .Name }}"]{{ .GoTypeAssertion }}
+			{{- else }}
+			if v, ok := cfg["{{ .Name }}"]; ok {
+				input.{{ .GoFieldName }} = v{{ .GoTypeAssertion }}
+			}
+			{{- end }}
+			{{- end }}
+		}
+	}
+	{{- else }}
+	{{- range $civ.SchemaFields }}
+	{{- if not .Computed }}
+	{{- if .NeedsManual }}
+	// TUTONE:MANUAL — "{{ .Name }}" is a custom scalar ({{ .CustomTypeName }})
+	{{- else if .CustomExpand }}
+	if v, ok := d.GetOk("{{ .Name }}"); ok {
+		input.{{ .GoFieldName }} = {{ .CustomExpand }}
+	}
+	{{- else if .IsEnum }}
+	if v, ok := d.GetOk("{{ .Name }}"); ok {
+		input.{{ .GoFieldName }} = {{ .EnumGoType }}(v.(string))
+	}
+	{{- else if .Required }}
+	input.{{ .GoFieldName }} = d.Get("{{ .Name }}"){{ .GoTypeAssertion }}
+	{{- else }}
+	if v, ok := d.GetOk("{{ .Name }}"); ok {
+		input.{{ .GoFieldName }} = v{{ .GoTypeAssertion }}
+	}
+	{{- end }}
+	{{- end }}
+	{{- end }}
+	{{- end }}
+	return input
+}
+{{- end }}
+{{- end }}
+
 {{- if .HasUpdate }}
 
 // {{ .ExpandUpdateFunc }} builds the update API input from Terraform state.

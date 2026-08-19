@@ -272,7 +272,7 @@ func {{ .ResourceFunc }}Update(ctx context.Context, d *schema.ResourceData, meta
 
 	input := {{ .ExpandUpdateFunc }}(d)
 
-	_, updateErr := client.{{ .ClientAccessor }}.{{ .UpdateMethod }}({{ join .UpdateCallArgs ", " }}, input)
+	_, updateErr := client.{{ .ClientAccessor }}.{{ .UpdateMethod }}({{ join .UpdateCallArgs ", " }})
 	if updateErr != nil {
 		return diag.FromErr(updateErr)
 	}

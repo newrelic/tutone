@@ -155,6 +155,11 @@ type TerraformConfig struct {
 	// patching newrelic.erb.
 	WebsiteDir string `yaml:"website_dir,omitempty"`
 
+	// ProductMappingTag is the value written to integration_test_mappings.yaml for
+	// this resource (e.g. "PATHPOINTS", "ALERTS"). Used by the Jenkins generate script.
+	// If blank, the script requires PRODUCT_MAPPING_TAG to be set as an env var.
+	ProductMappingTag string `yaml:"product_mapping_tag,omitempty"`
+
 	// ImportIDFormat overrides the auto-derived import ID format string shown in
 	// the generated docs (e.g. "<id>" for GUID-based resources instead of
 	// "<account_id>:<id>"). Leave blank to use the derived value.

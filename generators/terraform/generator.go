@@ -123,6 +123,10 @@ type CreateInputVar struct {
 	ExpandFunc string // e.g. "expandNewRelicPathpointFlowCreateInput"
 	Type       string // qualified Go type, e.g. "pathpoint.PathPointFlowInput"
 	Source     string // "nested_block" | "flat"
+	// SchemaFields holds the fields for the secondary input type so the structures
+	// template can emit a fully-generated expand function for this arg.
+	// Only populated for indices 1+ (the primary expand is g.SchemaFields).
+	SchemaFields []TerraformSchemaField
 }
 
 // TerraformSchemaField is one attribute in the generated schema.Schema map.
@@ -253,6 +257,30 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 	// If no explicit create_inputs, use single default input
 	if len(g.CreateInputVars) == 0 {
 		g.ExpandFunc = "expandNewRelic" + snakeToCamel(tf.ResourceName) + "CreateInput"
+	}
+
+	// Populate SchemaFields for secondary create inputs (indices 1+) so the
+	// structures template can emit fully-generated expand functions for each arg.
+	for i := range g.CreateInputVars {
+		if i == 0 {
+			continue // primary — already covered by g.SchemaFields
+		}
+		civ := &g.CreateInputVars[i]
+		// Strip package prefix: "pathpoint.PathPointScopeInput" → "PathPointScopeInput"
+		typeName := civ.Type
+		if dotIdx := strings.LastIndex(typeName, "."); dotIdx >= 0 {
+			typeName = typeName[dotIdx+1:]
+		}
+		t, err := s.LookupTypeByName(typeName)
+		if err == nil && t != nil {
+			rawFields := t.InputFields
+			if len(rawFields) == 0 {
+				rawFields = t.Fields
+			}
+			civ.SchemaFields = buildFieldsFromRaw(s, rawFields, g.ClientPackageAlias,
+				map[string]bool{}, map[string]bool{}, map[string]bool{},
+				stringSet(tf.PointerFields), tf.CustomScalarMappings)
+		}
 	}
 
 	// Gap 4: resolve CRUD call arg lists
