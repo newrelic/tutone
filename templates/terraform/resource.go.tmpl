@@ -112,7 +112,13 @@ func {{ .ResourceFunc }}Create(ctx context.Context, d *schema.ResourceData, meta
 
 	{{- if .CreateInputVars }}
 	{{- range .CreateInputVars }}
+	{{- if .Expression }}
+	{{ .VarName }} := {{ .Expression }}
+	{{- else if .PassAccountID }}
+	{{ .VarName }} := {{ .ExpandFunc }}(d, accountID)
+	{{- else }}
 	{{ .VarName }} := {{ .ExpandFunc }}(d)
+	{{- end }}
 	{{- end }}
 	{{- else }}
 	input := {{ .ExpandFunc }}(d)
@@ -288,7 +294,11 @@ func {{ .ResourceFunc }}Update(ctx context.Context, d *schema.ResourceData, meta
 
 	log.Printf("[INFO] Updating {{ .TFResourceName }} %v", id)
 
+	{{- if .ExpandUpdateWithAccountID }}
+	input := {{ .ExpandUpdateFunc }}(d, accountID)
+	{{- else }}
 	input := {{ .ExpandUpdateFunc }}(d)
+	{{- end }}
 
 	_, updateErr := client.{{ .ClientAccessor }}.{{ .UpdateMethod }}({{ join .UpdateCallArgs ", " }})
 	if updateErr != nil {

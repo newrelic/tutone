@@ -78,9 +78,12 @@ packages:
         - arg: pathpoint
           type: PathPointFlowInput
           source: nested_block
+          pass_account_id: true    # accountID embedded in KPI inputs via expandFunc(d, accountID)
         - arg: scope
           type: PathPointScopeInput
-          source: nested_block
+          # scope is not user-visible — constructed from accountID, not from schema
+          expression: "pathpoint.PathPointScopeInput{ID: accountID, Type: pathpoint.PathPointScopeTypeTypes.ACCOUNT}"
+      expand_update_with_account_id: true  # expandFunc(d, accountID) for update
       crud_args:
         create: [pathpoint, scope]
         read:   [account_id, id]

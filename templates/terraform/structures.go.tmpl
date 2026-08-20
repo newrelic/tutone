@@ -13,7 +13,11 @@ import (
 
 // {{ .ExpandFunc }} builds the create API input from Terraform state.
 // TUTONE:{{ if .HasManualFields }}MANUAL (partial) — see TUTONE:MANUAL comments inside{{ else }}AUTO — fully generated{{ end }}
+{{- if .PrimaryExpandWithAccountID }}
+func {{ .ExpandFunc }}(d *schema.ResourceData, accountID int) {{ .InputTypeName }} {
+{{- else }}
 func {{ .ExpandFunc }}(d *schema.ResourceData) {{ .InputTypeName }} {
+{{- end }}
 	input := {{ .InputTypeName }}{}
 	{{- range .SchemaFields }}
 	{{- if not .Computed }}
@@ -122,7 +126,11 @@ func {{ $civ.ExpandFunc }}(d *schema.ResourceData) {{ $civ.Type }} {
 
 // {{ .ExpandUpdateFunc }} builds the update API input from Terraform state.
 // TUTONE:{{ if .HasManualFields }}MANUAL (partial) — see TUTONE:MANUAL comments inside{{ else }}AUTO — fully generated{{ end }}
+{{- if .ExpandUpdateWithAccountID }}
+func {{ .ExpandUpdateFunc }}(d *schema.ResourceData, accountID int) {{ .UpdateInputTypeName }} {
+{{- else }}
 func {{ .ExpandUpdateFunc }}(d *schema.ResourceData) {{ .UpdateInputTypeName }} {
+{{- end }}
 	input := {{ .UpdateInputTypeName }}{}
 	{{- range .SchemaFields }}
 	{{- if not .Computed }}

@@ -165,6 +165,9 @@ type TerraformConfig struct {
 	// Gap 4: explicit argument lists per CRUD operation — overrides default accountID+id pattern
 	CRUDArgs *CRUDArgsConfig `yaml:"crud_args,omitempty"`
 
+	// ExpandUpdateWithAccountID adds accountID as an extra argument to the update expand call.
+	ExpandUpdateWithAccountID bool `yaml:"expand_update_with_account_id,omitempty"`
+
 	// WebsiteDir is the path to the provider's website directory relative to CWD.
 	// Defaults to "website". Used for generating docs/r/<name>.html.markdown and
 	// patching newrelic.erb.
@@ -195,6 +198,15 @@ type CreateInputConfig struct {
 	//   "nested_block" (default) — sourced from a TypeList block named after Arg
 	//   "flat"                   — sourced directly from top-level d.GetOk() fields
 	Source string `yaml:"source,omitempty"`
+	// Expression, when non-empty, replaces the generated expand call with a literal
+	// Go expression. Use for args that are constructed from context rather than schema
+	// (e.g. scope structs derived from accountID).
+	// Example: "pathpoint.PathPointScopeInput{ID: accountID, Type: pathpoint.PathPointScopeTypeTypes.ACCOUNT}"
+	Expression string `yaml:"expression,omitempty"`
+	// PassAccountID adds accountID as an extra argument to the expand function call.
+	// Use when the expand function needs accountID to embed it into nested structs
+	// (e.g. PathPointKpiInput.AccountId).
+	PassAccountID bool `yaml:"pass_account_id,omitempty"`
 }
 
 // ScalarMapping defines how a custom GraphQL SCALAR maps to a Terraform schema type

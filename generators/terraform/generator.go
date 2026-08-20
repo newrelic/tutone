@@ -109,6 +109,11 @@ type TerraformGenerator struct {
 	// UpdateNeedsAccountID / DeleteNeedsAccountID drive conditional accountID declaration.
 	UpdateNeedsAccountID bool
 	DeleteNeedsAccountID bool
+	// ExpandUpdateWithAccountID adds accountID to the update expand call.
+	ExpandUpdateWithAccountID bool
+	// PrimaryExpandWithAccountID is true when the first CreateInputVar has PassAccountID set.
+	// Used by structures.go.tmpl to add accountID to the primary expand function signature.
+	PrimaryExpandWithAccountID bool
 
 	// Pre-resolved ctx-prefixed arg lists for each CRUD client call
 	CreateCallArgs []string
@@ -131,6 +136,12 @@ type CreateInputVar struct {
 	ExpandFunc string // e.g. "expandNewRelicPathpointFlowCreateInput"
 	Type       string // qualified Go type, e.g. "pathpoint.PathPointFlowInput"
 	Source     string // "nested_block" | "flat"
+	// Expression, when non-empty, replaces the expand call with a literal Go expression.
+	// The template emits: VarName := Expression
+	Expression string
+	// PassAccountID adds accountID as an extra arg to the expand call:
+	// VarName := ExpandFunc(d, accountID)
+	PassAccountID bool
 	// SchemaFields holds the fields for the secondary input type so the structures
 	// template can emit a fully-generated expand function for this arg.
 	// Only populated for indices 1+ (the primary expand is g.SchemaFields).
@@ -310,6 +321,10 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 	// Determine which ops actually use accountID — drives conditional declaration in template.
 	g.UpdateNeedsAccountID = containsStr(g.UpdateCallArgs, "accountID")
 	g.DeleteNeedsAccountID = containsStr(g.DeleteCallArgs, "accountID")
+	g.ExpandUpdateWithAccountID = tf.ExpandUpdateWithAccountID
+	if len(g.CreateInputVars) > 0 {
+		g.PrimaryExpandWithAccountID = g.CreateInputVars[0].PassAccountID
+	}
 
 	// Derive automation status after fields are built — used for file-level banner
 	g.HasManualFields = false
@@ -1046,9 +1061,8 @@ func renderTemplate(templateDir, templateName, destFile, destDir string, g *Gene
 func buildCreateInputVars(inputs []config.CreateInputConfig, pkgAlias, resourceCamel string) []CreateInputVar {
 	vars := make([]CreateInputVar, 0, len(inputs))
 	for i, inp := range inputs {
-		varName := camelToSnake(inp.Arg) // arg name → snake for var prefix
+		varName := camelToSnake(inp.Arg)
 		varName = strings.ReplaceAll(varName, "_", "") + "Input"
-		// First input's expand function is the primary ExpandFunc
 		expandFunc := "expandNewRelic" + resourceCamel
 		if i == 0 {
 			expandFunc += "CreateInput"
@@ -1056,11 +1070,13 @@ func buildCreateInputVars(inputs []config.CreateInputConfig, pkgAlias, resourceC
 			expandFunc += upperFirst(inp.Arg) + "Input"
 		}
 		vars = append(vars, CreateInputVar{
-			ArgName:    inp.Arg,
-			VarName:    varName,
-			ExpandFunc: expandFunc,
-			Type:       pkgAlias + "." + inp.Type,
-			Source:     inp.Source,
+			ArgName:       inp.Arg,
+			VarName:       varName,
+			ExpandFunc:    expandFunc,
+			Type:          pkgAlias + "." + inp.Type,
+			Source:        inp.Source,
+			Expression:    inp.Expression,
+			PassAccountID: inp.PassAccountID,
 		})
 	}
 	return vars
