@@ -66,10 +66,15 @@ packages:
         max_query_field_depth: 2
     terraform:
       resource_name: pathpoint_flow
-      create_method: PathPointCreateWithContext
-      update_method: PathPointUpdateWithContext
-      delete_method: PathPointDeleteWithContext
-      read_method:   GetFlowWithContext
+      # Use non-context go-client methods — they wrap WithContext internally
+      # using context.Background(), matching the terraform-provider-newrelic pattern.
+      create_method: PathPointCreate
+      update_method: PathPointUpdate
+      delete_method: PathPointDelete
+      read_method:   GetFlow
+
+      # The NewClient field is "PathPoint" (not "Pathpoint" derived from pkg alias).
+      client_accessor: PathPoint
 
       # GUID-based ID (string, not numeric int pair)
       id_type:   string
@@ -105,10 +110,12 @@ packages:
           flatten:  "int64($FIELD)"
 
       # ── Gap 4: explicit CRUD arg lists ───────────────────────────────────
-      # pathPointDelete takes only a GUID — no accountID
-      # pathPointUpdate takes GUID + input — no accountID
+      # PathPointCreate(pathpoint, scope)  — accountID is embedded in pathpointInput
+      # GetFlow(accountID, guid)           — accountID IS a method param for reads
+      # PathPointUpdate(guid, input)       — no accountID
+      # PathPointDelete(guid)              — just the GUID
       crud_args:
-        create: [account_id, pathpoint, scope]
+        create: [pathpoint, scope]
         read:   [account_id, id]
         update: [id, input]
         delete: [id]

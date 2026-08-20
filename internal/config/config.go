@@ -138,6 +138,12 @@ type TerraformConfig struct {
 	// Client packages to import in the generated file
 	ClientPackages []string `yaml:"client_packages,omitempty"`
 
+	// ClientAccessor overrides the go-client field accessor derived from the package alias
+	// (upperFirst(lastSegment(clientPackages[0]))). Set this when the field name in
+	// newrelic.NewClient differs from the derived name — e.g. pkg/pathpoint yields alias
+	// "pathpoint" → derived "Pathpoint", but the actual field is "PathPoint".
+	ClientAccessor string `yaml:"client_accessor,omitempty"`
+
 	// Gap 1: multi-arg create (e.g. pathpoint takes both PathPointFlowInput + PathPointScopeInput)
 	CreateInputs []CreateInputConfig `yaml:"create_inputs,omitempty"`
 

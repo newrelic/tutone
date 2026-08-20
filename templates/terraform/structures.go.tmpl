@@ -64,6 +64,7 @@ func {{ $civ.ExpandFunc }}(d *schema.ResourceData) {{ $civ.Type }} {
 		list := v.([]interface{})
 		if len(list) > 0 {
 			cfg := list[0].(map[string]interface{})
+			_ = cfg // populated by fields below; kept in case SchemaFields is empty at generation time
 			{{- range $civ.SchemaFields }}
 			{{- if .NeedsManual }}
 			// TUTONE:MANUAL — "{{ .Name }}" is a custom scalar ({{ .CustomTypeName }})

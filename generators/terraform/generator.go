@@ -175,7 +175,11 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 
 	g.ClientPackages = tf.ClientPackages
 	g.ClientPackageAlias = derivePackageAlias(tf.ClientPackages)
-	g.ClientAccessor = toClientAccessor(g.ClientPackageAlias)
+	if tf.ClientAccessor != "" {
+		g.ClientAccessor = tf.ClientAccessor
+	} else {
+		g.ClientAccessor = toClientAccessor(g.ClientPackageAlias)
+	}
 
 	g.ReadType = tf.ReadType
 	if g.ReadType == "" {
@@ -1037,8 +1041,9 @@ func buildCreateInputVars(inputs []config.CreateInputConfig, pkgAlias, resourceC
 
 // ── Gap 4: CRUDArgs resolution ───────────────────────────────────────────────
 
-// resolveCallArgs builds the ctx-prefixed arg list for a CRUD client call.
-// It maps logical token names to their Go variable names.
+// resolveCallArgs builds the argument list for a CRUD go-client call.
+// ctx is prepended only when the method name ends with "WithContext"; non-context
+// go-client methods accept no ctx parameter (they call context.Background() internally).
 func resolveCallArgs(crud *config.CRUDArgsConfig, op string, g *Generator) []string {
 	var tokens []string
 
@@ -1089,7 +1094,24 @@ func resolveCallArgs(crud *config.CRUDArgsConfig, op string, g *Generator) []str
 		}
 	}
 
-	args := []string{"ctx"}
+	// Prepend ctx only for WithContext go-client methods; the non-context variants
+	// call context.Background() internally and have no ctx parameter.
+	methodName := ""
+	switch op {
+	case "create":
+		methodName = g.CreateMethod
+	case "read":
+		methodName = g.ReadMethod
+	case "update":
+		methodName = g.UpdateMethod
+	case "delete":
+		methodName = g.DeleteMethod
+	}
+
+	var args []string
+	if strings.HasSuffix(methodName, "WithContext") {
+		args = []string{"ctx"}
+	}
 	for _, tok := range tokens {
 		args = append(args, tokenToGoVar(tok, g))
 	}
