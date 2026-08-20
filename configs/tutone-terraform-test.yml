@@ -88,5 +88,7 @@ packages:
         delete: [id]
       import_example: "MjUyMDUyOHxBUE18QVBQTElDQVRJT058MjE1MDM3Nzk1"
       build_tags: [integration, unit, PATHPOINT]
+      data_source:
+        lookup_fields: [guid]        # user provides the flow GUID; maps to `id` in GetFlow call
       client_packages:
         - github.com/newrelic/newrelic-client-go/v2/pkg/pathpoint

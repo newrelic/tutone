@@ -138,6 +138,9 @@ type TerraformConfig struct {
 	// Client packages to import in the generated file
 	ClientPackages []string `yaml:"client_packages,omitempty"`
 
+	// DataSource, when non-nil, also generates a data_source_newrelic_<name>.go file.
+	DataSource *DataSourceConfig `yaml:"data_source,omitempty"`
+
 	// IDResultField is the field name on the create/update result struct used for d.SetId().
 	// Defaults to "ID". Set to "GUID" (or similar) when the result uses a different field.
 	IDResultField string `yaml:"id_result_field,omitempty"`
@@ -195,6 +198,15 @@ type CreateInputConfig struct {
 	//   "nested_block" (default) — sourced from a TypeList block named after Arg
 	//   "flat"                   — sourced directly from top-level d.GetOk() fields
 	Source string `yaml:"source,omitempty"`
+}
+
+// DataSourceConfig controls data source generation for a package.
+type DataSourceConfig struct {
+	// LookupFields are the schema attribute names the user provides to identify
+	// the entity (marked Required in the generated schema).
+	LookupFields []string `yaml:"lookup_fields,omitempty"`
+	// OptionalLookupFields are lookup fields that are Optional+Computed (not Required).
+	OptionalLookupFields []string `yaml:"optional_lookup_fields,omitempty"`
 }
 
 // ScalarMapping defines how a custom GraphQL SCALAR maps to a Terraform schema type

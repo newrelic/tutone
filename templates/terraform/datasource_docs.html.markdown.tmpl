@@ -1,0 +1,41 @@
+---
+layout: "newrelic"
+page_title: "New Relic: {{ .TFDataSourceName }}"
+sidebar_current: "docs-newrelic-datasource-{{ .ResourceName | replace "_" "-" }}"
+description: |-
+    Look up an existing {{ .ResourceTitle }} in New Relic.
+---
+
+# Data Source: {{ .TFDataSourceName }}
+
+Use this data source to get information about an existing **{{ .ResourceTitle }}** in New Relic.
+
+## Example Usage
+
+```hcl
+data "{{ .TFDataSourceName }}" "example" {
+{{- range .DSLookupFields }}
+  {{ . }} = "<{{ . }}>"
+{{- end }}
+}
+```
+
+## Argument Reference
+
+The following arguments are supported:
+
+{{- range .DataSourceSchemaFields }}
+{{- if or .Required .Optional }}
+- **`{{ .Name }}`** {{ if .Required }}(Required){{ else }}(Optional){{ end }} - {{ .Description }}
+{{- end }}
+{{- end }}
+
+## Attributes Reference
+
+The following attributes are exported in addition to the arguments above:
+
+{{- range .DataSourceSchemaFields }}
+{{- if and .Computed (not .Required) }}
+- `{{ .Name }}` - {{ .Description }}
+{{- end }}
+{{- end }}

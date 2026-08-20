@@ -110,6 +110,16 @@ type TerraformGenerator struct {
 	UpdateNeedsAccountID bool
 	DeleteNeedsAccountID bool
 
+	// Data source generation (populated only when config.DataSource is non-nil)
+	HasDataSource          bool
+	TFDataSourceName       string
+	DataSourceFunc         string
+	DataSourceSchemaFields []TerraformSchemaField
+	DSLookupField          string   // first lookup field — the schema key used to declare `id`
+	DSLookupFields         []string // all lookup fields
+	DSReadMethod           string
+	DSReadCallArgs         []string
+
 	// Pre-resolved ctx-prefixed arg lists for each CRUD client call
 	CreateCallArgs []string
 	ReadCallArgs   []string
@@ -378,6 +388,24 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 		g.ImportExample = tf.ImportExample
 	}
 
+	// Data source generation
+	if tf.DataSource != nil {
+		g.HasDataSource = true
+		g.TFDataSourceName = "newrelic_" + g.ResourceName
+		g.DataSourceFunc = toDataSourceFuncName(g.TFDataSourceName)
+		g.DSLookupFields = tf.DataSource.LookupFields
+		if len(g.DSLookupFields) > 0 {
+			g.DSLookupField = g.DSLookupFields[0]
+		}
+		g.DSReadMethod = g.ReadMethod
+		g.DSReadCallArgs = g.ReadCallArgs
+		g.DataSourceSchemaFields = buildDataSourceFields(
+			g.SchemaFields,
+			tf.DataSource.LookupFields,
+			tf.DataSource.OptionalLookupFields,
+		)
+	}
+
 	return nil
 }
 
@@ -460,6 +488,38 @@ func (g *Generator) Execute(genConfig *config.GeneratorConfig, pkgConfig *config
 			log.Warnf("could not patch %s: %s", erbFile, err)
 		} else {
 			generated = append(generated, erbFile)
+		}
+	}
+
+	// 8–11. Data source files (only when data_source: is configured)
+	if g.HasDataSource {
+		// 8. data_source_newrelic_<name>.go
+		dsFile := fmt.Sprintf("%s/data_source_%s.go", destDir, g.TFDataSourceName)
+		if err := renderTemplate(templateDir, "data_source.go.tmpl", dsFile, destDir, g); err != nil {
+			return fmt.Errorf("data source template: %w", err)
+		}
+		generated = append(generated, dsFile)
+
+		// 9. provider_newrelic.go — auto-patch DataSourcesMap
+		if fileExists(providerFile) {
+			if err := patchProviderFileDataSource(providerFile, g.TFDataSourceName, g.DataSourceFunc); err != nil {
+				log.Warnf("could not auto-patch DataSourcesMap in provider_newrelic.go: %s", err)
+			} else {
+				generated = append(generated, providerFile)
+			}
+		}
+
+		// 10. website/docs/d/<name>.html.markdown — scaffold-once
+		dsDsDir := filepath.Join(g.WebsiteDir, "docs", "d")
+		dsDsDocFile := filepath.Join(dsDsDir, g.ResourceName+".html.markdown")
+		if !fileExists(dsDsDocFile) {
+			if err := os.MkdirAll(dsDsDir, 0755); err != nil {
+				log.Warnf("could not create %s: %s", dsDsDir, err)
+			} else if err := renderRawTemplate(templateDir, "datasource_docs.html.markdown.tmpl", dsDsDocFile, dsDsDir, g); err != nil {
+				log.Warnf("data source docs template: %s", err)
+			} else {
+				generated = append(generated, dsDsDocFile)
+			}
 		}
 	}
 
@@ -999,6 +1059,99 @@ func appendProviderRegistration(regFile, tfName, funcName string) error {
 }
 
 // ── Utilities ────────────────────────────────────────────────────────────────
+
+// toDataSourceFuncName: "newrelic_pathpoint_flow" → "dataSourceNewRelicPathpointFlow"
+func toDataSourceFuncName(tfName string) string {
+	return "dataSource" + snakeToCamel(tfName)
+}
+
+// buildDataSourceFields derives a data source schema from the resource schema:
+//   - lookup fields (Required/Optional) stay as user inputs
+//   - account_id / org_id always stay Optional+Computed (standard TF pattern)
+//   - all other fields become Computed-only (API outputs)
+func buildDataSourceFields(resourceFields []TerraformSchemaField, lookupFields []string, optionalLookupFields []string) []TerraformSchemaField {
+	lookupSet := stringSet(lookupFields)
+	optionalSet := stringSet(optionalLookupFields)
+
+	// account_id and org_id are always Optional+Computed in data sources
+	alwaysOptionalComputed := map[string]bool{"account_id": true, "org_id": true}
+
+	covered := map[string]bool{}
+	var fields []TerraformSchemaField
+
+	for _, f := range resourceFields {
+		ds := f
+		ds.ForceNew = false
+		switch {
+		case lookupSet[f.Name]:
+			ds.Required = true
+			ds.Optional = false
+			ds.Computed = false
+			covered[f.Name] = true
+		case optionalSet[f.Name] || alwaysOptionalComputed[f.Name]:
+			ds.Optional = true
+			ds.Required = false
+			ds.Computed = true
+			covered[f.Name] = true
+		default:
+			// Pure output — Computed only
+			ds.Computed = true
+			ds.Required = false
+			ds.Optional = false
+		}
+		// Recursively make nested fields computed-only
+		if len(ds.NestedFields) > 0 {
+			ds.NestedFields = buildDataSourceFields(ds.NestedFields, nil, nil)
+		}
+		fields = append(fields, ds)
+	}
+
+	// Prepend any lookup fields not already present in the resource schema
+	var extra []TerraformSchemaField
+	for _, lf := range lookupFields {
+		if !covered[lf] {
+			extra = append(extra, TerraformSchemaField{
+				Name:            lf,
+				TFType:          "schema.TypeString",
+				GoTypeAssertion: ".(string)",
+				Required:        true,
+				Description:     "The " + strings.ReplaceAll(lf, "_", " ") + ".",
+			})
+		}
+	}
+	for _, lf := range optionalLookupFields {
+		if !covered[lf] {
+			extra = append(extra, TerraformSchemaField{
+				Name:            lf,
+				TFType:          "schema.TypeString",
+				GoTypeAssertion: ".(string)",
+				Optional:        true,
+				Computed:        true,
+				Description:     "The " + strings.ReplaceAll(lf, "_", " ") + ".",
+			})
+		}
+	}
+	return append(extra, fields...)
+}
+
+// patchProviderFileDataSource inserts a DataSourcesMap entry into provider_newrelic.go.
+func patchProviderFileDataSource(providerFile, tfName, funcName string) error {
+	content, err := os.ReadFile(providerFile)
+	if err != nil {
+		return err
+	}
+	if strings.Contains(string(content), `"`+tfName+`"`) {
+		log.Infof("provider_newrelic.go DataSourcesMap already contains %q — skipping", tfName)
+		return nil
+	}
+	anchor := "DataSourcesMap: map[string]*schema.Resource{"
+	if !strings.Contains(string(content), anchor) {
+		return fmt.Errorf("could not find DataSourcesMap anchor in %s", providerFile)
+	}
+	line := fmt.Sprintf("\t\t\t\"%s\": %s(),", tfName, funcName)
+	patched := insertAlphabetically(string(content), anchor, line, tfName)
+	return os.WriteFile(providerFile, []byte(patched), 0644)
+}
 
 func containsStr(ss []string, s string) bool {
 	for _, v := range ss {
