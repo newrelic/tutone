@@ -102,6 +102,14 @@ type TerraformGenerator struct {
 
 	// Gap 1: multi-arg create support
 	CreateInputVars []CreateInputVar // one per create_inputs entry
+	// IDResultField is the field on the result struct used for d.SetId() (default "ID").
+	IDResultField string
+	// IDCastType is the Go type to cast d.Id() to for go-client calls, e.g. "pathpoint.EntityGUID".
+	IDCastType string
+	// UpdateNeedsAccountID / DeleteNeedsAccountID drive conditional accountID declaration.
+	UpdateNeedsAccountID bool
+	DeleteNeedsAccountID bool
+
 	// Pre-resolved ctx-prefixed arg lists for each CRUD client call
 	CreateCallArgs []string
 	ReadCallArgs   []string
@@ -180,6 +188,12 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 	} else {
 		g.ClientAccessor = toClientAccessor(g.ClientPackageAlias)
 	}
+
+	g.IDResultField = tf.IDResultField
+	if g.IDResultField == "" {
+		g.IDResultField = "ID"
+	}
+	g.IDCastType = tf.IDCastType
 
 	g.ReadType = tf.ReadType
 	if g.ReadType == "" {
@@ -292,6 +306,10 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 	g.ReadCallArgs = resolveCallArgs(tf.CRUDArgs, "read", g)
 	g.UpdateCallArgs = resolveCallArgs(tf.CRUDArgs, "update", g)
 	g.DeleteCallArgs = resolveCallArgs(tf.CRUDArgs, "delete", g)
+
+	// Determine which ops actually use accountID — drives conditional declaration in template.
+	g.UpdateNeedsAccountID = containsStr(g.UpdateCallArgs, "accountID")
+	g.DeleteNeedsAccountID = containsStr(g.DeleteCallArgs, "accountID")
 
 	// Derive automation status after fields are built — used for file-level banner
 	g.HasManualFields = false
@@ -981,6 +999,15 @@ func appendProviderRegistration(regFile, tfName, funcName string) error {
 }
 
 // ── Utilities ────────────────────────────────────────────────────────────────
+
+func containsStr(ss []string, s string) bool {
+	for _, v := range ss {
+		if v == s {
+			return true
+		}
+	}
+	return false
+}
 
 func stringSet(ss []string) map[string]bool {
 	m := make(map[string]bool, len(ss))

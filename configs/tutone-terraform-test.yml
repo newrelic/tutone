@@ -1,13 +1,15 @@
 ---
-# Test config for terraform-provider-newrelic
-# Drop this file at the root of terraform-provider-newrelic as .tutone.yml
-# Run from terraform-provider-newrelic root:
+# Reference config for generating terraform-provider-newrelic resources with tutone.
+# Drop this file at the root of terraform-provider-newrelic as .tutone.yml and update
+# templateDir to the absolute path of tutone's templates/terraform directory.
+#
+# Usage:
 #   export NEW_RELIC_API_KEY=<your-key>
-#   go run /Users/bhoomikars/workspace/tutone/cmd/tutone/main.go fetch -s schema.json -c .tutone.yml
-#   go run /Users/bhoomikars/workspace/tutone/cmd/tutone/main.go generate --config .tutone.yml --package alertmutingrule
-#   go run /Users/bhoomikars/workspace/tutone/cmd/tutone/main.go generate --config .tutone.yml --package pathpoint
+#   tutone fetch -s schema.json -c .tutone.yml
+#   tutone generate --config .tutone.yml --package alertmutingrule
+#   tutone generate --config .tutone.yml --package pathpoint
 
-log_level: debug
+log_level: info
 
 cache:
   schema_file: schema.json
@@ -20,11 +22,11 @@ auth:
 
 generators:
   - name: terraform
-    templateDir: /Users/bhoomikars/workspace/tutone/templates/terraform
+    # Update this path to point at your local tutone checkout.
+    templateDir: /path/to/tutone/templates/terraform
 
 packages:
 
-  # ── Example 1: Standard CRUD (~70% auto without gap fixes) ───────────────
   - name: alertmutingrule
     path: newrelic/
     generators:
@@ -42,7 +44,6 @@ packages:
       update_method: UpdateMutingRuleWithContext
       delete_method: DeleteMutingRuleWithContext
       read_method:   GetMutingRuleWithContext
-      read_type:     direct
       id_type:       int
       id_fields:     [account_id, id]
       requires_account_id: true
@@ -51,8 +52,6 @@ packages:
       client_packages:
         - github.com/newrelic/newrelic-client-go/v2/pkg/alerts
 
-  # ── Example 2: New import — pathpoint (100% auto with all 4 gap fixes) ───
-  # Based on: https://github.com/newrelic/newrelic-client-go/pull/1443
   - name: pathpoint
     path: newrelic/
     generators:
@@ -66,65 +65,28 @@ packages:
         max_query_field_depth: 2
     terraform:
       resource_name: pathpoint_flow
-      # Use non-context go-client methods — they wrap WithContext internally
-      # using context.Background(), matching the terraform-provider-newrelic pattern.
       create_method: PathPointCreate
       update_method: PathPointUpdate
       delete_method: PathPointDelete
       read_method:   GetFlow
-
-      # The NewClient field is "PathPoint" (not "Pathpoint" derived from pkg alias).
       client_accessor: PathPoint
-
-      # GUID-based ID (string, not numeric int pair)
-      id_type:   string
-      id_fields: [id]
+      id_type:        string
+      id_result_field: GUID
+      id_cast_type:   pathpoint.EntityGUID
       requires_account_id: true
-      computed_fields: [account_id]
-
-      # ── Gap 1: multi-arg create ─────────────────────────────────────────
-      # pathPointCreate takes TWO separate inputs: pathpoint + scope
       create_inputs:
         - arg: pathpoint
           type: PathPointFlowInput
-          source: nested_block    # sourced from a "pathpoint" TypeList block in schema
+          source: nested_block
         - arg: scope
           type: PathPointScopeInput
-          source: nested_block    # sourced from a "scope" TypeList block in schema
-
-      # ── Gap 2: pointer fields ────────────────────────────────────────────
-      # These fields use *T in client-go structs (optional nested objects)
-      pointer_fields:
-        - kpi_time_window
-        - signal_query
-        - relative_range
-
-      # ── Gap 3: custom scalar mappings ────────────────────────────────────
-      # Without these, EpochMilliseconds would be TUTONE:MANUAL.
-      # With these, fully generated using the expressions below.
-      custom_scalar_mappings:
-        EpochMilliseconds:
-          tf_type:  schema.TypeInt
-          go_type:  nrtime.EpochMilliseconds
-          expand:   "nrtime.EpochMilliseconds($VALUE)"
-          flatten:  "int64($FIELD)"
-
-      # ── Gap 4: explicit CRUD arg lists ───────────────────────────────────
-      # PathPointCreate(pathpoint, scope)  — accountID is embedded in pathpointInput
-      # GetFlow(accountID, guid)           — accountID IS a method param for reads
-      # PathPointUpdate(guid, input)       — no accountID
-      # PathPointDelete(guid)              — just the GUID
+          source: nested_block
       crud_args:
         create: [pathpoint, scope]
         read:   [account_id, id]
         update: [id, input]
         delete: [id]
-
-      # Import by GUID — not the default "<account_id>:<id>" format
-      import_id_format: "<id>"
       import_example: "MjUyMDUyOHxBUE18QVBQTElDQVRJT058MjE1MDM3Nzk1"
-
       build_tags: [integration, unit, PATHPOINT]
       client_packages:
         - github.com/newrelic/newrelic-client-go/v2/pkg/pathpoint
-        - github.com/newrelic/newrelic-client-go/v2/pkg/nrtime

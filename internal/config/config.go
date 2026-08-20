@@ -138,6 +138,15 @@ type TerraformConfig struct {
 	// Client packages to import in the generated file
 	ClientPackages []string `yaml:"client_packages,omitempty"`
 
+	// IDResultField is the field name on the create/update result struct used for d.SetId().
+	// Defaults to "ID". Set to "GUID" (or similar) when the result uses a different field.
+	IDResultField string `yaml:"id_result_field,omitempty"`
+
+	// IDCastType is the Go type to cast d.Id() to before passing it to go-client methods.
+	// Needed when the go-client uses a named string type such as pathpoint.EntityGUID.
+	// Example: "pathpoint.EntityGUID"
+	IDCastType string `yaml:"id_cast_type,omitempty"`
+
 	// ClientAccessor overrides the go-client field accessor derived from the package alias
 	// (upperFirst(lastSegment(clientPackages[0]))). Set this when the field name in
 	// newrelic.NewClient differs from the derived name — e.g. pkg/pathpoint yields alias

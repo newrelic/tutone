@@ -131,7 +131,7 @@ func {{ .ResourceFunc }}Create(ctx context.Context, d *schema.ResourceData, meta
 	{{- if eq .IDType "int" }}
 	d.SetId(serializeIDs([]int{accountID, r.ID}))
 	{{- else }}
-	d.SetId(r.ID)
+	d.SetId(string(r.{{ .IDResultField }}))
 	{{- end }}
 	{{- else }}
 	result, err := client.{{ .ClientAccessor }}.{{ .CreateMethod }}({{ join .CreateCallArgs ", " }})
@@ -144,7 +144,7 @@ func {{ .ResourceFunc }}Create(ctx context.Context, d *schema.ResourceData, meta
 	{{- if eq .IDType "int" }}
 	d.SetId(serializeIDs([]int{accountID, result.ID}))
 	{{- else }}
-	d.SetId(result.ID)
+	d.SetId(string(result.{{ .IDResultField }}))
 	{{- end }}
 	{{- end }}
 
@@ -163,10 +163,18 @@ func {{ .ResourceFunc }}Read(ctx context.Context, d *schema.ResourceData, meta i
 	id := ids[1]
 	{{- else }}
 	accountID := selectAccountID(meta.(*ProviderConfig), d)
-	id := d.Id()
-	{{- end }}
+	{{- if .IDCastType }}
+	id := {{ .IDCastType }}(d.Id())
 	{{- else }}
 	id := d.Id()
+	{{- end }}
+	{{- end }}
+	{{- else }}
+	{{- if .IDCastType }}
+	id := {{ .IDCastType }}(d.Id())
+	{{- else }}
+	id := d.Id()
+	{{- end }}
 	{{- end }}
 
 	log.Printf("[INFO] Reading {{ .TFResourceName }} %v", id)
@@ -261,11 +269,21 @@ func {{ .ResourceFunc }}Update(ctx context.Context, d *schema.ResourceData, meta
 	accountID := ids[0]
 	id := ids[1]
 	{{- else }}
+	{{- if .UpdateNeedsAccountID }}
 	accountID := selectAccountID(meta.(*ProviderConfig), d)
-	id := d.Id()
 	{{- end }}
+	{{- if .IDCastType }}
+	id := {{ .IDCastType }}(d.Id())
 	{{- else }}
 	id := d.Id()
+	{{- end }}
+	{{- end }}
+	{{- else }}
+	{{- if .IDCastType }}
+	id := {{ .IDCastType }}(d.Id())
+	{{- else }}
+	id := d.Id()
+	{{- end }}
 	{{- end }}
 
 	log.Printf("[INFO] Updating {{ .TFResourceName }} %v", id)
@@ -285,7 +303,6 @@ func {{ .ResourceFunc }}Delete(ctx context.Context, d *schema.ResourceData, meta
 	client := meta.(*ProviderConfig).NewClient
 	{{- if .RequiresAccountID }}
 	{{- if eq .IDType "int" }}
-	// Issue 3: use deleteIDs to avoid err redeclaration with parseHashedIDs above
 	deleteIDs, parseErr := parseHashedIDs(d.Id())
 	if parseErr != nil {
 		return diag.FromErr(parseErr)
@@ -293,11 +310,21 @@ func {{ .ResourceFunc }}Delete(ctx context.Context, d *schema.ResourceData, meta
 	accountID := deleteIDs[0]
 	id := deleteIDs[1]
 	{{- else }}
+	{{- if .DeleteNeedsAccountID }}
 	accountID := selectAccountID(meta.(*ProviderConfig), d)
-	id := d.Id()
 	{{- end }}
+	{{- if .IDCastType }}
+	id := {{ .IDCastType }}(d.Id())
 	{{- else }}
 	id := d.Id()
+	{{- end }}
+	{{- end }}
+	{{- else }}
+	{{- if .IDCastType }}
+	id := {{ .IDCastType }}(d.Id())
+	{{- else }}
+	id := d.Id()
+	{{- end }}
 	{{- end }}
 
 	log.Printf("[INFO] Deleting {{ .TFResourceName }} %v", id)
