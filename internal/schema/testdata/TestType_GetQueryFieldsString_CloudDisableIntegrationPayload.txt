@@ -837,7 +837,30 @@ disabledIntegrations {
 		tagKey
 		tagValue
 	}
+	... on CloudGcpProvider {
+		__typename
+		serviceAccountId
+		services {
+			createdAt
+			icon
+			id
+			isEnabled
+			isEntitySupported
+			name
+			slug
+			updatedAt
+		}
+		templateParams {
+			autocomplete
+			immutable
+			label
+			name
+			placeholder
+			type
+		}
+	}
 }
+updatedAt
 errors {
 	integrationSlug
 	linkedAccountId

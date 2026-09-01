@@ -92,7 +92,7 @@ func TestExpandTypes(t *testing.T) {
 			Types: []config.TypeConfig{{
 				Name: "AlertsPolicy",
 			}},
-			Mutations: []config.MutationConfig{},
+			Mutations:     []config.MutationConfig{},
 			ExpectedNames: []string{"AlertsIncidentPreference", "AlertsPolicy", "EntityGuid", "ID", "Int", "String"},
 		},
 		"single mutation": {
