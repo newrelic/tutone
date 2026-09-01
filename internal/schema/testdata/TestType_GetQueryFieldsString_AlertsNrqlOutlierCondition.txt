@@ -1,3 +1,10 @@
+createdAt
+createdBy {
+	email
+	gravatar
+	id
+	name
+}
 description
 enabled
 entity {
@@ -89,6 +96,9 @@ entity {
 		monitoredUrl
 		period
 	}
+	... on TeamEntityOutline {
+		__typename
+	}
 	... on ThirdPartyServiceEntityOutline {
 		__typename
 	}
@@ -106,15 +116,27 @@ expectedGroups
 expiration {
 	closeViolationsOnExpiration
 	expirationDuration
+	ignoreOnExpectedTermination
 	openViolationOnExpiration
 }
 id
 name
 nrql {
+	dataAccountId
 	evaluationOffset
 	query
 }
 openViolationOnGroupOverlap
+outlierConfiguration {
+	__typename
+	algorithm
+	evaluationGroupFacet
+	... on AlertsOutlierDbScanConfiguration {
+		__typename
+		epsilon
+		minimumPoints
+	}
+}
 policyId
 runbookUrl
 signal {
@@ -126,15 +148,27 @@ signal {
 	evaluationOffset
 	fillOption
 	fillValue
+	pollingFrequency
 	slideBy
 }
+targetEntity
 terms {
+	disableEventCreation
+	disableHealthStatusReporting
 	operator
 	priority
 	threshold
 	thresholdDuration
 	thresholdOccurrences
 }
+titleTemplate
 type
+updatedAt
+updatedBy {
+	email
+	gravatar
+	id
+	name
+}
 violationTimeLimit
 violationTimeLimitSeconds

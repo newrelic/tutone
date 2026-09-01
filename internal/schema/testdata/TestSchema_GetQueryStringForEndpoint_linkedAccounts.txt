@@ -7,6 +7,7 @@ query(
 	createdAt
 	disabled
 	externalId
+	hasDimensionalMetrics
 	id
 	integrations {
 		__typename
@@ -31,6 +32,7 @@ query(
 			icon
 			id
 			isEnabled
+			isEntitySupported
 			name
 			slug
 			updatedAt
@@ -69,6 +71,12 @@ query(
 			metricsPollingInterval
 		}
 		... on CloudAwsAthenaIntegration {
+			__typename
+			awsRegions
+			inventoryPollingInterval
+			metricsPollingInterval
+		}
+		... on CloudAwsAutoDiscoveryIntegration {
 			__typename
 			awsRegions
 			inventoryPollingInterval
@@ -128,6 +136,16 @@ query(
 			inventoryPollingInterval
 			metricsPollingInterval
 		}
+		... on CloudAwsMetadataEuSovereignIntegration {
+			__typename
+			inventoryPollingInterval
+			metricsPollingInterval
+		}
+		... on CloudAwsMetadataGovIntegration {
+			__typename
+			inventoryPollingInterval
+			metricsPollingInterval
+		}
 		... on CloudAwsMetadataIntegration {
 			__typename
 			inventoryPollingInterval
@@ -136,6 +154,21 @@ query(
 		... on CloudAwsMqIntegration {
 			__typename
 			awsRegions
+			inventoryPollingInterval
+			metricsPollingInterval
+		}
+		... on CloudAwsMsElasticacheEuSovereignIntegration {
+			__typename
+			inventoryPollingInterval
+			metricsPollingInterval
+		}
+		... on CloudAwsMsElasticacheGovIntegration {
+			__typename
+			inventoryPollingInterval
+			metricsPollingInterval
+		}
+		... on CloudAwsMsElasticacheIntegration {
+			__typename
 			inventoryPollingInterval
 			metricsPollingInterval
 		}
@@ -166,6 +199,16 @@ query(
 		... on CloudAwsStatesIntegration {
 			__typename
 			awsRegions
+			inventoryPollingInterval
+			metricsPollingInterval
+		}
+		... on CloudAwsTagsGlobalEuSovereignIntegration {
+			__typename
+			inventoryPollingInterval
+			metricsPollingInterval
+		}
+		... on CloudAwsTagsGlobalGovIntegration {
+			__typename
 			inventoryPollingInterval
 			metricsPollingInterval
 		}
@@ -215,6 +258,12 @@ query(
 			inventoryPollingInterval
 			metricsPollingInterval
 			resourceGroups
+		}
+		... on CloudAzureAutoDiscoveryIntegration {
+			__typename
+			enabled
+			inventoryPollingInterval
+			metricsPollingInterval
 		}
 		... on CloudAzureContainersIntegration {
 			__typename
@@ -303,6 +352,7 @@ query(
 		... on CloudAzureMonitorIntegration {
 			__typename
 			enabled
+			excludeResourceTypes
 			excludeTags
 			includeTags
 			inventoryPollingInterval
@@ -402,6 +452,14 @@ query(
 			inventoryPollingInterval
 			metricsPollingInterval
 		}
+		... on CloudCciAwsS3Integration {
+			__typename
+			inventoryPollingInterval
+			metricsPollingInterval
+			s3BucketName
+			s3BucketPath
+			s3BucketRegion
+		}
 		... on CloudCloudfrontIntegration {
 			__typename
 			fetchLambdasAtEdge
@@ -414,6 +472,26 @@ query(
 		... on CloudCloudtrailIntegration {
 			__typename
 			awsRegions
+			inventoryPollingInterval
+			metricsPollingInterval
+		}
+		... on CloudConfluentKafkaConnectorResourceIntegration {
+			__typename
+			inventoryPollingInterval
+			metricsPollingInterval
+		}
+		... on CloudConfluentKafkaFlinkResourceIntegration {
+			__typename
+			inventoryPollingInterval
+			metricsPollingInterval
+		}
+		... on CloudConfluentKafkaKsqlResourceIntegration {
+			__typename
+			inventoryPollingInterval
+			metricsPollingInterval
+		}
+		... on CloudConfluentKafkaResourceIntegration {
+			__typename
 			inventoryPollingInterval
 			metricsPollingInterval
 		}
@@ -509,6 +587,16 @@ query(
 			tagKey
 			tagValue
 		}
+		... on CloudFossaIssuesIntegration {
+			__typename
+			inventoryPollingInterval
+			metricsPollingInterval
+		}
+		... on CloudGcpAiplatformIntegration {
+			__typename
+			inventoryPollingInterval
+			metricsPollingInterval
+		}
 		... on CloudGcpAlloydbIntegration {
 			__typename
 			inventoryPollingInterval
@@ -574,6 +662,10 @@ query(
 		... on CloudGcpFunctionsIntegration {
 			__typename
 			inventoryPollingInterval
+			metricsPollingInterval
+		}
+		... on CloudGcpGenericIntegration {
+			__typename
 			metricsPollingInterval
 		}
 		... on CloudGcpInterconnectIntegration {
@@ -687,6 +779,20 @@ query(
 			tagKey
 			tagValue
 		}
+		... on CloudOciLogsIntegration {
+			__typename
+			instrumentationType
+			loggingStacks
+			metricStacks
+			metricsPollingInterval
+		}
+		... on CloudOciMetadataAndTagsIntegration {
+			__typename
+			instrumentationType
+			loggingStacks
+			metricStacks
+			metricsPollingInterval
+		}
 		... on CloudRdsIntegration {
 			__typename
 			awsRegions
@@ -718,6 +824,12 @@ query(
 			metricsPollingInterval
 			tagKey
 			tagValue
+		}
+		... on CloudSecurityHubIntegration {
+			__typename
+			awsRegions
+			inventoryPollingInterval
+			metricsPollingInterval
 		}
 		... on CloudSesIntegration {
 			__typename
@@ -773,12 +885,25 @@ query(
 			icon
 			id
 			isEnabled
+			isEntitySupported
 			name
 			slug
 			updatedAt
 		}
 		slug
+		templateParams {
+			autocomplete
+			immutable
+			label
+			name
+			placeholder
+			type
+		}
 		updatedAt
+		... on CloudAwsEuSovereignProvider {
+			__typename
+			awsAccountId
+		}
 		... on CloudAwsGovCloudProvider {
 			__typename
 			awsAccountId

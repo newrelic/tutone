@@ -43,6 +43,12 @@ disabledIntegrations {
 		inventoryPollingInterval
 		metricsPollingInterval
 	}
+	... on CloudAwsAutoDiscoveryIntegration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		metricsPollingInterval
+	}
 	... on CloudAwsCognitoIntegration {
 		__typename
 		awsRegions
@@ -97,6 +103,16 @@ disabledIntegrations {
 		inventoryPollingInterval
 		metricsPollingInterval
 	}
+	... on CloudAwsMetadataEuSovereignIntegration {
+		__typename
+		inventoryPollingInterval
+		metricsPollingInterval
+	}
+	... on CloudAwsMetadataGovIntegration {
+		__typename
+		inventoryPollingInterval
+		metricsPollingInterval
+	}
 	... on CloudAwsMetadataIntegration {
 		__typename
 		inventoryPollingInterval
@@ -105,6 +121,21 @@ disabledIntegrations {
 	... on CloudAwsMqIntegration {
 		__typename
 		awsRegions
+		inventoryPollingInterval
+		metricsPollingInterval
+	}
+	... on CloudAwsMsElasticacheEuSovereignIntegration {
+		__typename
+		inventoryPollingInterval
+		metricsPollingInterval
+	}
+	... on CloudAwsMsElasticacheGovIntegration {
+		__typename
+		inventoryPollingInterval
+		metricsPollingInterval
+	}
+	... on CloudAwsMsElasticacheIntegration {
+		__typename
 		inventoryPollingInterval
 		metricsPollingInterval
 	}
@@ -135,6 +166,16 @@ disabledIntegrations {
 	... on CloudAwsStatesIntegration {
 		__typename
 		awsRegions
+		inventoryPollingInterval
+		metricsPollingInterval
+	}
+	... on CloudAwsTagsGlobalEuSovereignIntegration {
+		__typename
+		inventoryPollingInterval
+		metricsPollingInterval
+	}
+	... on CloudAwsTagsGlobalGovIntegration {
+		__typename
 		inventoryPollingInterval
 		metricsPollingInterval
 	}
@@ -184,6 +225,12 @@ disabledIntegrations {
 		inventoryPollingInterval
 		metricsPollingInterval
 		resourceGroups
+	}
+	... on CloudAzureAutoDiscoveryIntegration {
+		__typename
+		enabled
+		inventoryPollingInterval
+		metricsPollingInterval
 	}
 	... on CloudAzureContainersIntegration {
 		__typename
@@ -272,6 +319,7 @@ disabledIntegrations {
 	... on CloudAzureMonitorIntegration {
 		__typename
 		enabled
+		excludeResourceTypes
 		excludeTags
 		includeTags
 		inventoryPollingInterval
@@ -371,6 +419,14 @@ disabledIntegrations {
 		inventoryPollingInterval
 		metricsPollingInterval
 	}
+	... on CloudCciAwsS3Integration {
+		__typename
+		inventoryPollingInterval
+		metricsPollingInterval
+		s3BucketName
+		s3BucketPath
+		s3BucketRegion
+	}
 	... on CloudCloudfrontIntegration {
 		__typename
 		fetchLambdasAtEdge
@@ -383,6 +439,26 @@ disabledIntegrations {
 	... on CloudCloudtrailIntegration {
 		__typename
 		awsRegions
+		inventoryPollingInterval
+		metricsPollingInterval
+	}
+	... on CloudConfluentKafkaConnectorResourceIntegration {
+		__typename
+		inventoryPollingInterval
+		metricsPollingInterval
+	}
+	... on CloudConfluentKafkaFlinkResourceIntegration {
+		__typename
+		inventoryPollingInterval
+		metricsPollingInterval
+	}
+	... on CloudConfluentKafkaKsqlResourceIntegration {
+		__typename
+		inventoryPollingInterval
+		metricsPollingInterval
+	}
+	... on CloudConfluentKafkaResourceIntegration {
+		__typename
 		inventoryPollingInterval
 		metricsPollingInterval
 	}
@@ -478,6 +554,16 @@ disabledIntegrations {
 		tagKey
 		tagValue
 	}
+	... on CloudFossaIssuesIntegration {
+		__typename
+		inventoryPollingInterval
+		metricsPollingInterval
+	}
+	... on CloudGcpAiplatformIntegration {
+		__typename
+		inventoryPollingInterval
+		metricsPollingInterval
+	}
 	... on CloudGcpAlloydbIntegration {
 		__typename
 		inventoryPollingInterval
@@ -543,6 +629,10 @@ disabledIntegrations {
 	... on CloudGcpFunctionsIntegration {
 		__typename
 		inventoryPollingInterval
+		metricsPollingInterval
+	}
+	... on CloudGcpGenericIntegration {
+		__typename
 		metricsPollingInterval
 	}
 	... on CloudGcpInterconnectIntegration {
@@ -656,6 +746,20 @@ disabledIntegrations {
 		tagKey
 		tagValue
 	}
+	... on CloudOciLogsIntegration {
+		__typename
+		instrumentationType
+		loggingStacks
+		metricStacks
+		metricsPollingInterval
+	}
+	... on CloudOciMetadataAndTagsIntegration {
+		__typename
+		instrumentationType
+		loggingStacks
+		metricStacks
+		metricsPollingInterval
+	}
 	... on CloudRdsIntegration {
 		__typename
 		awsRegions
@@ -687,6 +791,12 @@ disabledIntegrations {
 		metricsPollingInterval
 		tagKey
 		tagValue
+	}
+	... on CloudSecurityHubIntegration {
+		__typename
+		awsRegions
+		inventoryPollingInterval
+		metricsPollingInterval
 	}
 	... on CloudSesIntegration {
 		__typename

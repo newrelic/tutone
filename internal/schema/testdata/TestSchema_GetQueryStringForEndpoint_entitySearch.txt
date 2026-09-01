@@ -1,4 +1,8 @@
-query { actor { entitySearch {
+query(
+	$query: String,
+) { actor { entitySearch(
+	query: $query,
+) {
 	count
 	query
 	results {
@@ -90,6 +94,9 @@ query { actor { entitySearch {
 				monitorType
 				monitoredUrl
 				period
+			}
+			... on TeamEntityOutline {
+				__typename
 			}
 			... on ThirdPartyServiceEntityOutline {
 				__typename

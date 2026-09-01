@@ -1,4 +1,6 @@
 query { actor { user {
+	createdAt
 	id
 	name
+	timeZoneName
 } } }
