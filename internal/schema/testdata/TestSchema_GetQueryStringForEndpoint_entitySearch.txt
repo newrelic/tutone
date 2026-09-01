@@ -1,8 +1,4 @@
-query(
-	$query: String,
-) { actor { entitySearch(
-	query: $query,
-) {
+query { actor { entitySearch {
 	count
 	query
 	results {
