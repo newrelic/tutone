@@ -3,26 +3,25 @@
 
 package tools
 
-// Note: github.com/psampaz/go-mod-outdated is not imported here because it has no
-// importable library package. It's installed directly via build/tools.mk and tracked
-// in go.mod's require section.
-
 import (
 	// build/test.mk
 	_ "github.com/stretchr/testify/assert"
-	_ "gotest.tools/gotestsum/testjson"
+	_ "gotest.tools/gotestsum"
 
 	// build/lint.mk
-	_ "github.com/client9/misspell"
-	_ "github.com/golangci/golangci-lint/pkg/golinters"
-	_ "golang.org/x/tools/go/packages"
+	_ "github.com/client9/misspell/cmd/misspell"
+	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
+	_ "golang.org/x/tools/cmd/goimports"
 
 	// build/document.mk
-	_ "github.com/git-chglog/git-chglog"
-	_ "golang.org/x/tools/go/packages"
+	_ "github.com/git-chglog/git-chglog/cmd/git-chglog"
+	_ "golang.org/x/tools/cmd/godoc"
 
 	// build/release.mk
-	_ "github.com/caarlos0/svu/pkg/svu"
-	_ "github.com/goreleaser/goreleaser/pkg/config"
-	_ "github.com/x-motemen/gobump"
+	_ "github.com/caarlos0/svu"
+	_ "github.com/goreleaser/goreleaser"
+	_ "github.com/x-motemen/gobump/cmd/gobump"
 )
+
+// Note: github.com/psampaz/go-mod-outdated has no importable library package.
+// It is installed directly via build/tools.mk and tracked in go.mod's require section.
