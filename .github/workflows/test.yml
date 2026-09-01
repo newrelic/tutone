@@ -62,7 +62,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: testdata/schema.json
-          key: ${{ runner.os }}-schema
+          key: ${{ runner.os }}-schema-v2
 
       - name: Unit Tests
         run: make test-unit
