@@ -46,7 +46,7 @@ goimports: tools
 
 golangci: tools
 	@echo "=== $(PROJECT_NAME) === [ golangci-lint    ]: Linting using $(GOLINTER) ($(COMMIT_LINT_CMD))..."
-	@$(GOLINTER) run
+	@$(GOLINTER) run --timeout=5m
 
 outdated: tools tools-outdated
 	@echo "=== $(PROJECT_NAME) === [ outdated         ]: Finding outdated deps with $(GO_MOD_OUTDATED)..."
