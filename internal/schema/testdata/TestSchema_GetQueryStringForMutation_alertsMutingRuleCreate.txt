@@ -6,6 +6,7 @@ mutation(
 	rule: $rule,
 ) {
 	accountId
+	actionOnMutingRuleWindowEnded
 	condition {
 		conditions {
 			attribute
@@ -25,6 +26,7 @@ mutation(
 	description
 	enabled
 	id
+	mutingRuleLifecycleEventPublishedAt
 	name
 	schedule {
 		endRepeat

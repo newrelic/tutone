@@ -17,6 +17,7 @@ query(
 			createdAt
 			disabled
 			externalId
+			hasDimensionalMetrics
 			id
 			metricCollectionMode
 			name
