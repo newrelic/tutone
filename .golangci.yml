@@ -70,5 +70,5 @@ linters:
 
 issues:
   # disable limits on issue reporting
-  max-per-linter: 0
+  max-issues-per-linter: 0
   max-same-issues: 0
