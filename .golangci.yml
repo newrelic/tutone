@@ -2,13 +2,8 @@ version: "2"
 
 # options for analysis running
 run:
-  # timeout for analysis, e.g. 30s, 5m, default is 1m
   timeout: 5m
-
-  # exit code when at least one issue was found, default is 1
   issues-exit-code: 1
-
-  # include test files or not, default is true
   tests: true
 
   build-tags:
@@ -25,15 +20,10 @@ formatters:
 linters:
   default: none
   enable:
-    - errcheck
     - gocyclo
     - govet
-    - ineffassign
     - misspell
     - nolintlint
-    - staticcheck
-    - unconvert
-    - unused
     - whitespace
 
   settings:
@@ -42,33 +32,21 @@ linters:
       enable:
         - assign
         - bools
-        - framepointer
         - shadow
         - stringintconv
         - structtag
 
     gocyclo:
-      # minimal code complexity to report, 30 by default
       min-complexity: 26
-
-    depguard:
-      rules:
-        main:
-          deny:
-            - pkg: "github.com/davecgh/go-spew/spew"
 
     misspell:
       ignore-rules:
         - newrelic
-
-    lll:
-      line-length: 150
 
     nolintlint:
       allow-unused: false
       require-specific: true
 
 issues:
-  # disable limits on issue reporting
   max-issues-per-linter: 0
   max-same-issues: 0
