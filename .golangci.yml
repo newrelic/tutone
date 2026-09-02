@@ -1,3 +1,5 @@
+version: "2"
+
 # options for analysis running
 run:
   # timeout for analysis, e.g. 30s, 5m, default is 1m
@@ -15,59 +17,58 @@ run:
 
   modules-download-mode: readonly
 
-# all available settings of specific linters
-linters-settings:
-  govet:
-    # report about shadowed variables
-    check-shadowing: true
-  golint:
-    # minimal confidence for issues, default is 0.8
-    min-confidence: 0.5
-  gocyclo:
-    # minimal code complexity to report, 30 by default (but we recommend 10-20)
-    min-complexity: 26
-  maligned:
-    # print struct with more effective memory layout or not, false by default
-    suggest-new: true
-  nolintlint:
-    # Enable to ensure that nolint directives are all used. Default is true.
-    allow-unused: false
-    # Enable to require nolint directives to mention the specific linter being suppressed. Default is false.
-    require-specific: true
-  depguard:
-    list-type: blacklist
-    include-go-root: false
-    packages:
-      - github.com/davecgh/go-spew/spew
-  misspell:
-    ignore-words:
-      - newrelic
-  lll:
-    # max line length, lines longer will be reported. Default is 120.
-    # '\t' is counted as 1 character by default, and can be changed with the tab-width option
-    line-length: 150
+formatters:
+  enable:
+    - gofmt
+    - goimports
 
 linters:
-  disable-all: true
+  default: none
   enable:
     - errcheck
-    - goimports
     - gocyclo
-    - gofmt
-    - gosimple
     - govet
     - ineffassign
     - misspell
     - nolintlint
     - staticcheck
-    - thelper
     - unconvert
     - unused
-    - vet
     - whitespace
+
+  settings:
+    govet:
+      disable-all: true
+      enable:
+        - assign
+        - bools
+        - framepointer
+        - shadow
+        - stringintconv
+        - structtag
+
+    gocyclo:
+      # minimal code complexity to report, 30 by default
+      min-complexity: 26
+
+    depguard:
+      rules:
+        main:
+          deny:
+            - pkg: "github.com/davecgh/go-spew/spew"
+
+    misspell:
+      ignore-rules:
+        - newrelic
+
+    lll:
+      line-length: 150
+
+    nolintlint:
+      allow-unused: false
+      require-specific: true
 
 issues:
   # disable limits on issue reporting
   max-per-linter: 0
   max-same-issues: 0
-
