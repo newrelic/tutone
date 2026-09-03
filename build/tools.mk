@@ -11,13 +11,13 @@ BUILD_DIR        ?= ./bin/
 TOOL_DIR     ?= tools
 TOOL_CONFIG  ?= $(TOOL_DIR)/tools.go
 
-GOTOOLS ?= $(shell cd $(TOOL_DIR) && go list -f '{{ .Imports }}' -tags tools |tr -d '[]')
+GOTOOLS ?= $(shell cd $(TOOL_DIR) && go list -e -f '{{ .Imports }}' -tags tools |tr -d '[]')
 
 tools: check-version
 	@echo "=== $(PROJECT_NAME) === [ tools            ]: Installing tools required by the project..."
 	@cd $(TOOL_DIR) && $(GO) mod download
 	@cd $(TOOL_DIR) && $(GO) install $(GOTOOLS)
-	@cd $(TOOL_DIR) && $(GO) mod tidy
+	@cd $(TOOL_DIR) && $(GO) install github.com/psampaz/go-mod-outdated@v0.9.0
 
 tools-outdated: check-version
 	@echo "=== $(PROJECT_NAME) === [ tools-outdated   ]: Finding outdated tool deps with $(GO_MOD_OUTDATED)..."

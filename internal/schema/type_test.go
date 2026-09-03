@@ -38,11 +38,6 @@ func TestType_GetQueryFieldsString(t *testing.T) {
 			Depth:    2,
 			Mutation: false,
 		},
-		"CloudLinkedAccount": {
-			TypeName: "CloudLinkedAccount",
-			Depth:    3,
-			Mutation: false,
-		},
 		"CloudDisableIntegrationPayload": {
 			TypeName: "CloudDisableIntegrationPayload",
 			Depth:    1,

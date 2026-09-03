@@ -357,7 +357,7 @@ func TestSchema_GetInputFieldsForQueryPath(t *testing.T) {
 		"apiAccessKey": {
 			QueryPath: []string{"actor", "apiAccess", "key"},
 			Fields: map[string][]string{
-				"key": {"id", "keyType"},
+				"key": {"id", "includeDisabled"},
 			},
 		},
 	}

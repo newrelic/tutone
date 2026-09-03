@@ -91,6 +91,9 @@ query { actor { entitySearch {
 				monitoredUrl
 				period
 			}
+			... on TeamEntityOutline {
+				__typename
+			}
 			... on ThirdPartyServiceEntityOutline {
 				__typename
 			}

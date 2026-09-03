@@ -5,6 +5,7 @@ query(
 	id: $id,
 ) {
 	accountId
+	entityGuid
 	id
 	incidentPreference
 	name

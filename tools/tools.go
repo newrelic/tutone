@@ -10,8 +10,7 @@ import (
 
 	// build/lint.mk
 	_ "github.com/client9/misspell/cmd/misspell"
-	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
-	_ "github.com/psampaz/go-mod-outdated"
+	_ "github.com/golangci/golangci-lint/v2/cmd/golangci-lint"
 	_ "golang.org/x/tools/cmd/goimports"
 
 	// build/document.mk
@@ -23,3 +22,6 @@ import (
 	_ "github.com/goreleaser/goreleaser"
 	_ "github.com/x-motemen/gobump/cmd/gobump"
 )
+
+// Note: github.com/psampaz/go-mod-outdated has no importable library package.
+// It is installed directly via build/tools.mk and tracked in go.mod's require section.

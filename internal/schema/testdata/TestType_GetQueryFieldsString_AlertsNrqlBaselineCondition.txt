@@ -1,4 +1,11 @@
 baselineDirection
+createdAt
+createdBy {
+	email
+	gravatar
+	id
+	name
+}
 description
 enabled
 entity {
@@ -90,6 +97,9 @@ entity {
 		monitoredUrl
 		period
 	}
+	... on TeamEntityOutline {
+		__typename
+	}
 	... on ThirdPartyServiceEntityOutline {
 		__typename
 	}
@@ -106,11 +116,13 @@ entityGuid
 expiration {
 	closeViolationsOnExpiration
 	expirationDuration
+	ignoreOnExpectedTermination
 	openViolationOnExpiration
 }
 id
 name
 nrql {
+	dataAccountId
 	evaluationOffset
 	query
 }
@@ -125,15 +137,28 @@ signal {
 	evaluationOffset
 	fillOption
 	fillValue
+	pollingFrequency
 	slideBy
 }
+signalSeasonality
+targetEntity
 terms {
+	disableEventCreation
+	disableHealthStatusReporting
 	operator
 	priority
 	threshold
 	thresholdDuration
 	thresholdOccurrences
 }
+titleTemplate
 type
+updatedAt
+updatedBy {
+	email
+	gravatar
+	id
+	name
+}
 violationTimeLimit
 violationTimeLimitSeconds

@@ -1,3 +1,10 @@
+createdAt
+createdBy {
+	email
+	gravatar
+	id
+	name
+}
 description
 enabled
 entity {
@@ -89,6 +96,9 @@ entity {
 		monitoredUrl
 		period
 	}
+	... on TeamEntityOutline {
+		__typename
+	}
 	... on ThirdPartyServiceEntityOutline {
 		__typename
 	}
@@ -105,11 +115,13 @@ entityGuid
 expiration {
 	closeViolationsOnExpiration
 	expirationDuration
+	ignoreOnExpectedTermination
 	openViolationOnExpiration
 }
 id
 name
 nrql {
+	dataAccountId
 	evaluationOffset
 	query
 }
@@ -124,21 +136,46 @@ signal {
 	evaluationOffset
 	fillOption
 	fillValue
+	pollingFrequency
 	slideBy
 }
+targetEntity
 terms {
+	__typename
+	disableEventCreation
+	disableHealthStatusReporting
 	operator
 	priority
 	threshold
 	thresholdDuration
 	thresholdOccurrences
+	... on AlertsNrqlConditionTerms {
+		__typename
+	}
+	... on AlertsNrqlConditionTermsWithPrediction {
+		__typename
+	}
 }
+titleTemplate
 type
+updatedAt
+updatedBy {
+	email
+	gravatar
+	id
+	name
+}
 violationTimeLimit
 violationTimeLimitSeconds
 ... on AlertsNrqlBaselineCondition {
 	__typename
 	baselineDirection
+	createdBy {
+		email
+		gravatar
+		id
+		name
+	}
 	entity {
 		__typename
 		accountId
@@ -218,6 +255,9 @@ violationTimeLimitSeconds
 			monitorType
 			monitoredUrl
 			period
+		}
+		... on TeamEntityOutline {
+			__typename
 		}
 		... on ThirdPartyServiceEntityOutline {
 			__typename
@@ -234,9 +274,11 @@ violationTimeLimitSeconds
 	expiration {
 		closeViolationsOnExpiration
 		expirationDuration
+		ignoreOnExpectedTermination
 		openViolationOnExpiration
 	}
 	nrql {
+		dataAccountId
 		evaluationOffset
 		query
 	}
@@ -249,18 +291,34 @@ violationTimeLimitSeconds
 		evaluationOffset
 		fillOption
 		fillValue
+		pollingFrequency
 		slideBy
 	}
+	signalSeasonality
 	terms {
+		disableEventCreation
+		disableHealthStatusReporting
 		operator
 		priority
 		threshold
 		thresholdDuration
 		thresholdOccurrences
 	}
+	updatedBy {
+		email
+		gravatar
+		id
+		name
+	}
 }
 ... on AlertsNrqlOutlierCondition {
 	__typename
+	createdBy {
+		email
+		gravatar
+		id
+		name
+	}
 	entity {
 		__typename
 		accountId
@@ -340,6 +398,9 @@ violationTimeLimitSeconds
 			monitorType
 			monitoredUrl
 			period
+		}
+		... on TeamEntityOutline {
+			__typename
 		}
 		... on ThirdPartyServiceEntityOutline {
 			__typename
@@ -357,13 +418,25 @@ violationTimeLimitSeconds
 	expiration {
 		closeViolationsOnExpiration
 		expirationDuration
+		ignoreOnExpectedTermination
 		openViolationOnExpiration
 	}
 	nrql {
+		dataAccountId
 		evaluationOffset
 		query
 	}
 	openViolationOnGroupOverlap
+	outlierConfiguration {
+		__typename
+		algorithm
+		evaluationGroupFacet
+		... on AlertsOutlierDbScanConfiguration {
+			__typename
+			epsilon
+			minimumPoints
+		}
+	}
 	signal {
 		aggregationDelay
 		aggregationMethod
@@ -373,18 +446,33 @@ violationTimeLimitSeconds
 		evaluationOffset
 		fillOption
 		fillValue
+		pollingFrequency
 		slideBy
 	}
 	terms {
+		disableEventCreation
+		disableHealthStatusReporting
 		operator
 		priority
 		threshold
 		thresholdDuration
 		thresholdOccurrences
 	}
+	updatedBy {
+		email
+		gravatar
+		id
+		name
+	}
 }
 ... on AlertsNrqlStaticCondition {
 	__typename
+	createdBy {
+		email
+		gravatar
+		id
+		name
+	}
 	entity {
 		__typename
 		accountId
@@ -465,6 +553,9 @@ violationTimeLimitSeconds
 			monitoredUrl
 			period
 		}
+		... on TeamEntityOutline {
+			__typename
+		}
 		... on ThirdPartyServiceEntityOutline {
 			__typename
 		}
@@ -480,9 +571,11 @@ violationTimeLimitSeconds
 	expiration {
 		closeViolationsOnExpiration
 		expirationDuration
+		ignoreOnExpectedTermination
 		openViolationOnExpiration
 	}
 	nrql {
+		dataAccountId
 		evaluationOffset
 		query
 	}
@@ -495,14 +588,23 @@ violationTimeLimitSeconds
 		evaluationOffset
 		fillOption
 		fillValue
+		pollingFrequency
 		slideBy
 	}
 	terms {
+		disableEventCreation
+		disableHealthStatusReporting
 		operator
 		priority
 		threshold
 		thresholdDuration
 		thresholdOccurrences
+	}
+	updatedBy {
+		email
+		gravatar
+		id
+		name
 	}
 	valueFunction
 }

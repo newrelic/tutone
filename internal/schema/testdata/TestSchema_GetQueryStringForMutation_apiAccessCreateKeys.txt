@@ -6,9 +6,11 @@ mutation(
 	createdKeys {
 		__typename
 		createdAt
+		enabled
 		id
 		key
 		name
+		obfuscatedKey
 		type
 		... on ApiAccessIngestKey {
 			__typename
