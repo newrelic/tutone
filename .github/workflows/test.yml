@@ -32,17 +32,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
-      - name: Install tools
-        run: make tools
-
-      - name: Spell check and gofmt
-        run: make spell-check gofmt goimports
-
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v7
-        with:
-          version: v2.1.2
-          args: --timeout=5m
+      - name: Lint
+        run: make lint
 
   test-unit:
     runs-on: ubuntu-latest
