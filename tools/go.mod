@@ -485,7 +485,7 @@ require (
 replace (
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity => github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.6.0
 	github.com/buger/jsonparser => github.com/buger/jsonparser v1.6.1
-	github.com/go-git/go-billy/v5 => github.com/go-git/go-billy/v5 v5.9.0
+	github.com/go-git/go-billy/v5 => github.com/go-git/go-billy/v5 v5.9.1
 	github.com/go-git/go-git/v5 => github.com/go-git/go-git/v5 v5.19.2
 	github.com/golang-jwt/jwt/v4 => github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/golang-jwt/jwt/v5 => github.com/golang-jwt/jwt/v5 v5.2.2
