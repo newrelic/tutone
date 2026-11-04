@@ -37,7 +37,7 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 	}
 
 	// The Execute() below expects to have Generator g populated for use in the template files.
-	g.GolangGenerator.PackageName = pkgConfig.Name
+	g.GolangGenerator.SetPackageNaming(pkgConfig)
 	g.GolangGenerator.Imports = pkgConfig.Imports
 
 	if structsForGen != nil {
@@ -81,12 +81,9 @@ func (g *Generator) Execute(genConfig *config.GeneratorConfig, pkgConfig *config
 		fileName = genConfig.FileName
 	}
 
+	// The file is created by WriteFile, after it has read what is already there.
+	// Creating it here would truncate hand-written code before it could be kept.
 	filePath := fmt.Sprintf("%s/%s", destinationPath, fileName)
-	file, err := os.Create(filePath)
-	if err != nil {
-		log.Error(err)
-	}
-	defer file.Close()
 
 	templateName := "types.go.tmpl"
 	if genConfig.TemplateName != "" {
@@ -103,6 +100,8 @@ func (g *Generator) Execute(genConfig *config.GeneratorConfig, pkgConfig *config
 		TemplateName:    templateName,
 		DestinationFile: filePath,
 		DestinationDir:  destinationPath,
+
+		PreserveHandWritten: pkgConfig.GetPreserveHandWritten(),
 	}
 
 	return c.WriteFile(g)

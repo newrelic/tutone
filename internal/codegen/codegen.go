@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
+	"strings"
 	"text/template"
 
 	log "github.com/sirupsen/logrus"
@@ -21,6 +23,11 @@ type CodeGen struct {
 	DestinationFile string
 	Source          Path
 	Destination     Path
+
+	// PreserveHandWritten keeps, when the destination already exists, the
+	// declarations in it that the generator does not produce or that are marked
+	// DO NOT DELETE or DO NOT REGENERATE.
+	PreserveHandWritten bool
 }
 
 type Path struct {
@@ -30,7 +37,11 @@ type Path struct {
 	File string
 }
 
-// WriteFile creates a new file, where the output from rendering template using the received Generator will be stored.
+// WriteFile renders the template using the received Generator and stores the result in the destination file.
+//
+// The destination is not touched until the output is rendered, so the previous
+// version can be read first. When PreserveHandWritten is set, hand-written
+// declarations in that previous version are carried into the new file (see MergeHandWritten).
 func (c *CodeGen) WriteFile(g Generator) error {
 	var err error
 
@@ -40,12 +51,7 @@ func (c *CodeGen) WriteFile(g Generator) error {
 		}
 	}
 
-	file, err := os.Create(c.DestinationFile)
-	if err != nil {
-		return err
-	}
-
-	defer file.Close()
+	dest := ResolveCaseSpelling(c.DestinationFile)
 
 	templatePath := path.Join(c.TemplateDir, c.TemplateName)
 	templateName := path.Base(templatePath)
@@ -62,22 +68,97 @@ func (c *CodeGen) WriteFile(g Generator) error {
 		return err
 	}
 
-	formatted, err := imports.Process(file.Name(), resultBuf.Bytes(), nil)
+	formatted, err := imports.Process(dest, resultBuf.Bytes(), nil)
 	if err != nil {
 		log.Error(resultBuf.String())
 
-		_, err = file.WriteAt(resultBuf.Bytes(), 0)
+		// Keep the raw output so it can be inspected, as before.
+		return os.WriteFile(dest, resultBuf.Bytes(), 0644)
+	}
+
+	if c.PreserveHandWritten {
+		formatted, err = preserveHandWritten(dest, formatted)
 		if err != nil {
-			log.Error(err)
+			return err
 		}
 	}
 
-	_, err = file.WriteAt(formatted, 0)
-	if err != nil {
-		return err
+	return os.WriteFile(dest, formatted, 0644)
+}
+
+// preserveHandWritten merges the declarations kept from the existing file at
+// dest, if there is one, into the freshly generated source.
+func preserveHandWritten(dest string, generated []byte) ([]byte, error) {
+	existing, err := os.ReadFile(dest)
+	if os.IsNotExist(err) {
+		return generated, nil
 	}
 
-	return nil
+	if err != nil {
+		return nil, err
+	}
+
+	merged, kept, err := MergeHandWritten(generated, existing)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", dest, err)
+	}
+
+	if len(kept) == 0 {
+		return generated, nil
+	}
+
+	log.WithFields(log.Fields{
+		"file":  dest,
+		"count": len(kept),
+		"names": kept,
+	}).Info("kept hand-written declarations")
+
+	formatted, err := imports.Process(dest, merged, nil)
+	if err != nil {
+		return nil, fmt.Errorf("%s: formatting after keeping hand-written declarations: %w", dest, err)
+	}
+
+	return formatted, nil
+}
+
+// ResolveCaseSpelling returns the path of the file that already exists in the
+// directory under a name that differs from file's only in letter case, or file
+// itself if there is none.
+//
+// Without this, a name such as agentApplications_api.go next to the existing
+// agentapplications_api.go is one file on a case-insensitive file system (macOS)
+// and two on Linux, where Go then refuses to build the package. Writing to the
+// spelling that is already there behaves the same on both, and leaves the
+// repository with the one file it had.
+func ResolveCaseSpelling(file string) string {
+	dir, base := filepath.Split(file)
+	if dir == "" {
+		dir = "."
+	}
+
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return file
+	}
+
+	for _, e := range entries {
+		if e.Name() == base {
+			return file
+		}
+	}
+
+	for _, e := range entries {
+		if strings.EqualFold(e.Name(), base) {
+			log.WithFields(log.Fields{
+				"generated_name": base,
+				"existing_name":  e.Name(),
+			}).Warn("writing to the existing file name, which differs only in letter case; set file_name on the package to silence this")
+
+			return filepath.Join(filepath.Dir(file), e.Name())
+		}
+	}
+
+	return file
 }
 
 func (c *CodeGen) WriteFileFromTemplateString(g Generator, templateString string) error {

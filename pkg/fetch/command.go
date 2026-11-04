@@ -25,8 +25,10 @@ var Command = &cobra.Command{
 Query the GraphQL server for schema and write it to a file.
 `,
 	Example: "tutone fetch --config configs/tutone.yaml",
-	Run: func(cmd *cobra.Command, args []string) {
-		Fetch(
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cmd.SilenceUsage = true // flag mistakes, which need the usage text, are reported before RunE
+
+		return Fetch(
 			viper.GetString("endpoint"),
 			viper.GetBool("auth.disable"),
 			viper.GetString("auth.header"),
@@ -44,7 +46,7 @@ func Fetch(
 	authEnvVariableName string,
 	schemaFile string,
 	refetch bool,
-) {
+) error {
 	e := NewEndpoint()
 	e.URL = endpoint
 	e.Auth.Disable = disableAuth
@@ -56,11 +58,13 @@ func Fetch(
 	if os.IsNotExist(err) || refetch {
 		schema, err := e.Fetch()
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 
 		if schemaFile != "" {
-			util.LogIfError(log.ErrorLevel, schema.Save(schemaFile))
+			if err := schema.Save(schemaFile); err != nil {
+				return err
+			}
 		}
 
 		log.WithFields(log.Fields{
@@ -68,6 +72,8 @@ func Fetch(
 			"schema_file": schemaFile,
 		}).Info("successfully fetched schema")
 	}
+
+	return nil
 }
 
 func init() {

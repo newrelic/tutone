@@ -20,6 +20,7 @@ mutation(
 			}
 			accountId
 			ingestType
+			owningTeamIds
 		}
 		... on ApiAccessUserKey {
 			__typename

@@ -23,6 +23,7 @@ var Command = &cobra.Command{
 	Long:              `Generate Go code based on the introspection of a GraphQL server`,
 	Version:           version.Version,
 	DisableAutoGenTag: true, // Do not print generation date on documentation
+	SilenceErrors:     true, // main logs the error Execute returns
 }
 
 func main() {

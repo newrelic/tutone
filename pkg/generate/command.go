@@ -32,13 +32,20 @@ your upstream GraphQL schema to ensure your generated code
 is up to date with your configured GraphQL API.
 `,
 	Example: "tutone generate --config .tutone.yml",
-	Run: func(cmd *cobra.Command, args []string) {
-		util.LogIfError(log.ErrorLevel, Generate(GeneratorOptions{
+	// Bound here, when generate runs: fetch's init binds the same key to fetch's --schema flag, and the
+	// last binding wins.
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+		return viper.BindPFlag("cache.schema_file", cmd.Flags().Lookup("schema"))
+	},
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cmd.SilenceUsage = true // flag mistakes, which need the usage text, are reported before RunE
+
+		return Generate(GeneratorOptions{
 			PackageName:            packageName,
 			PackageNames:           packageNames,
 			Refetch:                refetch,
 			IncludeIntegrationTest: includeIntegrationTest,
-		}))
+		})
 	},
 }
 
@@ -47,7 +54,6 @@ func init() {
 	Command.Flags().StringSliceVar(&packageNames, "packages", []string{}, "List of package names to generate. Example: --packages=package1,package2")
 
 	Command.Flags().StringP("schema", "s", fetch.DefaultSchemaCacheFile, "Schema file to read from")
-	util.LogIfError(log.ErrorLevel, viper.BindPFlag("schema_file", Command.Flags().Lookup("schema")))
 
 	Command.Flags().String("types", DefaultGenerateOutputFile, "Output file for generated types")
 	util.LogIfError(log.ErrorLevel, viper.BindPFlag("generate.type_file", Command.Flags().Lookup("types")))

@@ -45,7 +45,7 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 
 	// lang.Normalize(&g, genConfig, pkgConfig)
 
-	g.GolangGenerator.PackageName = pkgConfig.Name
+	g.GolangGenerator.SetPackageNaming(pkgConfig)
 	g.GolangGenerator.Imports = pkgConfig.Imports
 
 	if structsForGen != nil {
@@ -136,6 +136,8 @@ func (g *Generator) Execute(genConfig *config.GeneratorConfig, pkgConfig *config
 		TemplateName:    templateName,
 		DestinationFile: filePath,
 		DestinationDir:  destinationPath,
+
+		PreserveHandWritten: pkgConfig.GetPreserveHandWritten(),
 	}
 
 	err = c.WriteFile(g)
@@ -146,7 +148,7 @@ func (g *Generator) Execute(genConfig *config.GeneratorConfig, pkgConfig *config
 	generatedFiles = []string{filePath}
 
 	if pkgConfig.IncludeIntegrationTest {
-		testFileName := fmt.Sprintf("%s_integration_test.go", strings.ToLower(pkgConfig.Name))
+		testFileName := fmt.Sprintf("%s_integration_test.go", strings.ToLower(pkgConfig.GetFileName()))
 		testFilePath := fmt.Sprintf("%s/%s", destinationPath, testFileName)
 
 		// Only create an integration test file if it doesn't exist. We don't want to overwrite

@@ -379,6 +379,17 @@ func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string,
 	// Append to QueryArgs and EndpointArgs only after the parent field
 	// requirements have been added so that they are last.
 	args := s.BuildQueryArgsForEndpoint(t, []string{endpoint.Name}, endpoint.IncludeArguments)
+	if len(endpoint.ExcludeArguments) > 0 {
+		kept := args[:0:0]
+
+		for _, a := range args {
+			if !util.StringInStrings(a.Key, endpoint.ExcludeArguments) {
+				kept = append(kept, a)
+			}
+		}
+
+		args = kept
+	}
 	data.EndpointArgs = append(data.EndpointArgs, args...)
 	// Append all the endpoint args to the query args
 	data.QueryArgs = append(data.QueryArgs, data.EndpointArgs...)
@@ -471,6 +482,10 @@ func (s *Schema) GetQueryStringForMutation(mutation *Field, cfg config.MutationC
 	}
 
 	for _, a := range mutation.Args {
+		if util.StringInStrings(a.Name, cfg.ExcludeArguments) {
+			continue
+		}
+
 		arg := s.GetQueryArg(a)
 		if v, ok := cfg.ArgumentTypeOverrides[arg.Key]; ok {
 			arg.Value = v

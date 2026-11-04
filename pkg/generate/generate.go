@@ -31,7 +31,7 @@ func Generate(options GeneratorOptions) error {
 
 	// Fetch a new schema if it doesn't exist or if --refetch flag has been provided.
 	if os.IsNotExist(err) || options.Refetch {
-		fetch.Fetch(
+		err = fetch.Fetch(
 			viper.GetString("endpoint"),
 			viper.GetBool("auth.disable"),
 			viper.GetString("auth.header"),
@@ -39,6 +39,9 @@ func Generate(options GeneratorOptions) error {
 			schemaFile,
 			options.Refetch,
 		)
+		if err != nil {
+			return err
+		}
 	}
 
 	log.WithFields(log.Fields{
@@ -72,29 +75,32 @@ func Generate(options GeneratorOptions) error {
 		// "count_subscription": len(cfg.Subscriptions),
 	}).Info("starting code generation")
 
-	// Generate for a specific package
-	if options.PackageName != "" {
-		return generateForPackage(options.PackageName, cfg, s, options.IncludeIntegrationTest)
-	}
-
-	if options.PackageNames != nil {
-		for _, packageName := range options.PackageNames {
-			if err := generateForPackage(packageName, cfg, s, options.IncludeIntegrationTest); err != nil {
-				return err
-			}
-		}
-
-		return nil
-	}
-
-	// Generate for all configured packages
-	for _, pkgConfig := range cfg.Packages {
-		if err := generateForPackage(pkgConfig.Name, cfg, s, options.IncludeIntegrationTest); err != nil {
+	for _, packageName := range packagesToGenerate(options, cfg.Packages) {
+		if err := generateForPackage(packageName, cfg, s, options.IncludeIntegrationTest); err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+// packagesToGenerate returns the package named by --package, else the packages named by --packages, else
+// every configured package. --packages defaults to an empty list, so an empty list means it was not given.
+func packagesToGenerate(options GeneratorOptions, packages []config.PackageConfig) []string {
+	if options.PackageName != "" {
+		return []string{options.PackageName}
+	}
+
+	if len(options.PackageNames) > 0 {
+		return options.PackageNames
+	}
+
+	names := make([]string, 0, len(packages))
+	for _, p := range packages {
+		names = append(names, p.Name)
+	}
+
+	return names
 }
 
 func findPackageConfigByName(name string, packages []config.PackageConfig) *config.PackageConfig {
@@ -157,7 +163,7 @@ func generatePkgTypes(pkgConfig *config.PackageConfig, cfg *config.Config, s *sc
 	return nil
 }
 
-func generateForPackage(packageName string, cfg *config.Config, schema *schema.Schema, includeIntegrationTest bool) error {
+func generateForPackage(packageName string, cfg *config.Config, s *schema.Schema, includeIntegrationTest bool) error {
 	pkg := findPackageConfigByName(packageName, cfg.Packages)
 	if pkg == nil {
 		return fmt.Errorf("[Error] package %s not found", packageName)
@@ -165,7 +171,16 @@ func generateForPackage(packageName string, cfg *config.Config, schema *schema.S
 
 	pkg.IncludeIntegrationTest = includeIntegrationTest
 
-	return generatePkgTypes(pkg, cfg, schema)
+	warnUnknownTypes(s, pkg)
+
+	// Narrow interfaces for this package only; the schema is shared across packages.
+	restore, err := applyImplementationFilters(s, pkg)
+	if err != nil {
+		return err
+	}
+	defer restore()
+
+	return generatePkgTypes(pkg, cfg, s)
 }
 
 // getGeneratorConfigByName retrieve the *config.GeneratorConfig from the given set or errros.
