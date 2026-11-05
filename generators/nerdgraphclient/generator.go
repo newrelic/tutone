@@ -47,6 +47,7 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 
 	g.GolangGenerator.SetPackageNaming(pkgConfig)
 	g.GolangGenerator.Imports = pkgConfig.Imports
+	g.GolangGenerator.KeepExisting = lang.KeptNames(pkgConfig, expandedTypes)
 
 	if structsForGen != nil {
 		g.GolangGenerator.Types = *structsForGen
@@ -137,7 +138,12 @@ func (g *Generator) Execute(genConfig *config.GeneratorConfig, pkgConfig *config
 		DestinationFile: filePath,
 		DestinationDir:  destinationPath,
 
+		// Only explicit go_package_name and client_type_name override what the template writes.
+		GoPackageName:   pkgConfig.GoPackageName,
+		ReceiverRenames: clientTypeRenames(pkgConfig),
+
 		PreserveHandWritten: pkgConfig.GetPreserveHandWritten(),
+		KeepNames:           g.KeepExisting,
 	}
 
 	err = c.WriteFile(g)
@@ -160,6 +166,7 @@ func (g *Generator) Execute(genConfig *config.GeneratorConfig, pkgConfig *config
 				TemplateName:    "integration_test.go.tmpl",
 				DestinationFile: testFilePath,
 				DestinationDir:  destinationPath,
+				GoPackageName:   pkgConfig.GoPackageName,
 			}
 
 			err = cg.WriteFile(g)
@@ -174,6 +181,17 @@ func (g *Generator) Execute(genConfig *config.GeneratorConfig, pkgConfig *config
 	output.PrintSuccessMessage(c.DestinationDir, generatedFiles)
 
 	return nil
+}
+
+// clientTypeRenames maps the receiver type a template that predates client_type_name
+// writes to the configured one. It is nil when the two are the same.
+func clientTypeRenames(pkgConfig *config.PackageConfig) map[string]string {
+	from, to := pkgConfig.DefaultClientTypeName(), pkgConfig.GetClientTypeName()
+	if from == to {
+		return nil
+	}
+
+	return map[string]string{from: to}
 }
 
 func fileExists(filePath string) bool {

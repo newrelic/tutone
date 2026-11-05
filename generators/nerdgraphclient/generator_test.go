@@ -104,9 +104,15 @@ func genConfig() *config.GeneratorConfig {
 func run(t *testing.T, pkg *config.PackageConfig, gc *config.GeneratorConfig) (string, error) {
 	t.Helper()
 
+	return runSchema(t, testSchema(), pkg, gc)
+}
+
+func runSchema(t *testing.T, s *schema.Schema, pkg *config.PackageConfig, gc *config.GeneratorConfig) (string, error) {
+	t.Helper()
+
 	g := &Generator{}
 
-	if err := g.Generate(testSchema(), gc, pkg); err != nil {
+	if err := g.Generate(s, gc, pkg); err != nil {
 		return "", err
 	}
 
@@ -125,10 +131,22 @@ func run(t *testing.T, pkg *config.PackageConfig, gc *config.GeneratorConfig) (s
 func runTypes(t *testing.T, pkg *config.PackageConfig) string {
 	t.Helper()
 
-	gc := &config.GeneratorConfig{Name: "typegen", FileName: "types.go", TemplateDir: "../../templates/typegen"}
+	return runTypesIn(t, pkg, "../../templates/typegen")
+}
+
+func runTypesIn(t *testing.T, pkg *config.PackageConfig, templateDir string) string {
+	t.Helper()
+
+	return runTypesSchema(t, testSchema(), pkg, templateDir)
+}
+
+func runTypesSchema(t *testing.T, s *schema.Schema, pkg *config.PackageConfig, templateDir string) string {
+	t.Helper()
+
+	gc := &config.GeneratorConfig{Name: "typegen", FileName: "types.go", TemplateDir: templateDir}
 	g := &typegen.Generator{}
 
-	require.NoError(t, g.Generate(testSchema(), gc, pkg))
+	require.NoError(t, g.Generate(s, gc, pkg))
 	require.NoError(t, g.Execute(gc, pkg))
 
 	b, err := os.ReadFile(filepath.Join(pkg.Path, "types.go"))
@@ -443,4 +461,433 @@ func TestGenerate_FieldOverrideWinsOverAutomaticRecursionBreaking(t *testing.T) 
 
 	assert.Equal(t, "*CollaborationComment", fields["CollaborationThread"]["Comment"])
 	assert.Equal(t, "CollaborationThread", fields["CollaborationComment"]["Thread"], "the cycle is already broken, so the other side stays a value")
+}
+
+// legacyTemplates writes copies of the templates spelled the way
+// newrelic-client-go's are, which cannot change: the lower-cased config name on the
+// package line and its `title` on every receiver.
+func legacyTemplates(t *testing.T) string {
+	t.Helper()
+
+	dir := t.TempDir()
+
+	legacy := func(file, templateDir string, swaps ...[2]string) {
+		b, err := os.ReadFile(filepath.Join(templateDir, file))
+		require.NoError(t, err)
+
+		src := string(b)
+
+		for _, sw := range swaps {
+			require.Contains(t, src, sw[0], "%s no longer has the line this test makes legacy", file)
+			src = strings.Replace(src, sw[0], sw[1], 1)
+		}
+
+		require.NoError(t, os.WriteFile(filepath.Join(dir, file), []byte(src), 0o600))
+	}
+
+	pkgLine := [2]string{"package {{.GoPackageName}}", "package {{.PackageName | lower}}"}
+
+	legacy("client.go.tmpl", "../../templates/nerdgraphclient", pkgLine,
+		[2]string{"{{$clientType := .ClientTypeName}}", "{{$clientType := .PackageName | title}}"})
+	legacy("types.go.tmpl", "../../templates/typegen", pkgLine)
+	legacy("integration_test.go.tmpl", "../../templates/nerdgraphclient")
+
+	return dir
+}
+
+func TestGenerate_TemplatesThatPredateTheNamingSettingsHonourThem(t *testing.T) {
+	t.Parallel()
+
+	cases := map[string]struct {
+		goPackage, clientType     string
+		wantPackage, wantReceiver string
+	}{
+		"unset keeps what the template writes": {"", "", "organization", "Organization"},
+		"client type only":                     {"", "OrganizationManagement", "organization", "OrganizationManagement"},
+		"package only":                         {"servicearchintelligence", "", "servicearchintelligence", "Organization"},
+		"both":                                 {"servicearchintelligence", "ServiceArchIntelligence", "servicearchintelligence", "ServiceArchIntelligence"},
+	}
+
+	for name, tc := range cases {
+		tc := tc
+
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			dir := t.TempDir()
+			templates := legacyTemplates(t)
+
+			pkg := twoPathPackage(dir, true)
+			pkg.Name = "organization"
+			pkg.GoPackageName = tc.goPackage
+			pkg.ClientTypeName = tc.clientType
+			pkg.IncludeIntegrationTest = true
+
+			gc := genConfig()
+			gc.TemplateDir = templates
+
+			src, err := run(t, pkg, gc)
+			require.NoError(t, err)
+
+			// The client file, the types file and the integration test all agree.
+			assert.Equal(t, tc.wantPackage, parse(t, src).Name.Name)
+			assert.Equal(t, tc.wantPackage, parse(t, runTypesIn(t, pkg, templates)).Name.Name)
+
+			integration, err := os.ReadFile(filepath.Join(dir, "organization_integration_test.go"))
+			require.NoError(t, err)
+			assert.Equal(t, tc.wantPackage, parse(t, string(integration)).Name.Name)
+
+			// Every method has the configured receiver, and only receivers were touched.
+			f := parse(t, src)
+			require.NotEmpty(t, methodNames(f))
+
+			for _, d := range f.Decls {
+				if fn, ok := d.(*ast.FuncDecl); ok && fn.Recv != nil {
+					assert.Equal(t, "*"+tc.wantReceiver, types.ExprString(fn.Recv.List[0].Type), fn.Name.Name)
+				}
+			}
+
+			assert.Contains(t, src, "const getLinkedAccountsOrgQuery =")
+		})
+	}
+}
+
+func TestGenerate_LegacyReceiverRenameStillMatchesTheHandFixedMethod(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	pkg := twoPathPackage(dir, true)
+	pkg.Name = "organization"
+	pkg.ClientTypeName = "OrganizationManagement"
+
+	gc := genConfig()
+	gc.TemplateDir = legacyTemplates(t)
+
+	first, err := run(t, pkg, gc)
+	require.NoError(t, err)
+
+	// A generated method is pinned by hand under the configured receiver. The legacy
+	// template writes another, so a rename after the merge would leave two.
+	edited := strings.Replace(first,
+		"func (a *OrganizationManagement) GetLinkedAccountsOrg(",
+		"// DO NOT REGENERATE\nfunc (a *OrganizationManagement) GetLinkedAccountsOrg(", 1)
+	edited = strings.Replace(edited, "return &resp.Actor.Cloud.LinkedAccounts, nil", "return &resp.Actor.Cloud.LinkedAccounts, nil // hand fix", 1)
+	require.NotEqual(t, first, edited)
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "organization_api.go"), []byte(edited), 0o600))
+
+	second, err := run(t, pkg, gc)
+	require.NoError(t, err)
+
+	assert.Contains(t, second, "// hand fix")
+	assert.ElementsMatch(t, []string{"GetLinkedAccountsOrg", "GetLinkedAccountsForAccount"}, methodNames(parse(t, second)))
+}
+
+func TestGenerate_KeepExistingEndpointsKeepTheHandWrittenMethods(t *testing.T) {
+	t.Parallel()
+
+	// Two endpoints that share a name under two paths, renamed by hand: the shape of
+	// destinations in the notifications package.
+	dir := t.TempDir()
+	pkg := twoPathPackage(dir, false)
+
+	_, err := run(t, pkg, genConfig())
+	require.Error(t, err, "without keep_existing the shared name is a duplicate")
+
+	for i := range pkg.Queries {
+		pkg.Queries[i].Endpoints[0].KeepExisting = true
+	}
+
+	handWritten := `package cloud
+
+import "context"
+
+// GetLinkedAccountsOrg was renamed by hand.
+func (a *Cloud) GetLinkedAccountsOrg(ctx context.Context) (*[]LinkedAccount, error) {
+	resp := linkedAccountsResponse{}
+	if err := a.client.NerdGraphQueryWithContext(ctx, getLinkedAccountsQueryOrg, nil, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp.Actor.Cloud.LinkedAccounts, nil
+}
+
+const getLinkedAccountsQueryOrg = ` + "`query { actor { cloud { linkedAccounts { id } } } }`" + `
+
+// GetLinkedAccountsForAccount was renamed by hand.
+func (a *Cloud) GetLinkedAccountsForAccount(ctx context.Context) (*[]LinkedAccount, error) {
+	resp := linkedAccountsResponse{}
+	if err := a.client.NerdGraphQueryWithContext(ctx, getLinkedAccountsQueryAccount, nil, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp.Actor.Account.Cloud.LinkedAccounts, nil
+}
+
+const getLinkedAccountsQueryAccount = ` + "`query { actor { account { cloud { linkedAccounts { id } } } } }`" + `
+`
+	file := filepath.Join(dir, "cloud_api.go")
+	require.NoError(t, os.WriteFile(file, []byte(handWritten), 0o600))
+
+	src, err := run(t, pkg, genConfig())
+	require.NoError(t, err)
+
+	f := parse(t, src)
+
+	assert.ElementsMatch(t, []string{"GetLinkedAccountsOrg", "GetLinkedAccountsForAccount"}, methodNames(f), "nothing generated, nothing duplicated")
+	assert.Equal(t, 1, strings.Count(src, "const getLinkedAccountsQueryOrg ="))
+	assert.Equal(t, 1, strings.Count(src, "const getLinkedAccountsQueryAccount ="))
+	assert.Contains(t, src, "// GetLinkedAccountsOrg was renamed by hand.")
+	assert.Contains(t, src, "return &resp.Actor.Account.Cloud.LinkedAccounts, nil")
+
+	again, err := run(t, pkg, genConfig())
+	require.NoError(t, err)
+	assert.Equal(t, src, again, "regenerating again changes nothing")
+
+	// The hand-written methods read linkedAccountsResponse, which types.go still declares.
+	fields, declared := structFields(parse(t, runTypes(t, pkg)))
+
+	assert.Equal(t, 1, declared["linkedAccountsResponse"])
+	assert.Equal(t, map[string]string{"Actor": "Actor"}, fields["linkedAccountsResponse"])
+	assert.Equal(t, "Account", fields["Actor"]["Account"])
+}
+
+func TestGenerate_KeepExistingMutationIsNotGenerated(t *testing.T) {
+	t.Parallel()
+
+	mutationSchema := func() *schema.Schema {
+		s := testSchema()
+		s.MutationType.Fields = []schema.Field{
+			{Name: "thingCreate", Type: obj("Thing"), Args: []schema.Field{{Name: "name", Type: scalar("String")}}},
+			{Name: "thingDelete", Type: obj("Thing"), Args: []schema.Field{{Name: "id", Type: scalar("Int")}}},
+		}
+		s.Types = append(s.Types, &schema.Type{Name: "Thing", Kind: schema.KindObject, Fields: []schema.Field{{Name: "id", Type: scalar("Int")}}})
+
+		return s
+	}
+
+	handWritten := `package things
+
+// ThingCreate was reshaped by hand.
+func (a *Things) ThingCreate(name string, extra bool) (*Thing, error) { return nil, nil }
+
+const ThingCreateMutation = "by hand"
+`
+
+	t.Run("the others are generated and the kept one survives", func(t *testing.T) {
+		t.Parallel()
+
+		dir := t.TempDir()
+		require.NoError(t, os.WriteFile(filepath.Join(dir, "things_api.go"), []byte(handWritten), 0o600))
+
+		pkg := &config.PackageConfig{Name: "things", Path: dir, Mutations: []config.MutationConfig{
+			{Name: "thingCreate", MaxQueryFieldDepth: 1, KeepExisting: true},
+			{Name: "thingDelete", MaxQueryFieldDepth: 1},
+		}}
+
+		src, err := runSchema(t, mutationSchema(), pkg, genConfig())
+		require.NoError(t, err)
+
+		assert.ElementsMatch(t, []string{"ThingCreate", "ThingDelete"}, methodNames(parse(t, src)))
+		assert.Contains(t, src, "func (a *Things) ThingCreate(name string, extra bool)", "the hand-written signature")
+		assert.Equal(t, 1, strings.Count(src, "const ThingCreateMutation ="))
+		assert.Contains(t, src, `"by hand"`)
+		assert.Contains(t, src, "const ThingDeleteMutation =")
+	})
+
+	t.Run("a package that keeps all of its mutations still generates", func(t *testing.T) {
+		t.Parallel()
+
+		dir := t.TempDir()
+		require.NoError(t, os.WriteFile(filepath.Join(dir, "things_api.go"), []byte(handWritten), 0o600))
+
+		pkg := &config.PackageConfig{Name: "things", Path: dir, Mutations: []config.MutationConfig{
+			{Name: "thingCreate", KeepExisting: true},
+		}}
+
+		src, err := runSchema(t, mutationSchema(), pkg, genConfig())
+		require.NoError(t, err)
+
+		assert.Equal(t, []string{"ThingCreate"}, methodNames(parse(t, src)))
+		assert.Contains(t, src, `"by hand"`)
+	})
+}
+
+func TestGenerate_KeepExistingTypeKeepsTheHandEditedDeclaration(t *testing.T) {
+	t.Parallel()
+
+	handEdit := func(t *testing.T, dir, generated string) {
+		t.Helper()
+
+		edited := strings.Replace(generated, "type LinkedAccount struct {", "type LinkedAccount struct {\n\tFromHand string", 1)
+		require.NotEqual(t, generated, edited)
+		require.NoError(t, os.WriteFile(filepath.Join(dir, "types.go"), []byte(edited), 0o600))
+	}
+
+	t.Run("with keep_existing", func(t *testing.T) {
+		t.Parallel()
+
+		dir := t.TempDir()
+		pkg := twoPathPackage(dir, true)
+		pkg.Types = []config.TypeConfig{{Name: "LinkedAccount", KeepExisting: true}}
+
+		handEdit(t, dir, runTypes(t, pkg))
+
+		again := runTypes(t, pkg)
+		fields, declared := structFields(parse(t, again))
+
+		assert.Equal(t, 1, declared["LinkedAccount"])
+		assert.Equal(t, "string", fields["LinkedAccount"]["FromHand"], "the declaration is the existing one")
+		assert.Contains(t, fields["LinkedAccount"], "Name", "and keeps its other fields")
+
+		// The type is still expanded, so what refers to it is generated as before.
+		assert.Equal(t, "[]LinkedAccount", fields["Cloud"]["LinkedAccounts"])
+
+		assert.Equal(t, again, runTypes(t, pkg), "regenerating again changes nothing")
+	})
+
+	t.Run("without it the edit is regenerated away", func(t *testing.T) {
+		t.Parallel()
+
+		dir := t.TempDir()
+		pkg := twoPathPackage(dir, true)
+
+		handEdit(t, dir, runTypes(t, pkg))
+
+		fields, _ := structFields(parse(t, runTypes(t, pkg)))
+		assert.NotContains(t, fields["LinkedAccount"], "FromHand")
+	})
+}
+
+// companionSchema has what the typegen template declares beside a struct: an enum,
+// an interface with an implementation, and a struct with a field of that interface,
+// which gets an UnmarshalJSON.
+func companionSchema() *schema.Schema {
+	id := []schema.Field{{Name: "id", Type: scalar("String")}}
+	item := schema.TypeRef{Kind: schema.KindInterface, Name: "Item"}
+
+	return &schema.Schema{
+		MutationType: &schema.Type{Name: "RootMutationType", Kind: schema.KindObject},
+		Types: []*schema.Type{
+			{Name: "RootQueryType", Kind: schema.KindObject},
+			{Name: "Page", Kind: schema.KindObject, Fields: []schema.Field{
+				{Name: "items", Type: listOf(item)},
+				{Name: "color", Type: schema.TypeRef{Kind: schema.KindENUM, Name: "Color"}},
+			}},
+			{Name: "Item", Kind: schema.KindInterface, Fields: id, PossibleTypes: []schema.TypeRef{obj("Gadget")}},
+			{Name: "Gadget", Kind: schema.KindObject, Fields: id, Interfaces: []schema.TypeRef{item}},
+			{Name: "Color", Kind: schema.KindENUM, EnumValues: []schema.EnumValue{{Name: "BLUE"}, {Name: "RED"}}},
+			{Name: "String", Kind: schema.KindScalar},
+		},
+	}
+}
+
+func TestGenerate_KeepExistingTypeAlsoKeepsWhatIsDeclaredBesideIt(t *testing.T) {
+	t.Parallel()
+
+	newPackage := func(dir string, keep bool) *config.PackageConfig {
+		return &config.PackageConfig{
+			Name: "pages",
+			Path: dir,
+			Types: []config.TypeConfig{
+				{Name: "Page", KeepExisting: keep},
+				{Name: "Item", KeepExisting: keep},
+				{Name: "Color", KeepExisting: keep},
+			},
+		}
+	}
+
+	generate := func(t *testing.T, dir string, keep bool) string {
+		t.Helper()
+
+		return runTypesSchema(t, companionSchema(), newPackage(dir, keep), "../../templates/typegen")
+	}
+
+	// Edits to what the template declares beside each type, and one to a method of a
+	// type that is not kept. Each puts its marker inside the declaration.
+	edits := []struct{ from, to, marker, note string }{
+		{
+			"func (x *Page) UnmarshalJSON(b []byte) error {",
+			"func (x *Page) UnmarshalJSON(b []byte) error {\n\t// hand edit: Page.UnmarshalJSON",
+			"hand edit: Page.UnmarshalJSON", "method of a kept struct",
+		},
+		{
+			"func (x *Item) ImplementsItem() {}",
+			"func (x *Item) ImplementsItem() { /* hand edit: Item.ImplementsItem */ }",
+			"hand edit: Item.ImplementsItem", "method of a kept interface",
+		},
+		{
+			"func UnmarshalItemInterface(b []byte) (*ItemInterface, error) {",
+			"func UnmarshalItemInterface(b []byte) (*ItemInterface, error) {\n\t// hand edit: UnmarshalItemInterface",
+			"hand edit: UnmarshalItemInterface", "function of a kept interface",
+		},
+		{
+			"type ItemInterface interface {",
+			"type ItemInterface interface {\n\t// hand edit: ItemInterface",
+			"hand edit: ItemInterface", "Go interface of a kept interface",
+		},
+		{
+			"var ColorTypes = struct {",
+			"var ColorTypes = struct {\n\t// hand edit: ColorTypes",
+			"hand edit: ColorTypes", "variable of a kept enum",
+		},
+		{
+			"func (x *Gadget) ImplementsItem() {}",
+			"func (x *Gadget) ImplementsItem() { /* hand edit: Gadget.ImplementsItem */ }",
+			"hand edit: Gadget.ImplementsItem", "method of a type that is not kept",
+		},
+	}
+
+	handEdit := func(t *testing.T, dir, generated string) {
+		t.Helper()
+
+		edited := generated
+
+		for _, e := range edits {
+			require.Contains(t, edited, e.from, "the template no longer declares the %s", e.note)
+			edited = strings.Replace(edited, e.from, e.to, 1)
+		}
+
+		require.NoError(t, os.WriteFile(filepath.Join(dir, "types.go"), []byte(edited), 0o600))
+	}
+
+	t.Run("with keep_existing", func(t *testing.T) {
+		t.Parallel()
+
+		dir := t.TempDir()
+		handEdit(t, dir, generate(t, dir, true))
+
+		again := generate(t, dir, true)
+
+		for _, e := range edits {
+			if strings.Contains(e.note, "not kept") {
+				assert.NotContains(t, again, e.marker, "%s: the generator's own", e.note)
+				continue
+			}
+
+			assert.Equal(t, 1, strings.Count(again, e.marker), "%s: kept, once", e.note)
+		}
+
+		// One declaration of each, whatever was kept.
+		f := parse(t, again)
+		_, declared := structFields(f)
+
+		for _, name := range []string{"Page", "Item", "Gadget", "Color", "ItemInterface"} {
+			assert.Equal(t, 1, declared[name], name)
+		}
+
+		assert.Equal(t, 1, strings.Count(again, "func UnmarshalItemInterface("))
+		assert.Equal(t, 1, strings.Count(again, "func (x *Page) UnmarshalJSON("))
+		assert.Equal(t, 1, strings.Count(again, "var ColorTypes ="))
+
+		assert.Equal(t, again, generate(t, dir, true), "regenerating again changes nothing")
+	})
+
+	t.Run("without it the edits are regenerated away", func(t *testing.T) {
+		t.Parallel()
+
+		dir := t.TempDir()
+		handEdit(t, dir, generate(t, dir, false))
+
+		assert.NotContains(t, generate(t, dir, false), "hand edit")
+	})
 }

@@ -17,8 +17,8 @@ generators: []string, required                      # Which generators to utiliz
 commands: []object, optional                        # Commands for the `command` generator. Keys: name, fileName, shortDescription, longDescription, example, inputType, clientPackageName, clientMethod, path, subcommands, and flags (name, type, defaultValue, description, variableName, required)
 
 file_name: string, optional                         # Stem for {{.FileName}} in a generator's fileName template. Default: name. Set it when the file on disk is spelled differently, e.g. name "agentApplications" with file_name "agentapplications"
-go_package_name: string, optional                   # Identifier on the generated `package` line. Default: name lower-cased. Example: name "scorecards" written into package "servicearchintelligence"
-client_type_name: string, optional                  # Receiver type of the generated client methods. Default: name with its first letter upper-cased. Example: "OrganizationManagement"
+go_package_name: string, optional                   # Identifier on the generated `package` line. Default: name lower-cased. Example: name "scorecards" written into package "servicearchintelligence". See "Package and client type names" below
+client_type_name: string, optional                  # Receiver type of the generated client methods. Default: name with its first letter upper-cased. Example: "OrganizationManagement". See "Package and client type names" below
 preserve_hand_written: bool, optional               # Default true. See "Hand-written code in generated files" below
 
 # Queries schema: The GraphQL queries you want to generate code for. Requires the `nerdgraphclient` generator.
@@ -34,6 +34,7 @@ queries: []object, optional
         argument_go_types: object, optional         # Map of GraphQL argument name to the Go type of its parameter, e.g. cursor: "*string". An unknown name is an error
         context_method_name: string, optional       # Name of the context.Context variant for templates that generate one. Default: method_name + "WithContext". Example: "GetDestinationsWithContextAccount"
         include_implementations: []string, optional # Keep only these implementations of the interface this endpoint returns, for this package only
+        keep_existing: bool, optional               # Do not generate this endpoint: its methods and query constant stay in the file as hand-written code. See "Hand-written code in generated files" below
         argument_type_overrides: []object, deprecated # Accepted so existing configs load, but ignored on endpoints (only mutations use it). A warning is logged; remove it
 
 # Mutations schema: The GraphQL mutations you want to generate code for. Requires the `nerdgraphclient` generator.
@@ -45,6 +46,7 @@ mutations: []object, optional
     exclude_arguments: []string, optional           # Arguments to leave out of the Go method and the query, e.g. an optional `version` that must not be sent when unset. An unknown name is an error
     argument_go_types: object, optional             # Map of GraphQL argument name to the Go type of its parameter, e.g. cursor: "*string". An unknown name is an error
     rename_arguments: object, optional              # Map of GraphQL argument name to Go parameter name. Go keywords get a safe name automatically ("type" becomes "typeArg"); this chooses a different one. An unknown name is an error
+    keep_existing: bool, optional                   # Do not generate this mutation: its method and query constant stay in the file as hand-written code. See "Hand-written code in generated files" below
 
 # Types schema: The GraphQL types to use for generating Go types. Requires the `typegen` generator
 types: []object, optional
@@ -57,6 +59,7 @@ types: []object, optional
     generate_struct_getters: bool, optional         # Generates a getter for each field, e.g. GetName() for name
     struct_tags: object, optional                   # Tags on every field: tags, e.g. ["json", "yaml"], and omitempty (false leaves omitempty out). An entry in fields overrides one field
     include_implementations: []string, optional     # For an interface type: keep only these implementations, for this package only. A name that does not implement the interface is an error
+    keep_existing: bool, optional                   # Keep this type's declaration in the existing file exactly as it is, as if it were marked DO NOT REGENERATE, and its methods and companion declarations too. See "Hand-written code in generated files" below
     fields: []object, optional                      # Per-field overrides. An entry naming a field the type does not have is an error
       - name: string, required                      # GraphQL field name, e.g. "enabled"
         pointer: bool, optional                     # true makes the Go type a pointer. Ignored for interface-typed fields
@@ -76,8 +79,17 @@ ignored and the output silently differed from what the config asked for.
 When a generated file already exists, regenerating it keeps:
 
 - every top-level declaration (function, method, type, const, var) the generator does not produce, and
-- every declaration whose doc comment contains `DO NOT DELETE` or `DO NOT REGENERATE` (any case), exactly
-  as written. If the generator also produces a declaration of that name, the existing text replaces it, in place.
+- every declaration marked `DO NOT DELETE` or `DO NOT REGENERATE` (any case), exactly as written. The marker
+  can be anywhere in the declaration: its doc comment, a field comment or its body. If the generator also
+  produces a declaration of that name, the existing text replaces it, in place. A marker does not count when
+  the newly generated declaration contains the same phrase, because a description from the schema can say
+  "do not delete" about something else, and
+- every type set to `keep_existing: true` that the file declares, exactly as written, as if it were marked,
+  and what the templates declare for it: its methods (getters, `Implements...`, `UnmarshalJSON`) whether the
+  receiver is the type or a pointer to it, an enum's `<Name>Types` variable, and an interface's
+  `<Name>Interface` type and `Unmarshal<Name>Interface` function. Each is kept only if the file declares it,
+  and generated normally otherwise. The type is still expanded, so types that refer to it are generated as
+  before.
 
 Everything else is replaced by the newly generated version. Imports the kept code needs are carried over.
 If the existing file does not parse, generation fails and the file is left as it was.
@@ -85,6 +97,26 @@ If the existing file does not parse, generation fails and the file is left as it
 A declaration the generator used to produce and no longer does (for example a type removed from the config)
 cannot be told apart from hand-written code, so it is kept as well. To drop such leftovers, set
 `preserve_hand_written: false` for the package, or delete them by hand.
+
+A mutation or endpoint set to `keep_existing: true` is not generated, and it takes no part in the check for
+two methods with one name. Its methods and query constant stay in the file as hand-written code, by the first
+rule above. The types it uses, and an endpoint's response struct (in the types file, read by the hand-written
+methods), are still generated. Set it on both of two endpoints that share a name under different paths and were
+renamed by hand, such as `destinations` under `[actor, account, aiNotifications]` and
+`[actor, organization, aiNotifications]`, which otherwise fail with
+`method "GetDestinations" is generated more than once`.
+
+`keep_existing` needs `preserve_hand_written` to be true, as it is by default. Otherwise the file is replaced
+as a whole, and loading the config logs a warning.
+
+### Package and client type names
+
+`go_package_name` and `client_type_name` apply whatever the template writes. After a template is rendered,
+tutone sets the `package` line of the file to `go_package_name`, and, in `nerdgraphclient` output, gives the
+methods whose receiver is the default client type (the package name with its first letter upper-cased, which is
+what a template's `title` produces) the type `client_type_name`. Templates written before these keys existed
+(`package {{.PackageName | lower}}` and `{{$packageName | title}}` as the receiver) therefore need no change. Only
+receivers are renamed. A key that is not set leaves what the template wrote as it is.
 
 ### Other generation rules
 

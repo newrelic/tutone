@@ -24,10 +24,22 @@ type CodeGen struct {
 	Source          Path
 	Destination     Path
 
+	// GoPackageName, when set, is the name the rendered file's package clause gets
+	// if the template wrote another. Templates written before go_package_name
+	// existed print the lower-cased config name.
+	GoPackageName string
+	// ReceiverRenames maps the type a template gave its methods' receivers to the
+	// type they should have, for the same reason (client_type_name).
+	ReceiverRenames map[string]string
+
 	// PreserveHandWritten keeps, when the destination already exists, the
 	// declarations in it that the generator does not produce or that are marked
 	// DO NOT DELETE or DO NOT REGENERATE.
 	PreserveHandWritten bool
+	// KeepNames names declarations of the existing file that are kept as they are,
+	// as if marked: for each name the type, const, var or function of that name and
+	// the methods of a type of that name. It applies only with PreserveHandWritten.
+	KeepNames []string
 }
 
 type Path struct {
@@ -39,9 +51,11 @@ type Path struct {
 
 // WriteFile renders the template using the received Generator and stores the result in the destination file.
 //
-// The destination is not touched until the output is rendered, so the previous
-// version can be read first. When PreserveHandWritten is set, hand-written
-// declarations in that previous version are carried into the new file (see MergeHandWritten).
+// The package clause and method receivers are set to the configured names before
+// the output is formatted, so any template honours them. The destination is not
+// touched until the output is rendered, so the previous version can be read first.
+// When PreserveHandWritten is set, hand-written declarations in that previous
+// version are carried into the new file (see MergeHandWritten).
 func (c *CodeGen) WriteFile(g Generator) error {
 	var err error
 
@@ -68,7 +82,7 @@ func (c *CodeGen) WriteFile(g Generator) error {
 		return err
 	}
 
-	formatted, err := imports.Process(dest, resultBuf.Bytes(), nil)
+	formatted, err := imports.Process(dest, c.applyNaming(resultBuf.Bytes()), nil)
 	if err != nil {
 		log.Error(resultBuf.String())
 
@@ -77,7 +91,7 @@ func (c *CodeGen) WriteFile(g Generator) error {
 	}
 
 	if c.PreserveHandWritten {
-		formatted, err = preserveHandWritten(dest, formatted)
+		formatted, err = preserveHandWritten(dest, formatted, c.KeepNames)
 		if err != nil {
 			return err
 		}
@@ -86,9 +100,30 @@ func (c *CodeGen) WriteFile(g Generator) error {
 	return os.WriteFile(dest, formatted, 0644)
 }
 
+// applyNaming sets the package name and receiver types the config asks for on a
+// template's output. Source that does not parse is returned as it is: formatting
+// fails on it next, and that is reported there.
+func (c *CodeGen) applyNaming(rendered []byte) []byte {
+	out := rendered
+
+	if c.GoPackageName != "" {
+		if renamed, err := SetPackageName(out, c.GoPackageName); err == nil {
+			out = renamed
+		}
+	}
+
+	if len(c.ReceiverRenames) > 0 {
+		if renamed, err := RenameReceivers(out, c.ReceiverRenames); err == nil {
+			out = renamed
+		}
+	}
+
+	return out
+}
+
 // preserveHandWritten merges the declarations kept from the existing file at
 // dest, if there is one, into the freshly generated source.
-func preserveHandWritten(dest string, generated []byte) ([]byte, error) {
+func preserveHandWritten(dest string, generated []byte, keepNames []string) ([]byte, error) {
 	existing, err := os.ReadFile(dest)
 	if os.IsNotExist(err) {
 		return generated, nil
@@ -98,7 +133,7 @@ func preserveHandWritten(dest string, generated []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	merged, kept, err := MergeHandWritten(generated, existing)
+	merged, kept, err := MergeHandWritten(generated, existing, keepNames...)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", dest, err)
 	}

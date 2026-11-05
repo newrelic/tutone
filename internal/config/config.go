@@ -109,6 +109,12 @@ func (c *PackageConfig) GetClientTypeName() string {
 		return c.ClientTypeName
 	}
 
+	return c.DefaultClientTypeName()
+}
+
+// DefaultClientTypeName is the receiver type a template that predates client_type_name
+// writes: its `title` of the package name.
+func (c *PackageConfig) DefaultClientTypeName() string {
 	//nolint:staticcheck // matches the template's sprig `title`, which keeps existing output unchanged
 	return strings.Title(c.Name)
 }
@@ -185,6 +191,10 @@ type MutationConfig struct {
 	// e.g. {cursor: "*string"} so a caller can pass nil for "not set". An unknown
 	// name is an error.
 	ArgumentGoTypes map[string]string `yaml:"argument_go_types,omitempty"`
+	// KeepExisting leaves the mutation out of generation. Its method and query
+	// constant stay in the file as hand-written code, for a mutation that was
+	// renamed or reshaped by hand.
+	KeepExisting bool `yaml:"keep_existing,omitempty"`
 }
 
 type EndpointConfig struct {
@@ -212,6 +222,12 @@ type EndpointConfig struct {
 	// IncludeImplementations narrows the interface this endpoint returns to the
 	// named implementations, for this package only.
 	IncludeImplementations []string `yaml:"include_implementations,omitempty"`
+	// KeepExisting leaves the endpoint out of generation, so its methods and query
+	// constant in the file stay as hand-written code. It is for endpoints renamed by
+	// hand, such as two that share a name under different paths and would otherwise
+	// fail as a duplicate method name. The types and the endpoint's response struct,
+	// which the hand-written methods use, are still generated.
+	KeepExisting bool `yaml:"keep_existing,omitempty"`
 	// ArgumentTypeOverrides is accepted for existing configs and has no effect:
 	// it has always been ignored on endpoints (only mutations use it). It stays a
 	// known key so those configs keep loading under strict parsing.
@@ -246,6 +262,13 @@ type TypeConfig struct {
 	// IncludeImplementations narrows this interface type to the named
 	// implementations, for this package only.
 	IncludeImplementations []string `yaml:"include_implementations,omitempty"`
+	// KeepExisting keeps the type's declaration in the existing file exactly as it
+	// is, as if it were marked DO NOT REGENERATE, and so the declarations made for
+	// it: its methods, an enum's <Name>Types variable, and an interface's
+	// <Name>Interface type and Unmarshal<Name>Interface function. The type is still
+	// expanded, so types that refer to it are generated as before, and anything the
+	// file does not declare yet is generated normally.
+	KeepExisting bool `yaml:"keep_existing,omitempty"`
 }
 
 // FieldConfig overrides how a single field of a generated struct is rendered.
@@ -363,7 +386,41 @@ func warnIgnoredKeys(c *Config) {
 				}
 			}
 		}
+
+		if names := keepExistingNames(p); len(names) > 0 && !p.GetPreserveHandWritten() {
+			log.WithFields(log.Fields{
+				"package": p.Name,
+				"entries": names,
+			}).Warn("keep_existing needs preserve_hand_written, which is false; the existing code is replaced, not kept")
+		}
 	}
+}
+
+// keepExistingNames returns the types, mutations and endpoints the package sets to keep_existing.
+func keepExistingNames(p PackageConfig) []string {
+	var names []string
+
+	for _, t := range p.Types {
+		if t.KeepExisting {
+			names = append(names, t.Name)
+		}
+	}
+
+	for _, m := range p.Mutations {
+		if m.KeepExisting {
+			names = append(names, m.Name)
+		}
+	}
+
+	for _, q := range p.Queries {
+		for _, e := range q.Endpoints {
+			if e.KeepExisting {
+				names = append(names, e.Name)
+			}
+		}
+	}
+
+	return names
 }
 
 // duplicateTypeNames returns the type names that appear in more than one entry.

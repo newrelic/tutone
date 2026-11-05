@@ -29,6 +29,9 @@ type GolangGenerator struct {
 	Interfaces     []GoInterface
 	Mutations      []GoMethod
 	Queries        []GoMethod
+	// KeepExisting names what an existing file keeps as it is for the types set to
+	// keep_existing (see KeptNames).
+	KeepExisting []string
 }
 
 // SetPackageNaming fills the name fields from the package config.
@@ -156,6 +159,11 @@ func GenerateGoMethodQueriesForPackage(s *schema.Schema, genConfig *config.Gener
 		// actor { cloud { } }
 		// ... we want to generate the method based on the Type of the field 'cloud'.
 		for _, endpoint := range pkgQuery.Endpoints {
+			// Kept as it is, so it also takes no part in the duplicate check below.
+			if endpoint.KeepExisting {
+				continue
+			}
+
 			for _, field := range t.Fields {
 				if field.Name == endpoint.Name {
 					if err := checkEndpointArguments(endpoint, field); err != nil {
@@ -288,11 +296,16 @@ func lowerFirst(s string) string {
 func GenerateGoMethodMutationsForPackage(s *schema.Schema, genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig) (*[]GoMethod, error) {
 	var methods []GoMethod
 
-	if len(pkgConfig.Mutations) == 0 {
+	if !hasGeneratedMutation(pkgConfig.Mutations) {
 		return nil, nil
 	}
 
 	for _, pkgMutation := range pkgConfig.Mutations {
+		// Kept as it is, so it also takes no part in the duplicate check below.
+		if pkgMutation.KeepExisting {
+			continue
+		}
+
 		fields := s.LookupMutationsByPattern(pkgMutation.Name)
 
 		if err := checkArgumentConfig(pkgMutation, fields); err != nil {
@@ -324,6 +337,18 @@ func GenerateGoMethodMutationsForPackage(s *schema.Schema, genConfig *config.Gen
 	}
 
 	return nil, fmt.Errorf("no methods for package")
+}
+
+// hasGeneratedMutation reports whether any mutation is left for the generator, as
+// opposed to none configured or all kept as they are.
+func hasGeneratedMutation(mutations []config.MutationConfig) bool {
+	for _, m := range mutations {
+		if !m.KeepExisting {
+			return true
+		}
+	}
+
+	return false
 }
 
 // checkArgumentConfig fails when exclude_arguments or rename_arguments names an
@@ -361,6 +386,46 @@ func checkArgumentConfig(cfg config.MutationConfig, mutations []schema.Field) er
 	}
 
 	return nil
+}
+
+// KeptNames returns the names an existing file keeps as they are for the expanded
+// types that the package config sets to keep_existing: the Go name of each, which
+// the merge also takes for its methods, and the other declarations the typegen
+// template makes for it. That is the <Name>Types variable of an enum, and the
+// <Name>Interface type and Unmarshal<Name>Interface function of an interface. A
+// type is matched to its config the way its other settings are, ignoring case.
+func KeptNames(pkgConfig *config.PackageConfig, expandedTypes *[]*schema.Type) []string {
+	kept := map[string]bool{}
+
+	for _, t := range pkgConfig.Types {
+		if t.KeepExisting {
+			kept[strings.ToLower(t.Name)] = true
+		}
+	}
+
+	if len(kept) == 0 || expandedTypes == nil {
+		return nil
+	}
+
+	var names []string
+
+	for _, t := range *expandedTypes {
+		name := t.GetName()
+		if !kept[strings.ToLower(name)] {
+			continue
+		}
+
+		names = append(names, name)
+
+		switch t.Kind {
+		case schema.KindENUM:
+			names = append(names, name+"Types")
+		case schema.KindInterface:
+			names = append(names, name+"Interface", "Unmarshal"+name+"Interface")
+		}
+	}
+
+	return names
 }
 
 func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig, expandedTypes *[]*schema.Type) (*[]GoStruct, *[]GoEnum, *[]GoScalar, *[]GoInterface, error) {

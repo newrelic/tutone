@@ -39,6 +39,7 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 	// The Execute() below expects to have Generator g populated for use in the template files.
 	g.GolangGenerator.SetPackageNaming(pkgConfig)
 	g.GolangGenerator.Imports = pkgConfig.Imports
+	g.GolangGenerator.KeepExisting = lang.KeptNames(pkgConfig, expandedTypes)
 
 	if structsForGen != nil {
 		g.GolangGenerator.Types = *structsForGen
@@ -101,7 +102,11 @@ func (g *Generator) Execute(genConfig *config.GeneratorConfig, pkgConfig *config
 		DestinationFile: filePath,
 		DestinationDir:  destinationPath,
 
+		// Only an explicit go_package_name overrides what the template writes.
+		GoPackageName: pkgConfig.GoPackageName,
+
 		PreserveHandWritten: pkgConfig.GetPreserveHandWritten(),
+		KeepNames:           g.KeepExisting,
 	}
 
 	return c.WriteFile(g)

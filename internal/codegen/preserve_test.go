@@ -33,10 +33,10 @@ func (a *Client) GetWidget() string {
 const widgetQuery = "generated"
 `
 
-func merge(t *testing.T, generated, existing string) (string, []string) {
+func merge(t *testing.T, generated, existing string, keep ...string) (string, []string) {
 	t.Helper()
 
-	out, kept, err := MergeHandWritten([]byte(generated), []byte(existing))
+	out, kept, err := MergeHandWritten([]byte(generated), []byte(existing), keep...)
 	require.NoError(t, err)
 
 	// Whatever comes out must still be valid Go.
@@ -162,6 +162,290 @@ func TestMergeHandWritten_MarkerIsCaseInsensitive(t *testing.T) {
 
 	out, _ := merge(t, generatedSrc, existing)
 	assert.Contains(t, out, "Mine bool")
+}
+
+func TestMergeHandWritten_MarkerAnywhereInTheDeclarationPins(t *testing.T) {
+	t.Parallel()
+
+	cases := map[string]struct {
+		existing string
+		hand     string
+	}{
+		"in a field comment": {
+			existing: "package demo\n\ntype Widget struct {\n\tName string\n\t// Do not delete: callers set it.\n\tCustom int\n}\n",
+			hand:     "Custom int",
+		},
+		"in the function body": {
+			existing: "package demo\n\ntype Widget struct{ Name string }\n\nfunc (a *Client) GetWidget() string {\n\t// do not regenerate, the query needs a retry\n\treturn \"hand fixed\"\n}\n",
+			hand:     "hand fixed",
+		},
+		"in a trailing comment": {
+			existing: "package demo\n\ntype Widget struct {\n\tName   string\n\tCustom int // DO NOT DELETE\n}\n",
+			hand:     "Custom int",
+		},
+		"as do not regenerate/modify": {
+			existing: "package demo\n\n// DO NOT REGENERATE/MODIFY\ntype Widget struct{ Mine bool }\n",
+			hand:     "Mine bool",
+		},
+	}
+
+	for name, tc := range cases {
+		tc := tc
+
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			out, kept := merge(t, generatedSrc, tc.existing)
+
+			assert.Contains(t, out, tc.hand)
+			assert.NotEmpty(t, kept)
+
+			// The generator's version of what was pinned is gone, not duplicated.
+			assert.LessOrEqual(t, strings.Count(out, "type Widget struct"), 1)
+			assert.LessOrEqual(t, strings.Count(out, "GetWidget()"), 1)
+		})
+	}
+}
+
+func TestMergeHandWritten_MarkerWordsThatTheGeneratedDeclarationHasToo(t *testing.T) {
+	t.Parallel()
+
+	// A schema description can say "do not delete" about something unrelated. It
+	// is in the generated text, so it is not a marker.
+	generated := `package demo
+
+// Widget is sent as is. Do not delete the name when you update it.
+type Widget struct {
+	// Name is required. Do not regenerate it.
+	Name string
+}
+`
+	existing := `package demo
+
+// Widget is sent as is. Do not delete the name when you update it.
+type Widget struct {
+	// Name is required. Do not regenerate it.
+	Name  string
+	Stale string
+}
+`
+
+	out, kept := merge(t, generated, existing)
+
+	assert.Empty(t, kept)
+	assert.NotContains(t, out, "Stale", "the generated declaration replaces it")
+	assert.Equal(t, generated, out)
+}
+
+func TestMergeHandWritten_MarkerThatTheGeneratedDeclarationLacks(t *testing.T) {
+	t.Parallel()
+
+	// The generated text holds one marker phrase but not the one the hand edit has.
+	generated := "package demo\n\n// Widget: do not delete the name.\ntype Widget struct{ Name string }\n"
+	existing := "package demo\n\n// Widget: do not delete the name.\n// DO NOT REGENERATE\ntype Widget struct{ Name, Mine string }\n"
+
+	out, kept := merge(t, generated, existing)
+
+	assert.Equal(t, []string{"Widget"}, kept)
+	assert.Contains(t, out, "Mine string")
+}
+
+func TestMergeHandWritten_KeepNamesPinWithoutAMarker(t *testing.T) {
+	t.Parallel()
+
+	existing := `package demo
+
+import "fmt"
+
+type Widget struct {
+	Name   string
+	Custom int
+}
+
+func (a *Client) GetWidget() string {
+	return fmt.Sprint("old generated version")
+}
+`
+
+	out, kept := merge(t, generatedSrc, existing, "Widget")
+
+	assert.Equal(t, []string{"Widget"}, kept)
+	assert.Contains(t, out, "Custom int")
+	assert.Equal(t, 1, strings.Count(out, "type Widget struct"))
+
+	// In place, ahead of the generator's method, which is still the generator's.
+	assert.Less(t, strings.Index(out, "Custom int"), strings.Index(out, "func (a *Client) GetWidget"))
+	assert.NotContains(t, out, "old generated version")
+	assert.Contains(t, out, `fmt.Sprint("generated")`)
+}
+
+func TestMergeHandWritten_KeepNamesOnlyAffectWhatTheFileDeclares(t *testing.T) {
+	t.Parallel()
+
+	t.Run("a type the file does not declare is generated", func(t *testing.T) {
+		t.Parallel()
+
+		out, kept := merge(t, generatedSrc, "package demo\n\ntype Other struct{}\n", "Widget")
+
+		assert.Equal(t, []string{"Other"}, kept, "only the unmanaged type survives")
+		assert.Contains(t, out, "type Widget struct")
+		assert.Contains(t, out, "Name string")
+	})
+
+	t.Run("other generated declarations are not pinned", func(t *testing.T) {
+		t.Parallel()
+
+		existing := "package demo\n\ntype Widget struct{ Stale string }\n\nconst widgetQuery = \"old\"\n"
+		out, kept := merge(t, generatedSrc, existing, "Widget")
+
+		assert.Equal(t, []string{"Widget"}, kept)
+		assert.Contains(t, out, "Stale string")
+		assert.NotContains(t, out, `"old"`, "the const is the generator's")
+	})
+
+	t.Run("only the type, its methods and the names given are pinned", func(t *testing.T) {
+		t.Parallel()
+
+		generated := "package demo\n\ntype A struct{}\n\ntype B struct{}\n\nfunc (b *B) Get() int { return 1 }\n\nfunc Helper() int { return 1 }\n"
+		existing := "package demo\n\ntype A struct{ X int }\n\ntype B struct{ Y int }\n\nfunc (b *B) Get() int { return 0 }\n\nfunc Helper() int { return 0 }\n"
+		out, kept := merge(t, generated, existing, "A")
+
+		assert.Equal(t, []string{"A"}, kept)
+		assert.Contains(t, out, "X int")
+		assert.NotContains(t, out, "Y int", "another type is the generator's")
+		assert.NotContains(t, out, "return 0", "and so are its method and a function that is not named")
+	})
+}
+
+func TestMergeHandWritten_KeepNamesKeepTheMethodsOfTheType(t *testing.T) {
+	t.Parallel()
+
+	generated := `package demo
+
+type Widget struct{ Name string }
+
+func (w Widget) GetName() string { return w.Name }
+
+func (w *Widget) ImplementsItem() {}
+
+func (w *Widget) UnmarshalJSON(b []byte) error { return nil }
+
+type Other struct{}
+
+func (o *Other) UnmarshalJSON(b []byte) error { return nil }
+`
+	existing := `package demo
+
+type Widget struct{ Name string }
+
+func (w Widget) GetName() string { return "hand getter" }
+
+func (w *Widget) ImplementsItem() {}
+
+// UnmarshalJSON skips what it does not know.
+func (w *Widget) UnmarshalJSON(b []byte) error { return errSkipped }
+
+type Other struct{}
+
+func (o *Other) UnmarshalJSON(b []byte) error { return errStale }
+`
+
+	out, kept := merge(t, generated, existing, "Widget")
+
+	assert.ElementsMatch(t, []string{"Widget", "Widget.GetName", "Widget.ImplementsItem", "Widget.UnmarshalJSON"}, kept)
+	assert.Contains(t, out, "hand getter", "a value receiver")
+	assert.Contains(t, out, "errSkipped", "a pointer receiver")
+	assert.Contains(t, out, "// UnmarshalJSON skips what it does not know.")
+	assert.NotContains(t, out, "errStale", "a method of another type is the generator's")
+	assert.Equal(t, 1, strings.Count(out, "(w *Widget) UnmarshalJSON"), "it replaces the generated one rather than sitting next to it")
+
+	// In place: the kept method still sits between the type and Other.
+	assert.Less(t, strings.Index(out, "type Widget"), strings.Index(out, "errSkipped"))
+	assert.Less(t, strings.Index(out, "errSkipped"), strings.Index(out, "type Other"))
+}
+
+func TestMergeHandWritten_KeepNamesKeepTheMethodsOfAGenericType(t *testing.T) {
+	t.Parallel()
+
+	generated := "package demo\n\ntype Box[T any] struct{ V T }\n\nfunc (b *Box[T]) Get() T { return b.V }\n\nfunc (b *Box[K, V]) Pair() {}\n"
+	existing := "package demo\n\ntype Box[T any] struct{ V T }\n\nfunc (b *Box[T]) Get() T { return b.hand() }\n\nfunc (b *Box[K, V]) Pair() { hand() }\n"
+
+	out, _ := merge(t, generated, existing, "Box")
+
+	assert.Contains(t, out, "b.hand()")
+	assert.Contains(t, out, "{ hand() }")
+}
+
+func TestMergeHandWritten_KeepNamesKeepFunctionsAndVariables(t *testing.T) {
+	t.Parallel()
+
+	// What the typegen template makes beside an enum and an interface.
+	generated := `package demo
+
+type Color string
+
+var ColorTypes = struct{ RED Color }{RED: "RED"}
+
+type ItemInterface interface{ ImplementsItem() }
+
+func UnmarshalItemInterface(b []byte) (*ItemInterface, error) { return nil, errFail }
+
+func UnmarshalOtherInterface(b []byte) (*ItemInterface, error) { return nil, errFail }
+`
+	existing := `package demo
+
+type Color string
+
+var ColorTypes = struct{ RED, BLUE Color }{RED: "RED", BLUE: "BLUE"}
+
+type ItemInterface interface{ ImplementsItem() }
+
+// UnmarshalItemInterface skips the types it does not know.
+func UnmarshalItemInterface(b []byte) (*ItemInterface, error) { return nil, nil }
+
+func UnmarshalOtherInterface(b []byte) (*ItemInterface, error) { return nil, errStale }
+`
+
+	out, kept := merge(t, generated, existing, "Color", "ColorTypes", "ItemInterface", "UnmarshalItemInterface")
+
+	assert.ElementsMatch(t, []string{"Color", "ColorTypes", "ItemInterface", "UnmarshalItemInterface"}, kept)
+	assert.Contains(t, out, "BLUE", "the variable")
+	assert.Contains(t, out, "// UnmarshalItemInterface skips the types it does not know.")
+	assert.Contains(t, out, "return nil, nil }", "the function")
+	assert.NotContains(t, out, "errStale", "a function that is not named is the generator's")
+	assert.Equal(t, 1, strings.Count(out, "func UnmarshalItemInterface"))
+}
+
+func TestMergeHandWritten_KeepNamesWithoutAnExistingDeclarationGenerateIt(t *testing.T) {
+	t.Parallel()
+
+	generated := "package demo\n\ntype Widget struct{}\n\nfunc (w *Widget) UnmarshalJSON(b []byte) error { return nil }\n\nvar WidgetTypes = 1\n"
+
+	out, kept := merge(t, generated, "package demo\n\ntype Widget struct{}\n", "Widget", "WidgetTypes")
+
+	assert.Equal(t, []string{"Widget"}, kept)
+	assert.Contains(t, out, "func (w *Widget) UnmarshalJSON")
+	assert.Contains(t, out, "var WidgetTypes = 1")
+}
+
+func TestMergeHandWritten_AnEmptyKeepNameKeepsNothing(t *testing.T) {
+	t.Parallel()
+
+	out, kept := merge(t, generatedSrc, generatedSrc, "")
+
+	assert.Empty(t, kept)
+	assert.Equal(t, generatedSrc, out)
+}
+
+func TestMergeHandWritten_KeepNamesRegeneratingTwiceIsStable(t *testing.T) {
+	t.Parallel()
+
+	existing := "package demo\n\ntype Widget struct{ Mine bool }\n"
+
+	first, _ := merge(t, generatedSrc, existing, "Widget")
+	second, _ := merge(t, generatedSrc, first, "Widget")
+
+	assert.Equal(t, first, second)
 }
 
 func TestMergeHandWritten_MethodsAreKeyedByReceiver(t *testing.T) {

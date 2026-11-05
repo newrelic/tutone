@@ -410,3 +410,194 @@ func TestArgumentGoTypes(t *testing.T) {
 
 	require.NoError(t, checkEndpointArguments(config.EndpointConfig{Name: "entitySearch", ArgumentGoTypes: map[string]string{"cursor": "*string"}}, field))
 }
+
+// keepSchema has two query paths that both end at a `destinations` field, and two mutations.
+func keepSchema() *schema.Schema {
+	obj := func(name string) schema.TypeRef { return schema.TypeRef{Kind: schema.KindObject, Name: name} }
+	str := schema.TypeRef{Kind: schema.KindScalar, Name: "String"}
+
+	return &schema.Schema{
+		MutationType: &schema.Type{Name: "RootMutationType", Kind: schema.KindObject, Fields: []schema.Field{
+			{Name: "thingCreate", Type: obj("Thing"), Args: []schema.Field{{Name: "name", Type: str}}},
+			{Name: "thingDelete", Type: obj("Thing"), Args: []schema.Field{{Name: "id", Type: str}}},
+		}},
+		Types: []*schema.Type{
+			{Name: "RootQueryType", Kind: schema.KindObject, Fields: []schema.Field{{Name: "actor", Type: obj("Actor")}}},
+			{Name: "Actor", Kind: schema.KindObject, Fields: []schema.Field{
+				{Name: "account", Type: obj("AccountScope")},
+				{Name: "organization", Type: obj("OrganizationScope")},
+			}},
+			{Name: "AccountScope", Kind: schema.KindObject, Fields: []schema.Field{{Name: "destinations", Type: obj("Destination")}}},
+			{Name: "OrganizationScope", Kind: schema.KindObject, Fields: []schema.Field{{Name: "destinations", Type: obj("Destination")}}},
+			{Name: "Destination", Kind: schema.KindObject, Fields: []schema.Field{{Name: "id", Type: str}}},
+			{Name: "Thing", Kind: schema.KindObject, Fields: []schema.Field{{Name: "id", Type: str}}},
+			{Name: "String", Kind: schema.KindScalar},
+		},
+	}
+}
+
+func destinationsPackage(account, organization config.EndpointConfig) *config.PackageConfig {
+	return &config.PackageConfig{Name: "notifications", Queries: []config.Query{
+		{Path: []string{"actor", "account"}, Endpoints: []config.EndpointConfig{account}},
+		{Path: []string{"actor", "organization"}, Endpoints: []config.EndpointConfig{organization}},
+	}}
+}
+
+func TestGenerateGoMethodQueries_KeepExistingEndpoints(t *testing.T) {
+	t.Parallel()
+
+	plain := config.EndpointConfig{Name: "destinations"}
+	kept := config.EndpointConfig{Name: "destinations", KeepExisting: true}
+
+	t.Run("two endpoints with one name are still an error", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := GenerateGoMethodQueriesForPackage(keepSchema(), &config.GeneratorConfig{}, destinationsPackage(plain, plain))
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), `"GetDestinations"`)
+	})
+
+	t.Run("kept endpoints are not generated and are not duplicates", func(t *testing.T) {
+		t.Parallel()
+
+		methods, err := GenerateGoMethodQueriesForPackage(keepSchema(), &config.GeneratorConfig{}, destinationsPackage(kept, kept))
+		require.NoError(t, err)
+		assert.Empty(t, *methods)
+	})
+
+	t.Run("a kept endpoint does not collide with the one that is generated", func(t *testing.T) {
+		t.Parallel()
+
+		methods, err := GenerateGoMethodQueriesForPackage(keepSchema(), &config.GeneratorConfig{}, destinationsPackage(kept, plain))
+		require.NoError(t, err)
+		require.Len(t, *methods, 1)
+		assert.Equal(t, "GetDestinations", (*methods)[0].MethodName)
+		assert.Contains(t, (*methods)[0].QueryString, "organization", "the one generated is the organization path")
+	})
+
+	t.Run("a kept endpoint is not checked, so its stale settings cannot fail the run", func(t *testing.T) {
+		t.Parallel()
+
+		stale := config.EndpointConfig{Name: "destinations", KeepExisting: true, ExcludeArguments: []string{"gone"}}
+
+		_, err := GenerateGoMethodQueriesForPackage(keepSchema(), &config.GeneratorConfig{}, destinationsPackage(stale, kept))
+		require.NoError(t, err)
+	})
+}
+
+func TestConstrainedResponseStructs_KeptEndpointKeepsItsResponseStruct(t *testing.T) {
+	t.Parallel()
+
+	kept := config.EndpointConfig{Name: "destinations", KeepExisting: true}
+	pkg := destinationsPackage(kept, kept)
+
+	// The hand-written methods still read destinationsResponse, so it is generated.
+	structs, err := constrainedResponseStructs(keepSchema(), pkg, &[]*schema.Type{})
+	require.NoError(t, err)
+
+	var names []string
+	for _, s := range structs {
+		names = append(names, s.Name)
+	}
+
+	assert.Contains(t, names, "destinationsResponse")
+}
+
+func TestGenerateGoMethodMutations_KeepExisting(t *testing.T) {
+	t.Parallel()
+
+	names := func(methods *[]GoMethod) []string {
+		var out []string
+		for _, m := range *methods {
+			out = append(out, m.Name)
+		}
+
+		return out
+	}
+
+	t.Run("a kept mutation is left out", func(t *testing.T) {
+		t.Parallel()
+
+		pkg := &config.PackageConfig{Name: "things", Mutations: []config.MutationConfig{
+			{Name: "thingCreate", KeepExisting: true},
+			{Name: "thingDelete"},
+		}}
+
+		methods, err := GenerateGoMethodMutationsForPackage(keepSchema(), &config.GeneratorConfig{}, pkg)
+		require.NoError(t, err)
+		assert.Equal(t, []string{"ThingDelete"}, names(methods))
+	})
+
+	t.Run("all kept leaves nothing to generate, which is not an error", func(t *testing.T) {
+		t.Parallel()
+
+		pkg := &config.PackageConfig{Name: "things", Mutations: []config.MutationConfig{
+			{Name: "thingCreate", KeepExisting: true},
+			{Name: "thingDelete", KeepExisting: true},
+		}}
+
+		methods, err := GenerateGoMethodMutationsForPackage(keepSchema(), &config.GeneratorConfig{}, pkg)
+		require.NoError(t, err)
+		assert.Nil(t, methods)
+	})
+
+	t.Run("a mutation that matches nothing is still an error", func(t *testing.T) {
+		t.Parallel()
+
+		pkg := &config.PackageConfig{Name: "things", Mutations: []config.MutationConfig{
+			{Name: "thingCreate", KeepExisting: true},
+			{Name: "nothingLikeIt"},
+		}}
+
+		_, err := GenerateGoMethodMutationsForPackage(keepSchema(), &config.GeneratorConfig{}, pkg)
+		require.Error(t, err)
+	})
+
+	t.Run("a kept mutation is not checked, and does not count as a duplicate", func(t *testing.T) {
+		t.Parallel()
+
+		pkg := &config.PackageConfig{Name: "things", Mutations: []config.MutationConfig{
+			{Name: "thingCreate", KeepExisting: true, ExcludeArguments: []string{"gone"}},
+			{Name: "thingCreate"},
+		}}
+
+		methods, err := GenerateGoMethodMutationsForPackage(keepSchema(), &config.GeneratorConfig{}, pkg)
+		require.NoError(t, err)
+		assert.Equal(t, []string{"ThingCreate"}, names(methods))
+	})
+}
+
+func TestKeptNames(t *testing.T) {
+	t.Parallel()
+
+	expanded := &[]*schema.Type{
+		{Name: "Alpha", Kind: schema.KindObject},
+		{Name: "Beta", Kind: schema.KindObject},
+		{Name: "Nrql", Kind: schema.KindScalar},
+		{Name: "Color", Kind: schema.KindENUM},
+		{Name: "Item", Kind: schema.KindInterface},
+		{Name: "Gamma", Kind: schema.KindENUM},
+	}
+
+	pkg := &config.PackageConfig{Types: []config.TypeConfig{
+		{Name: "Alpha", KeepExisting: true},
+		{Name: "Beta"},
+		{Name: "NRQL", KeepExisting: true}, // the Go spelling matches the schema's Nrql
+		{Name: "Color", KeepExisting: true},
+		{Name: "Item", KeepExisting: true},
+		{Name: "NotExpanded", KeepExisting: true},
+	}}
+
+	assert.Equal(t,
+		[]string{
+			"Alpha",
+			"NRQL",
+			"Color", "ColorTypes", // the variable that lists an enum's values
+			"Item", "ItemInterface", "UnmarshalItemInterface", // the Go interface and its unmarshal function
+		},
+		KeptNames(pkg, expanded),
+		"Go names of the expanded types that are kept, with what the template declares for each kind")
+
+	assert.Nil(t, KeptNames(&config.PackageConfig{Types: []config.TypeConfig{{Name: "Alpha"}}}, expanded))
+	assert.Nil(t, KeptNames(pkg, nil))
+}

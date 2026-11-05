@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	log "github.com/sirupsen/logrus"
+	logtest "github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -48,6 +50,18 @@ func TestLoadConfig_UnknownKeyFailsAndNamesTheKey(t *testing.T) {
 		"in an endpoint": {
 			yml: "packages:\n  - name: p\n    queries:\n      - path: [actor]\n        endpoints:\n          - name: e\n            include_implementation: [X]\n",
 			key: "include_implementation",
+		},
+		"keep_existing misspelled on a type": {
+			yml: "packages:\n  - name: p\n    types:\n      - name: T\n        keep_exisiting: true\n",
+			key: "keep_exisiting",
+		},
+		"keep_existing misspelled on a mutation": {
+			yml: "packages:\n  - name: p\n    mutations:\n      - name: m\n        keep_exisiting: true\n",
+			key: "keep_exisiting",
+		},
+		"keep_existing misspelled on an endpoint": {
+			yml: "packages:\n  - name: p\n    queries:\n      - path: [actor]\n        endpoints:\n          - name: e\n            keep_exisiting: true\n",
+			key: "keep_exisiting",
 		},
 	}
 
@@ -118,6 +132,82 @@ packages:
 	assert.Equal(t, []string{"PipelineRule"}, pkg.Queries[0].Endpoints[0].IncludeImplementations)
 }
 
+func TestLoadConfig_KeepExistingIsAcceptedOnTypesMutationsAndEndpoints(t *testing.T) {
+	t.Parallel()
+
+	yml := `
+packages:
+  - name: notifications
+    types:
+      - name: Handwritten
+        keep_existing: true
+      - name: Generated
+    mutations:
+      - name: aiNotificationsCreateChannel
+        keep_existing: true
+      - name: aiNotificationsDeleteChannel
+    queries:
+      - path: [actor, account, aiNotifications]
+        endpoints:
+          - name: destinations
+            keep_existing: true
+      - path: [actor, organization, aiNotifications]
+        endpoints:
+          - name: destinations
+            keep_existing: true
+          - name: channels
+`
+
+	cfg, err := LoadConfig(writeConfig(t, yml))
+	require.NoError(t, err)
+
+	pkg := cfg.Packages[0]
+	assert.True(t, pkg.Types[0].KeepExisting)
+	assert.False(t, pkg.Types[1].KeepExisting, "off unless set")
+	assert.True(t, pkg.Mutations[0].KeepExisting)
+	assert.False(t, pkg.Mutations[1].KeepExisting)
+	assert.True(t, pkg.Queries[0].Endpoints[0].KeepExisting)
+	assert.True(t, pkg.Queries[1].Endpoints[0].KeepExisting)
+	assert.False(t, pkg.Queries[1].Endpoints[1].KeepExisting)
+
+	assert.Equal(t,
+		[]string{"Handwritten", "aiNotificationsCreateChannel", "destinations", "destinations"},
+		keepExistingNames(pkg))
+}
+
+func TestLoadConfig_KeepExistingWithoutPreservingWarns(t *testing.T) {
+	// Not parallel: the hook is on the standard logger.
+	hook := logtest.NewGlobal()
+	t.Cleanup(hook.Reset)
+
+	warnings := func() []*log.Entry {
+		var out []*log.Entry
+
+		for _, e := range hook.AllEntries() {
+			if e.Level == log.WarnLevel {
+				out = append(out, e)
+			}
+		}
+
+		return out
+	}
+
+	preserved := "packages:\n  - name: kept\n    mutations:\n      - name: m\n        keep_existing: true\n"
+	_, err := LoadConfig(writeConfig(t, preserved))
+	require.NoError(t, err)
+	assert.Empty(t, warnings(), "preserving is the default, so keep_existing works")
+
+	notPreserved := "packages:\n  - name: replaced\n    preserve_hand_written: false\n    types:\n      - name: T\n        keep_existing: true\n"
+	_, err = LoadConfig(writeConfig(t, notPreserved))
+	require.NoError(t, err)
+
+	got := warnings()
+	require.Len(t, got, 1)
+	assert.Contains(t, got[0].Message, "keep_existing")
+	assert.Equal(t, "replaced", got[0].Data["package"])
+	assert.Equal(t, []string{"T"}, got[0].Data["entries"])
+}
+
 func TestLoadConfig_ExistingStyleConfigStillLoads(t *testing.T) {
 	t.Parallel()
 
@@ -183,7 +273,12 @@ func TestPackageConfig_NamingDefaults(t *testing.T) {
 	assert.Equal(t, "agentApplications", p.GetFileName())
 	assert.Equal(t, "agentapplications", p.GetGoPackageName())
 	assert.Equal(t, "AgentApplications", p.GetClientTypeName())
+	assert.Equal(t, "AgentApplications", p.DefaultClientTypeName())
 	assert.True(t, p.GetPreserveHandWritten())
+
+	p.ClientTypeName = "OrganizationManagement"
+	assert.Equal(t, "OrganizationManagement", p.GetClientTypeName())
+	assert.Equal(t, "AgentApplications", p.DefaultClientTypeName(), "what a template that predates client_type_name writes")
 }
 
 func TestLoadConfig_DeprecatedEndpointArgumentTypeOverridesStillLoads(t *testing.T) {

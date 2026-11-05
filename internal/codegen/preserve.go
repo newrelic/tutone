@@ -10,13 +10,15 @@ import (
 	"strings"
 )
 
-// Markers that pin a declaration in a generated file. A declaration whose doc
-// comment contains either one is kept exactly as it is in the existing file,
+// Markers that pin a declaration in a generated file. A declaration whose text
+// contains either one, in any case, is kept exactly as it is in the existing file,
 // and the generator's own version of it, if any, is dropped.
 const (
 	MarkerDoNotDelete     = "DO NOT DELETE"
 	MarkerDoNotRegenerate = "DO NOT REGENERATE"
 )
+
+var markers = []string{MarkerDoNotDelete, MarkerDoNotRegenerate}
 
 // decl is one top-level declaration located in a source file.
 type decl struct {
@@ -25,7 +27,71 @@ type decl struct {
 	names      []string
 	start, end int
 	text       string
-	marked     bool
+	// upper is text in upper case, so a marker is found whatever its case.
+	upper string
+	// receiver is the type name of a method's receiver, empty for anything else.
+	receiver string
+}
+
+// has reports whether the declaration's text, doc comment included, contains marker.
+func (d decl) has(marker string) bool {
+	return strings.Contains(d.upper, marker)
+}
+
+// keepSet is the declarations config pins without a marker. A name pins the type,
+// const, var or function of that name and every method of a type of that name.
+type keepSet struct {
+	keys      map[string]bool
+	receivers map[string]bool
+}
+
+func newKeepSet(names []string) keepSet {
+	k := keepSet{keys: map[string]bool{}, receivers: map[string]bool{}}
+
+	for _, n := range names {
+		if n == "" {
+			continue
+		}
+
+		k.keys["id:"+n] = true
+		k.keys["func:"+n] = true
+		k.receivers[n] = true
+	}
+
+	return k
+}
+
+// has reports whether d is one of the declarations the set pins.
+func (k keepSet) has(d decl) bool {
+	if d.receiver != "" && k.receivers[d.receiver] {
+		return true
+	}
+
+	for _, n := range d.names {
+		if k.keys[n] {
+			return true
+		}
+	}
+
+	return false
+}
+
+// pinned reports whether the existing declaration d is kept as written: keep pins
+// it, or its text carries a marker that twin, the generator's declaration of the
+// same name, does not. A schema description can hold the same words, which must
+// not pin the declaration it is generated into.
+func (d decl) pinned(twin *decl, keep keepSet) bool {
+	if keep.has(d) {
+		return true
+	}
+
+	for _, m := range markers {
+		if d.has(m) && (twin == nil || !twin.has(m)) {
+			return true
+		}
+	}
+
+	return false
 }
 
 // MergeHandWritten carries hand-written top-level declarations from the existing
@@ -33,15 +99,19 @@ type decl struct {
 //
 // A declaration from the existing file is kept when
 //   - the generator does not produce any identifier it declares, or
-//   - its doc comment contains DO NOT DELETE or DO NOT REGENERATE. Then it also
-//     replaces the generator's declaration of the same name, in place.
+//   - it is pinned: its text, doc comment and body included, contains DO NOT DELETE
+//     or DO NOT REGENERATE and the generator's declaration of the same name does
+//     not, or keep names it. A keep name stands in for a marker on the type, const,
+//     var or function of that name and on every method of a type of that name. A
+//     pinned declaration also replaces the generator's declaration of the same
+//     name, in place.
 //
 // Anything else is the generator's own output and is replaced by the new version.
 // Imports the kept code needs are carried over; the caller runs goimports after,
 // which drops any that turn out to be unused.
 //
 // Both inputs must be valid Go. The names of what was carried over are returned.
-func MergeHandWritten(generated, existing []byte) ([]byte, []string, error) {
+func MergeHandWritten(generated, existing []byte, keep ...string) ([]byte, []string, error) {
 	fset := token.NewFileSet()
 
 	newFile, err := parser.ParseFile(fset, "generated.go", generated, parser.ParseComments)
@@ -65,6 +135,8 @@ func MergeHandWritten(generated, existing []byte) ([]byte, []string, error) {
 		}
 	}
 
+	pins := newKeepSet(keep)
+
 	var (
 		edits    []textEdit
 		appended []string
@@ -82,13 +154,20 @@ func MergeHandWritten(generated, existing []byte) ([]byte, []string, error) {
 			}
 		}
 
+		var generatedTwin *decl
+		if hasTwin {
+			generatedTwin = &newDecls[twin]
+		}
+
+		pinned := od.pinned(generatedTwin, pins)
+
 		switch {
-		case od.marked && hasTwin && !consumed[twin]:
+		case pinned && hasTwin && !consumed[twin]:
 			// Pinned: the existing text wins, in the generator's position.
 			consumed[twin] = true
 			edits = append(edits, textEdit{newDecls[twin].start, newDecls[twin].end, od.text})
 			kept = append(kept, od.names...)
-		case od.marked, !hasTwin:
+		case pinned, !hasTwin:
 			// Pinned with nothing to replace, or not something the generator makes.
 			appended = append(appended, od.text)
 			kept = append(kept, od.names...)
@@ -134,15 +213,19 @@ func collectDecls(fset *token.FileSet, file *ast.File, src []byte) []decl {
 
 	for _, d := range file.Decls {
 		var (
-			names  []string
-			doc    *ast.CommentGroup
-			marked bool
+			names    []string
+			doc      *ast.CommentGroup
+			receiver string
 		)
 
 		switch v := d.(type) {
 		case *ast.FuncDecl:
 			doc = v.Doc
 			names = []string{funcKey(v)}
+
+			if v.Recv != nil && len(v.Recv.List) > 0 {
+				receiver = receiverName(v.Recv.List[0].Type)
+			}
 		case *ast.GenDecl:
 			if v.Tok == token.IMPORT {
 				continue
@@ -163,18 +246,16 @@ func collectDecls(fset *token.FileSet, file *ast.File, src []byte) []decl {
 		}
 
 		end := fset.Position(d.End()).Offset
-
-		if doc != nil {
-			text := strings.ToUpper(doc.Text())
-			marked = strings.Contains(text, MarkerDoNotDelete) || strings.Contains(text, MarkerDoNotRegenerate)
-		}
+		text := string(src[start:end])
 
 		decls = append(decls, decl{
-			names:  names,
-			start:  start,
-			end:    end,
-			text:   string(src[start:end]),
-			marked: marked,
+			names: names,
+			start: start,
+			end:   end,
+			text:  text,
+			upper: strings.ToUpper(text),
+
+			receiver: receiver,
 		})
 	}
 
@@ -192,18 +273,30 @@ func funcKey(f *ast.FuncDecl) string {
 }
 
 func receiverName(e ast.Expr) string {
-	switch v := e.(type) {
-	case *ast.StarExpr:
-		return receiverName(v.X)
-	case *ast.IndexExpr:
-		return receiverName(v.X)
-	case *ast.IndexListExpr:
-		return receiverName(v.X)
-	case *ast.Ident:
-		return v.Name
+	if id := receiverIdent(e); id != nil {
+		return id.Name
 	}
 
 	return "?"
+}
+
+// receiverIdent finds the type name in a receiver's type, through a pointer, type
+// parameters and parentheses, or returns nil.
+func receiverIdent(e ast.Expr) *ast.Ident {
+	switch v := e.(type) {
+	case *ast.StarExpr:
+		return receiverIdent(v.X)
+	case *ast.ParenExpr:
+		return receiverIdent(v.X)
+	case *ast.IndexExpr:
+		return receiverIdent(v.X)
+	case *ast.IndexListExpr:
+		return receiverIdent(v.X)
+	case *ast.Ident:
+		return v
+	}
+
+	return nil
 }
 
 // specNames returns the package-level identifiers a spec declares. Types,
