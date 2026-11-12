@@ -117,7 +117,7 @@ func (t *Type) GetQueryStringFields(s *Schema, depth, maxDepth int, isMutation b
 		lastKind := kinds[len(kinds)-1]
 
 		switch lastKind {
-		case KindObject, KindInterface:
+		case KindObject, KindInterface, KindUnion:
 			if depth > maxDepth {
 				continue
 			}
@@ -145,7 +145,7 @@ func (t *Type) GetQueryStringFields(s *Schema, depth, maxDepth int, isMutation b
 
 			// Add the field
 			lines = append(lines, field.Name+" {")
-			if lastKind == KindInterface {
+			if lastKind == KindInterface || lastKind == KindUnion {
 				lines = append(lines, "\t__typename")
 			}
 

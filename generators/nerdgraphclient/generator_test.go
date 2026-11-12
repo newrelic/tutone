@@ -1,6 +1,7 @@
 package nerdgraphclient
 
 import (
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -890,4 +891,568 @@ func TestGenerate_KeepExistingTypeAlsoKeepsWhatIsDeclaredBesideIt(t *testing.T) 
 
 		assert.NotContains(t, generate(t, dir, false), "hand edit")
 	})
+}
+
+func unionOf(name string) schema.TypeRef { return schema.TypeRef{Kind: schema.KindUnion, Name: name} }
+
+// catalogSchema has a union that two root fields return, a list of it, and
+// members that need no config to be reached.
+func catalogSchema() *schema.Schema {
+	return &schema.Schema{
+		MutationType: &schema.Type{Name: "RootMutationType", Kind: schema.KindObject},
+		Types: []*schema.Type{
+			{Name: "RootQueryType", Kind: schema.KindObject, Fields: []schema.Field{
+				{Name: "actor", Type: obj("Actor")},
+			}},
+			{Name: "Actor", Kind: schema.KindObject, Fields: []schema.Field{
+				{Name: "catalog", Type: obj("Catalog")},
+			}},
+			{Name: "Catalog", Kind: schema.KindObject, Fields: []schema.Field{
+				{Name: "result", Type: unionOf("SearchResult")},
+				{Name: "results", Type: listOf(unionOf("SearchResult"))},
+			}},
+			{
+				Name: "SearchResult", Kind: schema.KindUnion,
+				PossibleTypes: []schema.TypeRef{obj("Template"), obj("Quickstart")},
+			},
+			{Name: "Template", Kind: schema.KindObject, Fields: []schema.Field{
+				{Name: "id", Type: scalar("Int")},
+			}},
+			{Name: "Quickstart", Kind: schema.KindObject, Fields: []schema.Field{
+				{Name: "title", Type: scalar("String")},
+			}},
+			{Name: "Int", Kind: schema.KindScalar},
+			{Name: "String", Kind: schema.KindScalar},
+		},
+	}
+}
+
+// returnsSchema has mutations that return a list of IDs, a Boolean, a custom scalar, an
+// object with and without arguments, and an account-scoped endpoint that takes its own
+// accountId.
+func returnsSchema() *schema.Schema {
+	nonNull := func(r schema.TypeRef) schema.TypeRef {
+		return schema.TypeRef{Kind: schema.KindNonNull, OfType: &r}
+	}
+
+	return &schema.Schema{
+		MutationType: &schema.Type{Name: "RootMutationType", Kind: schema.KindObject, Fields: []schema.Field{
+			{Name: "thingAdd", Type: listOf(scalar("ID")), Args: []schema.Field{
+				{Name: "ids", Type: nonNull(listOf(nonNull(scalar("ID"))))},
+			}},
+			{Name: "thingDelete", Type: nonNull(scalar("Boolean")), Args: []schema.Field{
+				{Name: "accountId", Type: nonNull(scalar("Int"))},
+			}},
+			{Name: "thingPing", Type: nonNull(scalar("Boolean"))},
+			{Name: "thingStamp", Type: scalar("EpochSeconds")},
+			{Name: "thingRegister", Type: obj("Thing")},
+			{Name: "thingCreate", Type: obj("Thing"), Args: []schema.Field{{Name: "name", Type: scalar("String")}}},
+		}},
+		Types: []*schema.Type{
+			{Name: "RootQueryType", Kind: schema.KindObject, Fields: []schema.Field{{Name: "actor", Type: obj("Actor")}}},
+			{Name: "Actor", Kind: schema.KindObject, Fields: []schema.Field{
+				{Name: "account", Type: obj("Account"), Args: []schema.Field{{Name: "id", Type: nonNull(scalar("Int"))}}},
+				{Name: "notifications", Type: obj("Notifications")},
+			}},
+			{Name: "Account", Kind: schema.KindObject, Fields: []schema.Field{{Name: "cloud", Type: obj("Cloud")}}},
+			{Name: "Cloud", Kind: schema.KindObject, Fields: []schema.Field{
+				{Name: "details", Type: listOf(obj("Details")), Args: []schema.Field{
+					{Name: "accountId", Type: nonNull(scalar("Int"))},
+					{Name: "region", Type: nonNull(scalar("String"))},
+				}},
+			}},
+			{Name: "Notifications", Kind: schema.KindObject, Fields: []schema.Field{
+				{Name: "oAuthUrl", Type: obj("OAuthUrlResponse")},
+				{Name: "health", Type: scalar("String")},
+			}},
+			{Name: "OAuthUrlResponse", Kind: schema.KindObject, Fields: []schema.Field{{Name: "url", Type: scalar("String")}}},
+			{Name: "Details", Kind: schema.KindObject, Fields: []schema.Field{{Name: "id", Type: scalar("String")}}},
+			{Name: "Thing", Kind: schema.KindObject, Fields: []schema.Field{{Name: "id", Type: scalar("String")}}},
+			{Name: "ID", Kind: schema.KindScalar},
+			{Name: "Int", Kind: schema.KindScalar},
+			{Name: "Boolean", Kind: schema.KindScalar},
+			{Name: "String", Kind: schema.KindScalar},
+			{Name: "EpochSeconds", Kind: schema.KindScalar},
+		},
+	}
+}
+
+func catalogPackage(dir string) *config.PackageConfig {
+	return &config.PackageConfig{
+		Name: "catalog",
+		Path: dir,
+		Queries: []config.Query{{
+			Path: []string{"actor", "catalog"},
+			Endpoints: []config.EndpointConfig{
+				{Name: "result", MaxQueryFieldDepth: 2},
+				{Name: "results", MaxQueryFieldDepth: 2},
+			},
+		}},
+	}
+}
+
+// stdlibStubs are the parts of the standard library the generated code uses, small
+// enough to type-check in a millisecond where the real packages take seconds.
+var stdlibStubs = map[string]string{
+	"encoding/json": "package json\ntype RawMessage []byte\nfunc Unmarshal(data []byte, v any) error { return nil }\n",
+	"fmt":           "package fmt\nfunc Errorf(format string, a ...any) error { return nil }\n",
+}
+
+// stubImporter imports the stubs above.
+type stubImporter struct {
+	fset *token.FileSet
+}
+
+func (i stubImporter) Import(path string) (*types.Package, error) {
+	src, ok := stdlibStubs[path]
+	if !ok {
+		return nil, fmt.Errorf("the generated code imports %q, which the test has no stub for", path)
+	}
+
+	f, err := parser.ParseFile(i.fset, path+".go", src, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	return (&types.Config{}).Check(path, i.fset, []*ast.File{f}, nil)
+}
+
+// typeCheck fails the test unless the package made of the sources compiles. It
+// catches what parsing cannot: a method declared twice, a type that is not declared.
+func typeCheck(t *testing.T, sources ...string) {
+	t.Helper()
+
+	fset := token.NewFileSet()
+
+	var files []*ast.File
+
+	for i, src := range sources {
+		f, err := parser.ParseFile(fset, fmt.Sprintf("file%d.go", i), src, parser.ParseComments)
+		require.NoError(t, err, "source must parse:\n%s", src)
+
+		files = append(files, f)
+	}
+
+	_, err := (&types.Config{Importer: stubImporter{fset: fset}}).Check("catalog", fset, files, nil)
+	require.NoError(t, err)
+}
+
+func TestGenerate_UnionIsGeneratedLikeAnInterfaceAndCompiles(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	templates := legacyTemplates(t)
+	src := runTypesSchema(t, catalogSchema(), catalogPackage(dir), filepath.Join(templates))
+
+	typeCheck(t, src)
+
+	fields, declared := structFields(parse(t, src))
+
+	assert.Equal(t, 0, declared["SearchResult"], "a union has no struct")
+	assert.Equal(t, 1, declared["SearchResultInterface"])
+	assert.Equal(t, "SearchResultInterface", fields["Catalog"]["Result"])
+	assert.Equal(t, "[]SearchResultInterface", fields["Catalog"]["Results"])
+
+	assert.Contains(t, src, "func (x *Template) ImplementsSearchResult() {}")
+	assert.Contains(t, src, "func (x *Quickstart) ImplementsSearchResult() {}")
+	assert.Contains(t, src, "func UnmarshalSearchResultInterface(b []byte) (*SearchResultInterface, error)")
+	assert.Contains(t, src, `case "Template":`)
+	assert.Contains(t, src, `case "Quickstart":`)
+
+	// Catalog is only on the way to the endpoints, and decodes the union all the same.
+	assert.Contains(t, src, "func (x *Catalog) UnmarshalJSON(b []byte) error")
+	assert.Equal(t, 2, strings.Count(src, "UnmarshalSearchResultInterface(*"), "one call for the single field, one for each element of the list")
+}
+
+func TestGenerate_UnionEndpointsReturnTheInterfaceAndSelectByTypename(t *testing.T) {
+	t.Parallel()
+
+	templates := legacyTemplates(t)
+
+	gc := genConfig()
+	gc.TemplateDir = filepath.Join(templates)
+
+	src, err := runSchema(t, catalogSchema(), catalogPackage(t.TempDir()), gc)
+	require.NoError(t, err)
+
+	assert.Contains(t, src, "GetResult() (*SearchResultInterface, error)")
+	assert.Contains(t, src, "GetResults() (*[]SearchResultInterface, error)")
+
+	for _, selection := range []string{"__typename", "... on Template {", "... on Quickstart {"} {
+		assert.Contains(t, src, selection)
+	}
+}
+
+// catalogClient is the client type the generated methods hang off, which the package
+// declares by hand, with the NerdGraph call they make.
+const catalogClient = `package catalog
+
+type CatalogClient struct{ client nerdGraphClient }
+
+type nerdGraphClient interface {
+	NerdGraphQuery(query string, vars map[string]interface{}, respBody interface{}) error
+}
+`
+
+// catalogSchemaOf is catalogSchema with SearchResult of another kind.
+func catalogSchemaOf(kind schema.Kind) *schema.Schema {
+	s := catalogSchema()
+
+	for _, t := range s.Types {
+		switch t.Name {
+		case "Catalog":
+			t.Fields[0].Type = schema.TypeRef{Kind: kind, Name: "SearchResult"}
+			t.Fields[1].Type = listOf(schema.TypeRef{Kind: kind, Name: "SearchResult"})
+		case "SearchResult":
+			t.Kind = kind
+		}
+	}
+
+	return s
+}
+
+func TestGenerate_GetResultOfATypeThePackageSuppliesCompiles(t *testing.T) {
+	t.Parallel()
+
+	cases := map[string]struct {
+		kind        schema.Kind
+		config      config.TypeConfig
+		handWritten string
+		wantType    string
+	}{
+		"union": {
+			schema.KindUnion, config.TypeConfig{Name: "SearchResult", SkipTypeCreate: true},
+			"type SearchResult struct{ Title string }", "SearchResult",
+		},
+		"union the package has as its interface only": {
+			schema.KindUnion, config.TypeConfig{Name: "SearchResult", SkipTypeCreate: true, FieldTypeOverride: "SearchResultInterface"},
+			"type SearchResultInterface interface{ ImplementsSearchResult() }", "SearchResultInterface",
+		},
+		"interface": {
+			schema.KindInterface, config.TypeConfig{Name: "SearchResult", SkipTypeCreate: true},
+			"type SearchResultInterface interface{ ImplementsSearchResult() }", "SearchResultInterface",
+		},
+	}
+
+	for name, tc := range cases {
+		tc := tc
+
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			pkg := catalogPackage(t.TempDir())
+			pkg.ClientTypeName = "CatalogClient"
+			pkg.Types = []config.TypeConfig{tc.config}
+			pkg.Queries[0].Endpoints = pkg.Queries[0].Endpoints[:1]
+
+			s := catalogSchemaOf(tc.kind)
+
+			client, err := runSchema(t, s, pkg, genConfig())
+			require.NoError(t, err)
+
+			typesFile := runTypesSchema(t, s, pkg, "../../templates/typegen")
+
+			fields, _ := structFields(parse(t, typesFile))
+			assert.Equal(t, tc.wantType, fields["Catalog"]["Result"], "GetResult reads it")
+			assert.Contains(t, functions(t, client)["GetResult"], "resp.Actor.Catalog.Result")
+			assert.Contains(t, functions(t, client)["GetResult"], "(*"+tc.wantType+", error)")
+
+			typeCheck(t, catalogClient+tc.handWritten, client, typesFile)
+		})
+	}
+}
+
+func TestGenerate_UnmarshalJSONDeclaredByHandIsDeclaredOnce(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	handWritten := "package catalog\n\nimport \"encoding/json\"\n\nfunc (x *Catalog) UnmarshalJSON(b []byte) error { return json.Unmarshal(b, &struct{}{}) }\n"
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "catalog_extra.go"), []byte(handWritten), 0o600))
+
+	src := runTypesSchema(t, catalogSchema(), catalogPackage(dir), filepath.Join(legacyTemplates(t)))
+
+	assert.NotContains(t, src, "func (x *Catalog) UnmarshalJSON")
+	typeCheck(t, src, handWritten)
+}
+
+func TestGenerate_RegeneratingAUnionPackageChangesNothing(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	templates := filepath.Join(legacyTemplates(t))
+
+	first := runTypesSchema(t, catalogSchema(), catalogPackage(dir), templates)
+	second := runTypesSchema(t, catalogSchema(), catalogPackage(dir), templates)
+
+	assert.Equal(t, first, second)
+}
+
+// A struct with an UnmarshalJSON decodes the fields the schema lists, so it does not
+// decode a field that keep_removed_fields keeps. The field stays, and the struct
+// compiles.
+func TestGenerate_KeptRemovedFieldOfAStructWithAnUnmarshalJSONStaysAndCompiles(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	templates := "../../templates/typegen"
+
+	// The file as a schema that still had a legacy field generated it.
+	older := runTypesSchema(t, catalogSchema(), catalogPackage(dir), templates)
+	require.Contains(t, older, "type Catalog struct {")
+
+	older = strings.Replace(older, "type Catalog struct {", "type Catalog struct {\n\tLegacy string `json:\"legacy,omitempty\"`", 1)
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "types.go"), []byte(older), 0o600))
+
+	pkg := catalogPackage(dir)
+	pkg.KeepRemovedFields = true
+
+	kept := runTypesSchema(t, catalogSchema(), pkg, templates)
+
+	fields, _ := structFields(parse(t, kept))
+	assert.Equal(t, "string", fields["Catalog"]["Legacy"], "the field stays")
+	assert.Contains(t, kept, "// Not in the NerdGraph schema; kept so existing code compiles.")
+
+	assert.Contains(t, kept, "func (x *Catalog) UnmarshalJSON(b []byte) error", "the struct still decodes its interface fields")
+	assert.Contains(t, kept, `case "result":`)
+	typeCheck(t, kept)
+}
+
+func returnsPackage(dir string) *config.PackageConfig {
+	return &config.PackageConfig{
+		Name:       "things",
+		Path:       dir,
+		Generators: []string{"typegen", "nerdgraphclient"},
+		Types: []config.TypeConfig{
+			{Name: "ID", FieldTypeOverride: "string"},
+			{Name: "EpochSeconds", FieldTypeOverride: "nrtime.EpochSeconds"},
+			{Name: "Thing"},
+			{Name: "OAuthUrlResponse"},
+		},
+		Mutations: []config.MutationConfig{{Name: "thing.*", MaxQueryFieldDepth: 1}},
+		Queries: []config.Query{
+			{Path: []string{"actor", "account", "cloud"}, Endpoints: []config.EndpointConfig{{Name: "details", MaxQueryFieldDepth: 1}}},
+			{Path: []string{"actor", "notifications"}, Endpoints: []config.EndpointConfig{
+				{Name: "oAuthUrl", MaxQueryFieldDepth: 1},
+				{Name: "health", MaxQueryFieldDepth: 1},
+			}},
+		},
+	}
+}
+
+// functions maps each function in f, by name, to its source in src.
+func functions(t *testing.T, src string) map[string]string {
+	t.Helper()
+
+	fset := token.NewFileSet()
+	f, err := parser.ParseFile(fset, "out.go", src, parser.ParseComments)
+	require.NoError(t, err, "generated source must parse:\n%s", src)
+
+	out := map[string]string{}
+
+	for _, d := range f.Decls {
+		if fn, ok := d.(*ast.FuncDecl); ok {
+			out[fn.Name.Name] = src[fset.Position(fn.Pos()).Offset:fset.Position(fn.End()).Offset]
+		}
+	}
+
+	return out
+}
+
+// undeclaredResponses lists the response structs the client file builds that neither file declares.
+func undeclaredResponses(t *testing.T, client, typesFile string) []string {
+	t.Helper()
+
+	_, declaredInClient := structFields(parse(t, client))
+	_, declaredInTypes := structFields(parse(t, typesFile))
+
+	var missing []string
+
+	ast.Inspect(parse(t, client), func(n ast.Node) bool {
+		lit, ok := n.(*ast.CompositeLit)
+		if !ok {
+			return true
+		}
+
+		if id, ok := lit.Type.(*ast.Ident); ok && declaredInClient[id.Name]+declaredInTypes[id.Name] == 0 {
+			missing = append(missing, id.Name)
+		}
+
+		return true
+	})
+
+	return missing
+}
+
+func TestGenerate_MutationsReturningScalarsAndListsCompile(t *testing.T) {
+	t.Parallel()
+
+	// The second template set is spelled the way newrelic-client-go's is.
+	templates := map[string]struct{ client, types string }{
+		"own templates":    {"../../templates/nerdgraphclient", "../../templates/typegen"},
+		"legacy templates": {legacyTemplates(t), legacyTemplates(t)},
+	}
+
+	for name, dirs := range templates {
+		name, dirs := name, dirs
+
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			pkg := returnsPackage(t.TempDir())
+			gc := genConfig()
+			gc.TemplateDir = dirs.client
+
+			client, err := runSchema(t, returnsSchema(), pkg, gc)
+			require.NoError(t, err)
+
+			typesFile := runTypesSchema(t, returnsSchema(), pkg, dirs.types)
+			fns := functions(t, client)
+
+			// A list of IDs comes back as the list.
+			assert.Contains(t, fns["ThingAdd"], "(*[]string, error)")
+			assert.Contains(t, fns["ThingAdd"], "return &resp.Result, nil")
+			assert.NotContains(t, client, "resp.[]")
+
+			// A Boolean comes back as a bool, held in a field that can be decoded into.
+			assert.Contains(t, fns["ThingDelete"], "(*bool, error)")
+			assert.Contains(t, fns["ThingDelete"], "return &resp.Result, nil")
+
+			// A type from another package is written as it is.
+			assert.Contains(t, fns["ThingStamp"], "(*nrtime.EpochSeconds, error)")
+
+			fields, _ := structFields(parse(t, client))
+			assert.Equal(t, map[string]string{"Result": "[]string"}, fields["ThingAddQueryResponse"])
+			assert.Equal(t, map[string]string{"Result": "bool"}, fields["ThingDeleteQueryResponse"])
+
+			// A scalar has no selection set, with or without variables.
+			assert.Contains(t, client, "const ThingAddMutation = `mutation(\n\t$ids: [ID!]!,\n) { thingAdd(\n\tids: $ids,\n) }`")
+			assert.Contains(t, client, "const ThingPingMutation = `mutation { thingPing }`")
+
+			assert.Empty(t, undeclaredResponses(t, client, typesFile))
+			assert.NotContains(t, client+typesFile, "tutoneResult", "no stand-in is left in the output")
+		})
+	}
+}
+
+func TestGenerate_ArgumentlessMutationGetsItsResponseStruct(t *testing.T) {
+	t.Parallel()
+
+	pkg := returnsPackage(t.TempDir())
+
+	client, err := runSchema(t, returnsSchema(), pkg, genConfig())
+	require.NoError(t, err)
+
+	typesFile := runTypesSchema(t, returnsSchema(), pkg, "../../templates/typegen")
+	typeFields, declared := structFields(parse(t, typesFile))
+
+	// The template declares the response only when the mutation has variables.
+	assert.NotContains(t, client, "type ThingRegisterQueryResponse")
+	assert.Equal(t, 1, declared["ThingRegisterQueryResponse"])
+	assert.Equal(t, map[string]string{"Thing": "Thing"}, typeFields["ThingRegisterQueryResponse"])
+	assert.Contains(t, functions(t, client)["ThingRegister"], "return &resp.Thing, nil")
+
+	assert.Equal(t, 1, declared["ThingPingQueryResponse"])
+	assert.Equal(t, map[string]string{"Result": "bool"}, typeFields["ThingPingQueryResponse"])
+	assert.Equal(t, map[string]string{"Result": "nrtime.EpochSeconds"}, typeFields["ThingStampQueryResponse"])
+
+	// One that has variables is declared by the template, and only there.
+	assert.Equal(t, 0, declared["ThingCreateQueryResponse"])
+	assert.Contains(t, client, "type ThingCreateQueryResponse struct")
+
+	// Without empty parentheses the query is valid GraphQL.
+	assert.Contains(t, client, "const ThingRegisterMutation = `mutation { thingRegister {\n\tid\n} }`")
+	assert.NotContains(t, client, "mutation(\n)")
+	assert.Empty(t, undeclaredResponses(t, client, typesFile))
+}
+
+func TestGenerate_ArgumentlessMutationReturningAUnionDecodesItAndCompiles(t *testing.T) {
+	t.Parallel()
+
+	s := catalogSchema()
+	s.MutationType.Fields = []schema.Field{
+		{Name: "catalogPick", Type: unionOf("SearchResult")},
+		{Name: "catalogPickAll", Type: listOf(unionOf("SearchResult"))},
+	}
+
+	pkg := &config.PackageConfig{
+		Name:           "catalog",
+		Path:           t.TempDir(),
+		ClientTypeName: "CatalogClient",
+		Generators:     []string{"typegen", "nerdgraphclient"},
+		Mutations:      []config.MutationConfig{{Name: "catalogPick.*", MaxQueryFieldDepth: 2}},
+	}
+
+	client, err := runSchema(t, s, pkg, genConfig())
+	require.NoError(t, err)
+
+	typesFile := runTypesSchema(t, s, pkg, "../../templates/typegen")
+
+	// The result is held in the field the method reads and decoded by __typename, under the
+	// key the response has it, which is the name of the mutation in the schema.
+	assert.Contains(t, client, "return &resp.SearchResultInterface, nil")
+	assert.Contains(t, client, "return &resp.Result, nil")
+
+	for _, want := range []string{
+		"func (x *CatalogPickQueryResponse) UnmarshalJSON(b []byte) error",
+		`case "catalogPick":`,
+		"x.SearchResultInterface = *xxx",
+		"func (x *CatalogPickAllQueryResponse) UnmarshalJSON(b []byte) error",
+		`case "catalogPickAll":`,
+		"x.Result = append(x.Result, *xxx)",
+	} {
+		assert.Contains(t, typesFile, want)
+	}
+
+	assert.Empty(t, undeclaredResponses(t, client, typesFile))
+	typeCheck(t, catalogClient, client, typesFile)
+}
+
+func TestGenerate_PackageWithoutTheClientGeneratorGetsNoMutationResponses(t *testing.T) {
+	t.Parallel()
+
+	pkg := returnsPackage(t.TempDir())
+	pkg.Generators = []string{"typegen"}
+
+	_, declared := structFields(parse(t, runTypesSchema(t, returnsSchema(), pkg, "../../templates/typegen")))
+
+	assert.Zero(t, declared["ThingRegisterQueryResponse"])
+	assert.Zero(t, declared["ThingPingQueryResponse"])
+}
+
+func TestGenerate_AccountScopedEndpointWithItsOwnAccountIdTakesOneAccountID(t *testing.T) {
+	t.Parallel()
+
+	client, err := runSchema(t, returnsSchema(), returnsPackage(t.TempDir()), genConfig())
+	require.NoError(t, err)
+
+	fn := functions(t, client)["GetDetails"]
+
+	assert.Equal(t, 1, strings.Count(fn, "accountID int"), "the parameter is declared once")
+	assert.Contains(t, fn, "region string")
+	assert.Regexp(t, `"accountID":\s+accountID,`, fn)
+	assert.Regexp(t, `"accountId":\s+accountID,`, fn, "the argument gets the same value")
+
+	assert.Contains(t, client, "$accountID: Int!,\n\t$accountId: Int!,")
+	assert.Contains(t, client, "account(id: $accountID)")
+	assert.Contains(t, client, "accountId: $accountId,")
+}
+
+func TestGenerate_ResponseStructHasAFieldForATypeWhoseGoNameDiffersFromItsSchemaName(t *testing.T) {
+	t.Parallel()
+
+	pkg := returnsPackage(t.TempDir())
+
+	fields, _ := structFields(parse(t, runTypesSchema(t, returnsSchema(), pkg, "../../templates/typegen")))
+
+	// The method reads resp.Actor.Notifications.OAuthURL.
+	assert.Equal(t, "OAuthURLResponse", fields["Notifications"]["OAuthURL"])
+}
+
+func TestGenerate_ScalarEndpointHasNoSelection(t *testing.T) {
+	t.Parallel()
+
+	client, err := runSchema(t, returnsSchema(), returnsPackage(t.TempDir()), genConfig())
+	require.NoError(t, err)
+
+	assert.Contains(t, client, "const getHealthQuery = `query { actor { notifications { health } } }`")
 }

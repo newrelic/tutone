@@ -161,15 +161,6 @@ func (x *Expander) expandType(t *Type) error {
 			}
 		}
 
-		for _, possibleType := range t.PossibleTypes {
-			err := x.ExpandTypeFromName(possibleType.Name)
-			if err != nil {
-				log.WithFields(log.Fields{
-					"name": possibleType.Name,
-				}).Errorf("failed to expand type from name: %s", err)
-			}
-		}
-
 		for _, typeInterface := range t.Interfaces {
 			err := x.ExpandTypeFromName(typeInterface.Name)
 			if err != nil {
@@ -177,6 +168,16 @@ func (x *Expander) expandType(t *Type) error {
 					"name": typeInterface.Name,
 				}).Errorf("failed to expand type from name: %s", err)
 			}
+		}
+	}
+
+	// A union has no fields, so its members are reached only through PossibleTypes.
+	for _, possibleType := range t.PossibleTypes {
+		err := x.ExpandTypeFromName(possibleType.Name)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"name": possibleType.Name,
+			}).Errorf("failed to expand type from name: %s", err)
 		}
 	}
 

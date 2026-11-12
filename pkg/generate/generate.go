@@ -173,6 +173,10 @@ func generateForPackage(packageName string, cfg *config.Config, s *schema.Schema
 
 	warnUnknownTypes(s, pkg)
 
+	if err := skipUnionsWithGoType(s, pkg); err != nil {
+		return err
+	}
+
 	// Narrow interfaces for this package only; the schema is shared across packages.
 	restore, err := applyImplementationFilters(s, pkg)
 	if err != nil {

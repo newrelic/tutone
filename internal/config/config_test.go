@@ -100,3 +100,12 @@ func TestLoadConfig(t *testing.T) {
 
 	assert.Equal(t, config, expected)
 }
+
+func TestPackageConfig_GeneratesClient(t *testing.T) {
+	t.Parallel()
+
+	assert.True(t, (&PackageConfig{Generators: []string{"typegen", "nerdgraphclient"}}).GeneratesClient())
+	assert.True(t, (&PackageConfig{Generators: []string{"nerdgraphclient"}}).GeneratesClient())
+	assert.False(t, (&PackageConfig{Generators: []string{"typegen"}}).GeneratesClient())
+	assert.False(t, (&PackageConfig{}).GeneratesClient())
+}

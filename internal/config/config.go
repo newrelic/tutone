@@ -80,6 +80,12 @@ type PackageConfig struct {
 	// declarations the generator does not produce, and those marked DO NOT DELETE
 	// or DO NOT REGENERATE. Defaults to true.
 	PreserveHandWritten *bool `yaml:"preserve_hand_written,omitempty"`
+	// KeepRemovedFields keeps, when regenerating the types file, the struct fields
+	// and enum values the existing declaration has and the schema no longer lists,
+	// each marked with a note that the schema does not list it, so code that uses
+	// them keeps compiling. It adds nothing the existing file lacks. It needs
+	// PreserveHandWritten. Defaults to false.
+	KeepRemovedFields bool `yaml:"keep_removed_fields,omitempty"`
 
 	// Transient property which is set by using the --include-integration-test flag.
 	IncludeIntegrationTest bool
@@ -117,6 +123,18 @@ func (c *PackageConfig) GetClientTypeName() string {
 func (c *PackageConfig) DefaultClientTypeName() string {
 	//nolint:staticcheck // matches the template's sprig `title`, which keeps existing output unchanged
 	return strings.Title(c.Name)
+}
+
+// GeneratesClient reports whether the package has the nerdgraphclient generator, which
+// makes the methods that call the API.
+func (c *PackageConfig) GeneratesClient() bool {
+	for _, g := range c.Generators {
+		if g == "nerdgraphclient" {
+			return true
+		}
+	}
+
+	return false
 }
 
 // GetPreserveHandWritten reports whether hand-written declarations are kept, defaulting to true.
@@ -191,6 +209,14 @@ type MutationConfig struct {
 	// e.g. {cursor: "*string"} so a caller can pass nil for "not set". An unknown
 	// name is an error.
 	ArgumentGoTypes map[string]string `yaml:"argument_go_types,omitempty"`
+	// IncludeOptionalArguments makes the method take the mutation's optional
+	// (nullable) arguments as pointers, or as the slice they are for a list, so a
+	// caller can leave one unset. An unset argument is left out of the request's
+	// variables, so the API applies its own default instead of receiving the
+	// type's zero value. exclude_arguments still removes an argument and
+	// argument_go_types still sets a parameter's type. It changes the parameter
+	// types of an existing method, so use it on mutations a package is adding.
+	IncludeOptionalArguments bool `yaml:"include_optional_arguments,omitempty"`
 	// KeepExisting leaves the mutation out of generation. Its method and query
 	// constant stay in the file as hand-written code, for a mutation that was
 	// renamed or reshaped by hand.
@@ -210,6 +236,16 @@ type EndpointConfig struct {
 	// ArgumentGoTypes maps a GraphQL argument name to the Go type of its parameter,
 	// e.g. {cursor: "*string"}. An unknown name is an error.
 	ArgumentGoTypes map[string]string `yaml:"argument_go_types,omitempty"`
+	// IncludeOptionalArguments declares every optional (nullable) argument of the
+	// endpoint in its query, where otherwise only the required ones and those in
+	// IncludeArguments are, and makes the method take each as a pointer, or as the
+	// slice it is for a list, so a caller can leave it unset. An unset argument is
+	// left out of the request's variables, so the API applies its own default (e.g.
+	// `first: 10`) instead of receiving null. exclude_arguments still removes an
+	// argument and argument_go_types still sets a parameter's type. It changes the
+	// parameter types of an existing method, so use it on endpoints a package is
+	// adding.
+	IncludeOptionalArguments bool `yaml:"include_optional_arguments,omitempty"`
 	// MethodName is the complete Go method name (e.g. "GetDestinationsAccount").
 	// It defaults to "Get" plus the endpoint name. Set it on each of two endpoints
 	// that share a name under different query paths.
@@ -247,7 +283,9 @@ type TypeConfig struct {
 	FieldTypeOverride string `yaml:"field_type_override,omitempty"`
 	// CreateAs is used when creating a new scalar type to determine which Go type to use.
 	CreateAs string `yaml:"create_as,omitempty"`
-	// SkipTypeCreate allows the user to skip creating a Scalar type.
+	// SkipTypeCreate skips creating the Go type, usually along with FieldTypeOverride.
+	// A union with it is not generated at all, and its fields keep the type the
+	// package has for it.
 	SkipTypeCreate bool `yaml:"skip_type_create,omitempty"`
 	// SkipFields allows the user to skip generating specific fields within a type.
 	SkipFields []string `yaml:"skip_fields,omitempty"`
@@ -259,7 +297,7 @@ type TypeConfig struct {
 	// Fields holds per-field overrides, for when a whole-type setting such as
 	// StructTags is too broad.
 	Fields []FieldConfig `yaml:"fields,omitempty"`
-	// IncludeImplementations narrows this interface type to the named
+	// IncludeImplementations narrows this interface or union type to the named
 	// implementations, for this package only.
 	IncludeImplementations []string `yaml:"include_implementations,omitempty"`
 	// KeepExisting keeps the type's declaration in the existing file exactly as it
@@ -392,6 +430,12 @@ func warnIgnoredKeys(c *Config) {
 				"package": p.Name,
 				"entries": names,
 			}).Warn("keep_existing needs preserve_hand_written, which is false; the existing code is replaced, not kept")
+		}
+
+		if p.KeepRemovedFields && !p.GetPreserveHandWritten() {
+			log.WithFields(log.Fields{
+				"package": p.Name,
+			}).Warn("keep_removed_fields needs preserve_hand_written, which is false; the existing code is replaced, not kept")
 		}
 	}
 }

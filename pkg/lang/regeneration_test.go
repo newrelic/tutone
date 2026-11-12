@@ -567,6 +567,30 @@ func TestGenerateGoMethodMutations_KeepExisting(t *testing.T) {
 	})
 }
 
+func TestSkippedFields(t *testing.T) {
+	t.Parallel()
+
+	expanded := &[]*schema.Type{
+		{Name: "Alpha", Kind: schema.KindObject},
+		{Name: "Beta", Kind: schema.KindObject},
+		{Name: "Gamma", Kind: schema.KindObject},
+	}
+
+	pkg := &config.PackageConfig{Types: []config.TypeConfig{
+		{Name: "Alpha", SkipFields: []string{"Slug", "ResultQueries"}},
+		{Name: "Beta"},
+		{Name: "NotExpanded", SkipFields: []string{"Gone"}},
+	}}
+
+	assert.Equal(t,
+		map[string][]string{"Alpha": {"Slug", "ResultQueries"}},
+		SkippedFields(pkg, expanded),
+		"keyed by the Go name of each expanded type that has skip_fields")
+
+	assert.Nil(t, SkippedFields(pkg, nil))
+	assert.Empty(t, SkippedFields(&config.PackageConfig{}, expanded))
+}
+
 func TestKeptNames(t *testing.T) {
 	t.Parallel()
 

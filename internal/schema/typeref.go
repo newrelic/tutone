@@ -54,6 +54,11 @@ func (r *TypeRef) GetTypeName() string {
 	return "UNKNOWN"
 }
 
+// GetGoTypeName is GetTypeName spelled the way the generated Go type is named.
+func (r *TypeRef) GetGoTypeName() string {
+	return formatGoName(r.GetTypeName())
+}
+
 // GetType resolves the given SchemaInputField into a field name to use on a go struct.
 //
 //	type, recurse, error
@@ -108,6 +113,19 @@ func (r *TypeRef) IsScalarID() bool {
 	return r.OfType != nil && r.OfType.Kind == KindScalar && r.GetTypeName() == "ID"
 }
 
+// IsLeaf reports whether the type, with its list and non-null wrappers removed, is a
+// scalar or an enum. A field of such a type has no fields to select.
+func (r *TypeRef) IsLeaf() bool {
+	kinds := r.GetKinds()
+	if len(kinds) == 0 {
+		return false
+	}
+
+	last := kinds[len(kinds)-1]
+
+	return last == KindScalar || last == KindENUM
+}
+
 // IsNonNull walks down looking for NON_NULL kind, however that can appear
 // multiple times, so this is likely a bit deceiving...
 // Example:
@@ -144,6 +162,13 @@ func (r *TypeRef) IsNonNull() bool {
 	return false
 }
 
+// IsNullable reports whether a value of the type may be null: its outermost wrapper is
+// not NON_NULL. It differs from !IsNonNull, which is true for `[T!]` as well, a list
+// that may be null.
+func (r *TypeRef) IsNullable() bool {
+	return r.Kind != KindNonNull
+}
+
 // IsList determines if a TypeRef is of a KIND LIST.
 func (r *TypeRef) IsList() bool {
 	kinds := r.GetKinds()
@@ -165,6 +190,17 @@ func (r *TypeRef) IsInterface() bool {
 	// Lots of kinds
 	for _, k := range kinds {
 		if k == KindInterface {
+			return true
+		}
+	}
+
+	return false
+}
+
+// IsUnion determines if a TypeRef is of a KIND UNION.
+func (r *TypeRef) IsUnion() bool {
+	for _, k := range r.GetKinds() {
+		if k == KindUnion {
 			return true
 		}
 	}

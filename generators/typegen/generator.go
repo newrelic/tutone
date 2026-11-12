@@ -40,6 +40,8 @@ func (g *Generator) Generate(s *schema.Schema, genConfig *config.GeneratorConfig
 	g.GolangGenerator.SetPackageNaming(pkgConfig)
 	g.GolangGenerator.Imports = pkgConfig.Imports
 	g.GolangGenerator.KeepExisting = lang.KeptNames(pkgConfig, expandedTypes)
+	g.GolangGenerator.SkippedFields = lang.SkippedFields(pkgConfig, expandedTypes)
+	g.GolangGenerator.NarrowedInterfaces = lang.NarrowedInterfaces(pkgConfig, expandedTypes)
 
 	if structsForGen != nil {
 		g.GolangGenerator.Types = *structsForGen
@@ -107,6 +109,9 @@ func (g *Generator) Execute(genConfig *config.GeneratorConfig, pkgConfig *config
 
 		PreserveHandWritten: pkgConfig.GetPreserveHandWritten(),
 		KeepNames:           g.KeepExisting,
+		KeepRemovedFields:   pkgConfig.KeepRemovedFields,
+		SkippedFields:       g.SkippedFields,
+		NarrowedInterfaces:  g.NarrowedInterfaces,
 	}
 
 	return c.WriteFile(g)

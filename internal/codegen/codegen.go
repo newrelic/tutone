@@ -31,6 +31,15 @@ type CodeGen struct {
 	// ReceiverRenames maps the type a template gave its methods' receivers to the
 	// type they should have, for the same reason (client_type_name).
 	ReceiverRenames map[string]string
+	// TypeStandIns are identifiers the template printed for types it cannot print
+	// (see ReplaceTypeStandIns).
+	TypeStandIns []TypeStandIn
+	// OmitUnset lists, per generated method, the parameters whose variable is left
+	// out of the request when nil (see OmitUnsetArguments).
+	OmitUnset []UnsetArguments
+	// NarrowedInterfaces are the Go names of the interfaces the package narrows to
+	// some implementations (see DecodeUnlistedImplementations).
+	NarrowedInterfaces []string
 
 	// PreserveHandWritten keeps, when the destination already exists, the
 	// declarations in it that the generator does not produce or that are marked
@@ -40,6 +49,13 @@ type CodeGen struct {
 	// as if marked: for each name the type, const, var or function of that name and
 	// the methods of a type of that name. It applies only with PreserveHandWritten.
 	KeepNames []string
+	// KeepRemovedFields keeps, when the destination already exists, the struct fields
+	// and enum values it declares and the generator no longer produces (see
+	// KeepRemovedFields). It applies only with PreserveHandWritten.
+	KeepRemovedFields bool
+	// SkippedFields maps a Go type name to the Go names of the fields the package
+	// config skips, which KeepRemovedFields does not keep.
+	SkippedFields map[string][]string
 }
 
 type Path struct {
@@ -91,7 +107,7 @@ func (c *CodeGen) WriteFile(g Generator) error {
 	}
 
 	if c.PreserveHandWritten {
-		formatted, err = preserveHandWritten(dest, formatted, c.KeepNames)
+		formatted, err = c.preserveHandWritten(dest, formatted)
 		if err != nil {
 			return err
 		}
@@ -101,8 +117,9 @@ func (c *CodeGen) WriteFile(g Generator) error {
 }
 
 // applyNaming sets the package name and receiver types the config asks for on a
-// template's output. Source that does not parse is returned as it is: formatting
-// fails on it next, and that is reported there.
+// template's output, and puts the types back where it printed a stand-in for them.
+// Source that does not parse is returned as it is: formatting fails on it next, and
+// that is reported there.
 func (c *CodeGen) applyNaming(rendered []byte) []byte {
 	out := rendered
 
@@ -118,12 +135,37 @@ func (c *CodeGen) applyNaming(rendered []byte) []byte {
 		}
 	}
 
+	if len(c.TypeStandIns) > 0 {
+		if replaced, err := ReplaceTypeStandIns(out, c.TypeStandIns); err == nil {
+			out = replaced
+		}
+	}
+
+	if len(c.OmitUnset) > 0 {
+		if rewritten, unmatched, err := OmitUnsetArguments(out, c.OmitUnset); err == nil {
+			out = rewritten
+
+			for _, name := range unmatched {
+				log.WithFields(log.Fields{
+					"file":   c.DestinationFile,
+					"method": name,
+				}).Warn("include_optional_arguments: found no request variables to leave unset arguments out of; the template may name the method differently, and unset arguments are sent as null")
+			}
+		}
+	}
+
+	if len(c.NarrowedInterfaces) > 0 {
+		if rewritten, err := DecodeUnlistedImplementations(out, c.NarrowedInterfaces); err == nil {
+			out = rewritten
+		}
+	}
+
 	return out
 }
 
 // preserveHandWritten merges the declarations kept from the existing file at
 // dest, if there is one, into the freshly generated source.
-func preserveHandWritten(dest string, generated []byte, keepNames []string) ([]byte, error) {
+func (c *CodeGen) preserveHandWritten(dest string, generated []byte) ([]byte, error) {
 	existing, err := os.ReadFile(dest)
 	if os.IsNotExist(err) {
 		return generated, nil
@@ -133,20 +175,35 @@ func preserveHandWritten(dest string, generated []byte, keepNames []string) ([]b
 		return nil, err
 	}
 
-	merged, kept, err := MergeHandWritten(generated, existing, keepNames...)
+	merged, kept, err := MergeHandWritten(generated, existing, c.KeepNames...)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", dest, err)
 	}
 
-	if len(kept) == 0 {
+	var removed []string
+
+	if c.KeepRemovedFields {
+		merged, removed, err = KeepRemovedFields(merged, existing, c.SkippedFields)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", dest, err)
+		}
+
+		var noted []string
+
+		merged, noted, err = NoteKeptTypes(merged, generated, c.KeepNames)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", dest, err)
+		}
+
+		removed = append(removed, noted...)
+	}
+
+	if len(kept) == 0 && len(removed) == 0 {
 		return generated, nil
 	}
 
-	log.WithFields(log.Fields{
-		"file":  dest,
-		"count": len(kept),
-		"names": kept,
-	}).Info("kept hand-written declarations")
+	logKept(dest, "kept hand-written declarations", kept)
+	logKept(dest, "kept fields and values that are not in the schema", removed)
 
 	formatted, err := imports.Process(dest, merged, nil)
 	if err != nil {
@@ -154,6 +211,18 @@ func preserveHandWritten(dest string, generated []byte, keepNames []string) ([]b
 	}
 
 	return formatted, nil
+}
+
+func logKept(dest, message string, names []string) {
+	if len(names) == 0 {
+		return
+	}
+
+	log.WithFields(log.Fields{
+		"file":  dest,
+		"count": len(names),
+		"names": names,
+	}).Info(message)
 }
 
 // ResolveCaseSpelling returns the path of the file that already exists in the

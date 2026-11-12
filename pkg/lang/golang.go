@@ -2,10 +2,12 @@ package lang
 
 import (
 	"fmt"
+	"go/token"
 	"regexp"
 	"sort"
 	"strings"
 
+	"github.com/newrelic/tutone/internal/codegen"
 	"github.com/newrelic/tutone/internal/config"
 	"github.com/newrelic/tutone/internal/schema"
 	"github.com/newrelic/tutone/internal/util"
@@ -32,6 +34,12 @@ type GolangGenerator struct {
 	// KeepExisting names what an existing file keeps as it is for the types set to
 	// keep_existing (see KeptNames).
 	KeepExisting []string
+	// SkippedFields maps the Go name of a type to the Go names of the fields the
+	// package config skips for it (see SkippedFields).
+	SkippedFields map[string][]string
+	// NarrowedInterfaces are the Go names of the interfaces the package narrows to
+	// some implementations (see NarrowedInterfaces).
+	NarrowedInterfaces []string
 }
 
 // SetPackageNaming fills the name fields from the package config.
@@ -111,7 +119,31 @@ type GoMethod struct {
 	QueryString    string
 	// ResponseObjectType is the name of the type for the API response.  Note that this is not the method return, but the API call response.
 	ResponseObjectType string
+	// ReturnAlias is the identifier that stands in for the return type in Signature.Return
+	// when the type is not itself an exported identifier, e.g. `[]string`, `bool` or
+	// `nrtime.EpochSeconds`. Templates print that entry as a field name as well as a type,
+	// which only an identifier survives. It is replaced by ReturnType once the method is
+	// rendered, and is empty when the return type is an identifier.
+	ReturnAlias string
+	// ReturnType is the Go type ReturnAlias stands for.
+	ReturnType string
+	// UnsetParams are the parameters of a method generated with
+	// include_optional_arguments whose variable is left out of the request when the
+	// caller passes nil, so the API applies its default.
+	UnsetParams []UnsetParam
 }
+
+// UnsetParam is a parameter that may be nil and the key of the request variable it fills.
+type UnsetParam struct {
+	// Param is the Go name of the parameter as the template prints it.
+	Param string
+	// Key is the name of the GraphQL variable.
+	Key string
+}
+
+// MutationResultField is the name of the field that holds the result in the response
+// struct of a mutation whose return type is a ReturnAlias.
+const MutationResultField = "Result"
 
 type GoMethodSignature struct {
 	Input  []GoMethodInputType
@@ -170,14 +202,22 @@ func GenerateGoMethodQueriesForPackage(s *schema.Schema, genConfig *config.Gener
 						return nil, err
 					}
 
-					method := goMethodForField(field, pkgConfig, inputFields, methodArgOptions{Exclude: endpoint.ExcludeArguments, GoTypes: endpoint.ArgumentGoTypes})
+					method := goMethodForField(field, pkgConfig, inputFields, methodArgOptions{
+						Exclude:         endpoint.ExcludeArguments,
+						GoTypes:         endpoint.ArgumentGoTypes,
+						IncludeOptional: endpoint.IncludeOptionalArguments,
+					})
+
+					if err := checkUniqueParameters(method); err != nil {
+						return nil, err
+					}
 
 					method.QueryString = s.GetQueryStringForEndpoint(typePath, pkgQuery.Path, endpoint)
 					method.ResponseObjectType = endpointResponseName(endpoint)
 					method.Signature.ReturnPath = returnPath
 
 					method.FieldName = method.Name
-					method.MethodName = "Get" + upperFirst(method.Name)
+					method.MethodName = "Get" + UpperFirst(method.Name)
 					method.QueryConstName = "get" + method.Name + "Query"
 
 					if endpoint.MethodName != "" {
@@ -276,7 +316,8 @@ func checkDuplicateMethodNames(pkg string, methods []GoMethod, name func(GoMetho
 	return nil
 }
 
-func upperFirst(s string) string {
+// UpperFirst capitalizes the first letter, as the templates' title function does.
+func UpperFirst(s string) string {
 	if s == "" {
 		return s
 	}
@@ -294,14 +335,49 @@ func lowerFirst(s string) string {
 
 // GenerateGoMethodMutationsForPackage uses the provided configuration to generate the GoMethod structs that contain the information about performing GraphQL mutations.
 func GenerateGoMethodMutationsForPackage(s *schema.Schema, genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig) (*[]GoMethod, error) {
-	var methods []GoMethod
-
 	if !hasGeneratedMutation(pkgConfig.Mutations) {
 		return nil, nil
 	}
 
+	mutations, err := generatedMutations(s, pkgConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(mutations) > 0 {
+		methods := make([]GoMethod, 0, len(mutations))
+		for _, m := range mutations {
+			methods = append(methods, m.method)
+		}
+
+		sort.SliceStable(methods, func(i, j int) bool {
+			return methods[i].Name < methods[j].Name
+		})
+
+		if err := checkDuplicateMethodNames(pkgConfig.Name, methods, func(m GoMethod) string { return m.Name }); err != nil {
+			return nil, err
+		}
+
+		return &methods, nil
+	}
+
+	return nil, fmt.Errorf("no methods for package")
+}
+
+// generatedMutation is a mutation the package config generates: the schema field it
+// calls and the method that calls it.
+type generatedMutation struct {
+	field  schema.Field
+	method GoMethod
+}
+
+// generatedMutations makes a method for every mutation the package config generates, in
+// config order.
+func generatedMutations(s *schema.Schema, pkgConfig *config.PackageConfig) ([]generatedMutation, error) {
+	var mutations []generatedMutation
+
 	for _, pkgMutation := range pkgConfig.Mutations {
-		// Kept as it is, so it also takes no part in the duplicate check below.
+		// Kept as it is, so it also takes no part in the duplicate check by the caller.
 		if pkgMutation.KeepExisting {
 			continue
 		}
@@ -317,26 +393,36 @@ func GenerateGoMethodMutationsForPackage(s *schema.Schema, genConfig *config.Gen
 				Exclude: pkgMutation.ExcludeArguments,
 				Rename:  pkgMutation.RenameArguments,
 				GoTypes: pkgMutation.ArgumentGoTypes,
+
+				IncludeOptional: pkgMutation.IncludeOptionalArguments,
 			})
 			method.QueryString = s.GetQueryStringForMutation(&field, pkgMutation)
+			setReturnAlias(&method)
 
-			methods = append(methods, method)
+			if err := checkUniqueParameters(method); err != nil {
+				return nil, err
+			}
+
+			mutations = append(mutations, generatedMutation{field: field, method: method})
 		}
 	}
 
-	if len(methods) > 0 {
-		sort.SliceStable(methods, func(i, j int) bool {
-			return methods[i].Name < methods[j].Name
-		})
+	return mutations, nil
+}
 
-		if err := checkDuplicateMethodNames(pkgConfig.Name, methods, func(m GoMethod) string { return m.Name }); err != nil {
-			return nil, err
-		}
-
-		return &methods, nil
+// setReturnAlias gives a method whose return type is not an exported identifier an
+// identifier to be rendered with, which the rendered method gets the type back for.
+// The templates use the return type as the name of the response's field too, so a
+// type such as `[]string` would otherwise render `resp.[]string`.
+func setReturnAlias(m *GoMethod) {
+	returnType := m.Signature.Return[0]
+	if token.IsIdentifier(returnType) && token.IsExported(returnType) {
+		return
 	}
 
-	return nil, fmt.Errorf("no methods for package")
+	m.ReturnType = returnType
+	m.ReturnAlias = "tutoneResult" + m.Name
+	m.Signature.Return[0] = m.ReturnAlias
 }
 
 // hasGeneratedMutation reports whether any mutation is left for the generator, as
@@ -392,8 +478,8 @@ func checkArgumentConfig(cfg config.MutationConfig, mutations []schema.Field) er
 // types that the package config sets to keep_existing: the Go name of each, which
 // the merge also takes for its methods, and the other declarations the typegen
 // template makes for it. That is the <Name>Types variable of an enum, and the
-// <Name>Interface type and Unmarshal<Name>Interface function of an interface. A
-// type is matched to its config the way its other settings are, ignoring case.
+// <Name>Interface type and Unmarshal<Name>Interface function of an interface or a
+// union. A type is matched to its config the way its other settings are, ignoring case.
 func KeptNames(pkgConfig *config.PackageConfig, expandedTypes *[]*schema.Type) []string {
 	kept := map[string]bool{}
 
@@ -420,12 +506,55 @@ func KeptNames(pkgConfig *config.PackageConfig, expandedTypes *[]*schema.Type) [
 		switch t.Kind {
 		case schema.KindENUM:
 			names = append(names, name+"Types")
-		case schema.KindInterface:
+		case schema.KindInterface, schema.KindUnion:
 			names = append(names, name+"Interface", "Unmarshal"+name+"Interface")
 		}
 	}
 
 	return names
+}
+
+// NarrowedInterfaces returns the Go names of the expanded interfaces the package config
+// narrows with include_implementations on a type.
+func NarrowedInterfaces(pkgConfig *config.PackageConfig, expandedTypes *[]*schema.Type) []string {
+	if expandedTypes == nil {
+		return nil
+	}
+
+	var names []string
+
+	for _, t := range *expandedTypes {
+		if t.Kind != schema.KindInterface {
+			continue
+		}
+
+		if c := getTypeConfig(t.Name, pkgConfig.Types); c != nil && len(c.IncludeImplementations) > 0 {
+			names = append(names, t.GetName())
+		}
+	}
+
+	sort.Strings(names)
+
+	return names
+}
+
+// SkippedFields returns, for each expanded type the package config gives
+// skip_fields, the Go type name and the Go names of the fields it skips. Regenerating
+// does not keep these fields: they are left out on purpose, not removed from the schema.
+func SkippedFields(pkgConfig *config.PackageConfig, expandedTypes *[]*schema.Type) map[string][]string {
+	if expandedTypes == nil {
+		return nil
+	}
+
+	skipped := map[string][]string{}
+
+	for _, t := range *expandedTypes {
+		if c := getTypeConfig(t.Name, pkgConfig.Types); c != nil && len(c.SkipFields) > 0 {
+			skipped[t.GetName()] = c.SkipFields
+		}
+	}
+
+	return skipped
 }
 
 func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConfig, pkgConfig *config.PackageConfig, expandedTypes *[]*schema.Type) (*[]GoStruct, *[]GoEnum, *[]GoScalar, *[]GoInterface, error) {
@@ -436,6 +565,7 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 	var enumsForGen []GoEnum
 	var scalarsForGen []GoScalar
 	var interfacesForGen []GoInterface
+	var unionsForGen []GoInterface
 
 	configNames := make(map[string]config.TypeConfig, len(pkgConfig.Types))
 
@@ -506,15 +636,10 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 					continue
 				}
 
-				// If any of the fields for this type are an interface type, then we
-				// need to signal to the template an UnmarshalJSON() should be
-				// rendered.
-				if f.Type.IsInterface() {
-					xxx.SpecialUnmarshal = true
-				}
-
 				xxx.Fields = append(xxx.Fields, getStructField(f, pkgConfig, t))
 			}
+
+			xxx.SpecialUnmarshal = hasInterfaceField(xxx.Fields)
 
 			if len(fieldErrs) > 0 {
 				log.Error(fieldErrs)
@@ -534,31 +659,7 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 				// Ensure that the struct for the graphql interface implements the go interface
 				xxx.Implements = append(xxx.Implements, t.GetName())
 
-				// Handle the interface
-				yyy := GoInterface{
-					Description: t.GetDescription(),
-					Name:        t.GetName(),
-				}
-
-				// Inform the template about which possible implementations exist for
-				// this interface.  We need to know about both the name that GraphQL
-				// uses and the name that Go uses.  This is to allow some flexibility
-				// in the template for how to reference the implementation information.
-				for _, x := range t.PossibleTypes {
-					ttt := GoInterfacePossibleType{
-						GraphQLName: x.Name,
-						GoName:      x.GetName(),
-					}
-
-					yyy.PossibleTypes = append(yyy.PossibleTypes, ttt)
-				}
-
-				// Require at least one auto-generated method, allow others
-				yyy.Methods = make([]string, 0, len(interfaceMethods)+1)
-				yyy.Methods = append(yyy.Methods, "Implements"+t.GetName()+"()")
-				yyy.Methods = append(yyy.Methods, interfaceMethods...)
-
-				interfacesForGen = append(interfacesForGen, yyy)
+				interfacesForGen = append(interfacesForGen, goInterfaceForType(t, interfaceMethods))
 			}
 
 			sort.SliceStable(xxx.Fields, func(i, j int) bool {
@@ -566,6 +667,10 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 			})
 
 			structsForGen = append(structsForGen, xxx)
+		case schema.KindUnion:
+			if !unionHasGoType(getTypeConfig(t.Name, pkgConfig.Types)) {
+				unionsForGen = append(unionsForGen, goInterfaceForType(t, interfaceMethods))
+			}
 		case schema.KindENUM:
 			xxx := GoEnum{
 				Name:        t.GetName(),
@@ -611,12 +716,23 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 		}
 	}
 
+	interfacesForGen = append(interfacesForGen, implementUnions(structsForGen, unionsForGen)...)
+
 	constrained, err := constrainedResponseStructs(s, pkgConfig, expandedTypes)
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
 
+	responses, err := argumentlessMutationResponseStructs(s, pkgConfig)
+	if err != nil {
+		return nil, nil, nil, nil, err
+	}
+
+	setSpecialUnmarshal(constrained, interfacesForGen)
+	setSpecialUnmarshal(responses, interfacesForGen)
+
 	structsForGen = append(structsForGen, constrained...)
+	structsForGen = append(structsForGen, responses...)
 
 	// The same struct can come from more than one query path (e.g. Actor from
 	// actor.cloud and actor.account.cloud). Declaring it twice does not compile.
@@ -624,6 +740,13 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
+
+	handWritten, err := codegen.ScanHandWritten(pkgConfig.GetDestinationPath())
+	if err != nil {
+		return nil, nil, nil, nil, err
+	}
+
+	omitDeclaredUnmarshalers(structsForGen, handWritten.Methods)
 
 	sort.SliceStable(structsForGen, func(i, j int) bool {
 		return structsForGen[i].Name < structsForGen[j].Name
@@ -644,6 +767,202 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 	})
 
 	return &structsForGen, &enumsForGen, &scalarsForGen, &interfacesForGen, nil
+}
+
+// goInterfaceForType describes the Go interface generated for a GraphQL interface
+// or union: the template needs both names of each possible type, the one GraphQL
+// uses and the one Go uses, so it can pick the type by __typename.
+func goInterfaceForType(t *schema.Type, interfaceMethods []string) GoInterface {
+	goInterface := GoInterface{
+		Description: t.GetDescription(),
+		Name:        t.GetName(),
+	}
+
+	for _, x := range t.PossibleTypes {
+		goInterface.PossibleTypes = append(goInterface.PossibleTypes, GoInterfacePossibleType{
+			GraphQLName: x.Name,
+			GoName:      x.GetName(),
+		})
+	}
+
+	// Require at least one auto-generated method, allow others
+	goInterface.Methods = make([]string, 0, len(interfaceMethods)+1)
+	goInterface.Methods = append(goInterface.Methods, "Implements"+t.GetName()+"()")
+	goInterface.Methods = append(goInterface.Methods, interfaceMethods...)
+
+	return goInterface
+}
+
+// isGoInterface reports whether the Go type of a field is the <Name>Interface
+// generated for its GraphQL type, so the field is unmarshalled by __typename. That
+// is every interface, and every union the package generates. A union the config
+// names a Go type for, with field_type_override or skip_type_create, is that type.
+func isGoInterface(f schema.Field, pkgConfig *config.PackageConfig) bool {
+	if f.Type.IsInterface() {
+		return true
+	}
+
+	if !f.Type.IsUnion() {
+		return false
+	}
+
+	return !unionHasGoType(getTypeConfig(f.Type.GetTypeName(), pkgConfig.Types))
+}
+
+// unionHasGoType reports whether the config names the Go type of a union, so none
+// is generated: field_type_override gives it and skip_type_create says it exists.
+func unionHasGoType(c *config.TypeConfig) bool {
+	return c != nil && (c.FieldTypeOverride != "" || c.SkipTypeCreate)
+}
+
+// hasInterfaceField reports whether a struct needs the UnmarshalJSON that picks
+// the Go type of its interface fields.
+func hasInterfaceField(fields []GoStructField) bool {
+	for _, f := range fields {
+		if f.IsInterface {
+			return true
+		}
+	}
+
+	return false
+}
+
+// unmarshalsInterfaceFields reports whether a struct gets an UnmarshalJSON for its
+// interface fields. It does when it has some and the package generates the
+// Unmarshal<Name>Interface function for each of them. A package may instead supply
+// the Go type of an interface by hand, and no generated function can decode into it.
+func unmarshalsInterfaceFields(fields []GoStructField, generated []GoInterface) bool {
+	if !hasInterfaceField(fields) {
+		return false
+	}
+
+	names := make(map[string]bool, len(generated))
+	for _, g := range generated {
+		names[g.Name] = true
+	}
+
+	for _, f := range fields {
+		if f.IsInterface && !names[f.TypeName] {
+			return false
+		}
+	}
+
+	return true
+}
+
+// setSpecialUnmarshal gives the structs that unmarshalsInterfaceFields accepts an
+// UnmarshalJSON for their interface fields.
+func setSpecialUnmarshal(structs []GoStruct, generated []GoInterface) {
+	for i := range structs {
+		structs[i].SpecialUnmarshal = unmarshalsInterfaceFields(structs[i].Fields, generated)
+	}
+}
+
+// omitDeclaredUnmarshalers clears SpecialUnmarshal on the structs whose UnmarshalJSON
+// a hand-written file of the package already declares, so it is not declared twice.
+func omitDeclaredUnmarshalers(structs []GoStruct, handWritten map[string]bool) {
+	for i := range structs {
+		if structs[i].SpecialUnmarshal && handWritten[structs[i].Name+".UnmarshalJSON"] {
+			log.WithFields(log.Fields{
+				"struct": structs[i].Name,
+			}).Info("UnmarshalJSON is declared by hand in the package, so it is not generated")
+
+			structs[i].SpecialUnmarshal = false
+		}
+	}
+}
+
+// implementUnions makes the generated members of each union implement its Go
+// interface, and returns the unions with those members only. A member that is not
+// generated, because the config skips it, is dropped: the interface's Unmarshal
+// function could not name it.
+func implementUnions(structs []GoStruct, unions []GoInterface) []GoInterface {
+	index := make(map[string]int, len(structs))
+	for i, st := range structs {
+		index[st.Name] = i
+	}
+
+	for u := range unions {
+		var members []GoInterfacePossibleType
+
+		for _, m := range unions[u].PossibleTypes {
+			i, ok := index[m.GoName]
+			if !ok {
+				log.WithFields(log.Fields{
+					"union":  unions[u].Name,
+					"member": m.GoName,
+				}).Warn("union member is not generated, so it is left out of the union")
+
+				continue
+			}
+
+			if !util.StringInStrings(unions[u].Name, structs[i].Implements) {
+				structs[i].Implements = append(structs[i].Implements, unions[u].Name)
+			}
+
+			members = append(members, m)
+		}
+
+		unions[u].PossibleTypes = members
+	}
+
+	return unions
+}
+
+// argumentlessMutationResponseStructs makes the struct that holds the response of each
+// generated mutation that sends no variables. The client template declares that struct
+// only for a mutation with variables, but every method decodes into it. These structs
+// decode a result that is an interface or a union by __typename; the one the template
+// declares has no UnmarshalJSON, so it cannot.
+func argumentlessMutationResponseStructs(s *schema.Schema, pkgConfig *config.PackageConfig) ([]GoStruct, error) {
+	if !pkgConfig.GeneratesClient() || !hasGeneratedMutation(pkgConfig.Mutations) {
+		return nil, nil
+	}
+
+	mutations, err := generatedMutations(s, pkgConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	var structs []GoStruct
+
+	for _, m := range mutations {
+		if len(m.method.QueryVars) > 0 {
+			continue
+		}
+
+		structs = append(structs, GoStruct{Name: m.method.Name + "QueryResponse", Fields: []GoStructField{mutationResultField(m, pkgConfig)}})
+	}
+
+	return structs, nil
+}
+
+// mutationResultField is the field of a mutation's response struct that holds its
+// result. The method reads the field named after its return type, or the result field
+// when the return type was given an alias. TagKey is the key of the result in the
+// response, and the other settings are those of any struct field of the result's type,
+// so UnmarshalJSON can decode an interface or a union by __typename.
+func mutationResultField(m generatedMutation, pkgConfig *config.PackageConfig) GoStructField {
+	typeName, err := m.field.GetTypeNameWithOverride(pkgConfig)
+	if err != nil {
+		log.Error(err)
+	}
+
+	field := GoStructField{
+		Name:        m.method.Signature.Return[0],
+		Type:        m.method.Signature.Return[0],
+		Tags:        fmt.Sprintf("`json:\"%s\"`", m.method.Name),
+		TagKey:      m.field.Name,
+		TypeName:    typeName,
+		IsInterface: isGoInterface(m.field, pkgConfig),
+		IsList:      m.field.Type.IsList(),
+	}
+
+	if m.method.ReturnAlias != "" {
+		field.Name, field.Type = MutationResultField, m.method.ReturnType
+	}
+
+	return field
 }
 
 func getStructField(f schema.Field, pkgConfig *config.PackageConfig, parentType *schema.Type) GoStructField {
@@ -671,7 +990,7 @@ func getStructField(f schema.Field, pkgConfig *config.PackageConfig, parentType 
 	// In the case a field type is of type Interface, we need to ensure we
 	// append the term "Interface" to it, as is done in the "Implements"
 	// below.
-	if f.Type.IsInterface() {
+	if isGoInterface(f, pkgConfig) {
 		typeNameSuffix = "Interface"
 		isInterface = true
 	}
@@ -766,7 +1085,7 @@ func constrainedResponseStructs(s *schema.Schema, pkgConfig *config.PackageConfi
 		}
 
 		// Ensure that all of the types that we will depend on in our response struct below are present.
-		for _, t := range pathTypes {
+		for i, t := range pathTypes {
 			// Skip doing anything with this type if it has already been expanded.
 			if isExpanded(expandedTypes, t.GetName()) {
 				continue
@@ -777,8 +1096,13 @@ func constrainedResponseStructs(s *schema.Schema, pkgConfig *config.PackageConfi
 				Description: t.GetDescription(),
 			}
 
+			// The generated methods read the endpoints from the last type of the path, so
+			// it has them whatever their type is: a type the package supplies is not
+			// expanded, and would leave the field out.
+			last := i == len(pathTypes)-1
+
 			for _, f := range t.Fields {
-				if isExpanded(expandedTypes, f.Type.GetTypeName()) || isInPath(pathTypes, f.Type.GetName()) {
+				if isExpanded(expandedTypes, f.Type.GetGoTypeName()) || isInPath(pathTypes, f.Type.GetName()) || (last && hasEndpoint(query, f.Name)) {
 					xxx.Fields = append(xxx.Fields, getStructField(f, pkgConfig, t))
 				}
 			}
@@ -816,6 +1140,17 @@ func constrainedResponseStructs(s *schema.Schema, pkgConfig *config.PackageConfi
 	}
 
 	return goStructs, nil
+}
+
+// hasEndpoint reports whether the query has an endpoint of the given name.
+func hasEndpoint(query config.Query, name string) bool {
+	for _, endpoint := range query.Endpoints {
+		if endpoint.Name == name {
+			return true
+		}
+	}
+
+	return false
 }
 
 // mergeStructsByName combines structs that share a name into one, keeping the
@@ -974,6 +1309,9 @@ type methodArgOptions struct {
 	Rename map[string]string
 	// GoTypes maps a GraphQL argument name to the Go type of its parameter.
 	GoTypes map[string]string
+	// IncludeOptional makes the parameter of an optional argument nilable, so a caller
+	// can leave it unset (see config include_optional_arguments).
+	IncludeOptional bool
 }
 
 var goKeywords = map[string]bool{
@@ -993,6 +1331,35 @@ func safeParamName(name string) string {
 	}
 
 	return name
+}
+
+// sharedPathInput returns the path input that has the parameter's name, as the templates
+// spell it, and its type, or nil if there is none.
+func sharedPathInput(pathInputs []GoMethodInputType, param GoMethodInputType) *GoMethodInputType {
+	for i := range pathInputs {
+		if lowerFirst(pathInputs[i].Name) == lowerFirst(param.Name) && pathInputs[i].Type == param.Type {
+			return &pathInputs[i]
+		}
+	}
+
+	return nil
+}
+
+// checkUniqueParameters fails when two parameters of a method would get the same name,
+// which would not compile.
+func checkUniqueParameters(m GoMethod) error {
+	seen := map[string]bool{}
+
+	for _, in := range m.Signature.Input {
+		name := lowerFirst(in.Name)
+		if seen[name] {
+			return fmt.Errorf("method %q: parameter %q is declared more than once; exclude_arguments, or for a mutation rename_arguments, resolves it", m.Name, name)
+		}
+
+		seen[name] = true
+	}
+
+	return nil
 }
 
 // goMethodForField creates a new GoMethod based on a field.  Note that the
@@ -1044,6 +1411,8 @@ func goMethodForField(field schema.Field, pkgConfig *config.PackageConfig, input
 		}
 	}
 
+	pathInputs := len(method.Signature.Input)
+
 	var prefix, suffix string
 
 	if field.Type.IsList() {
@@ -1051,7 +1420,7 @@ func goMethodForField(field schema.Field, pkgConfig *config.PackageConfig, input
 		method.Signature.ReturnSlice = true
 	}
 
-	if field.Type.IsInterface() {
+	if isGoInterface(field, pkgConfig) {
 		suffix = "Interface"
 	}
 
@@ -1096,6 +1465,31 @@ func goMethodForField(field schema.Field, pkgConfig *config.PackageConfig, input
 			Type: goType,
 		}
 
+		// An argument that has the name and type of a parameter that the path
+		// already takes, such as an `accountId` argument below `account(id:)`, is the
+		// same value, so the method takes it once and sends it for both.
+		if shared := sharedPathInput(method.Signature.Input[:pathInputs], inputType); shared != nil {
+			method.QueryVars = append(method.QueryVars, QueryVar{
+				Key:   methodArg.Name,
+				Value: shared.Name,
+				Type:  methodArg.Type.GetTypeName(),
+			})
+
+			continue
+		}
+
+		// The shared-input check above compares the type the argument has without this,
+		// so an optional argument is matched as before.
+		if opts.IncludeOptional && methodArg.Type.IsNullable() {
+			if _, overridden := opts.GoTypes[methodArg.Name]; !overridden {
+				inputType.Type = optionalGoType(inputType.Type, methodArg.Type.IsList())
+			}
+
+			if nilable(inputType.Type) {
+				method.UnsetParams = append(method.UnsetParams, UnsetParam{Param: lowerFirst(inputType.Name), Key: methodArg.Name})
+			}
+		}
+
 		method.Signature.Input = append(method.Signature.Input, inputType)
 
 		queryVar := QueryVar{
@@ -1108,4 +1502,22 @@ func goMethodForField(field schema.Field, pkgConfig *config.PackageConfig, input
 	}
 
 	return method
+}
+
+// optionalGoType is the type of the parameter for a nullable argument whose Go type is
+// goType: a pointer, so nil means unset. A list is a slice, which is nil already, and a
+// type that is a pointer already, such as a field_type_override of "*Filter", stays.
+func optionalGoType(goType string, isList bool) string {
+	if isList || nilable(goType) {
+		return goType
+	}
+
+	return "*" + goType
+}
+
+// nilable reports whether a value of the Go type can be nil, as far as the spelling
+// of the type shows.
+func nilable(goType string) bool {
+	return strings.HasPrefix(goType, "*") || strings.HasPrefix(goType, "[]") ||
+		strings.HasPrefix(goType, "map[") || goType == "interface{}" || goType == "any"
 }

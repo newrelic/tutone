@@ -42,12 +42,16 @@ type queryStringData struct {
 	QueryArgs []QueryArg
 	Fields    string
 	FieldPath []string
+	// Selection is false for an endpoint of a scalar or enum type, which has no fields to select.
+	Selection bool
 }
 
 type mutationStringData struct {
 	MutationName string
 	Args         []QueryArg
 	Fields       string
+	// Selection is false for a mutation of a scalar or enum type, which has no fields to select.
+	Selection bool
 }
 
 func ParseResponse(resp *http.Response) (*QueryResponse, error) {
@@ -321,14 +325,16 @@ func (s *Schema) QueryFieldsForTypeName(name string, maxDepth int, isMutation bo
 
 // BuildQueryArgsForEndpoint is meant to fill in the data necessary for a query(<args_go_here>)
 // string.  i.e: query($guids: [String]!) { actor ...
-func (s *Schema) BuildQueryArgsForEndpoint(t *Type, fields []string, includeArguments []string) []QueryArg {
+//
+// The required arguments are declared, and the optional ones named in includeArguments.
+// With includeOptional every optional argument is declared.
+func (s *Schema) BuildQueryArgsForEndpoint(t *Type, fields []string, includeArguments []string, includeOptional bool) []QueryArg {
 	args := []QueryArg{}
 
 	for _, f := range t.Fields {
 		if util.StringInStrings(f.Name, fields) {
 			for _, a := range f.Args {
-				// TODO implement optional arguments.
-				if a.IsRequired() || util.StringInStrings(a.Name, includeArguments) {
+				if a.IsRequired() || includeOptional || util.StringInStrings(a.Name, includeArguments) {
 					args = append(args, s.GetQueryArg(a))
 				}
 			}
@@ -378,7 +384,7 @@ func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string,
 
 	// Append to QueryArgs and EndpointArgs only after the parent field
 	// requirements have been added so that they are last.
-	args := s.BuildQueryArgsForEndpoint(t, []string{endpoint.Name}, endpoint.IncludeArguments)
+	args := s.BuildQueryArgsForEndpoint(t, []string{endpoint.Name}, endpoint.IncludeArguments, endpoint.IncludeOptionalArguments)
 	if len(endpoint.ExcludeArguments) > 0 {
 		kept := args[:0:0]
 
@@ -397,6 +403,11 @@ func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string,
 	// Match the endpoint field
 	for _, f := range t.Fields {
 		if f.Name == endpoint.Name {
+			data.Selection = !f.Type.IsLeaf()
+			if !data.Selection {
+				break
+			}
+
 			fieldType, lookupErr := s.LookupTypeByName(f.Type.GetTypeName())
 			if lookupErr != nil {
 				log.Error(lookupErr)
@@ -424,7 +435,12 @@ func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string,
 		return ""
 	}
 
-	final := result.String() + queryFooter + strings.Repeat(" }", len(data.FieldPath)-1)
+	footer := queryFooter
+	if !data.Selection {
+		footer = leafQueryFooter
+	}
+
+	final := result.String() + footer + strings.Repeat(" }", len(data.FieldPath)-1)
 
 	return final
 }
@@ -473,12 +489,7 @@ func (s *Schema) GetQueryStringForMutation(mutation *Field, cfg config.MutationC
 
 	data := mutationStringData{
 		MutationName: mutation.Name,
-	}
-
-	fieldType, lookupErr := s.LookupTypeByName(mutation.Type.GetTypeName())
-	if lookupErr != nil {
-		log.Error(lookupErr)
-		return ""
+		Selection:    !mutation.Type.IsLeaf(),
 	}
 
 	for _, a := range mutation.Args {
@@ -493,8 +504,17 @@ func (s *Schema) GetQueryStringForMutation(mutation *Field, cfg config.MutationC
 		data.Args = append(data.Args, arg)
 	}
 
-	data.Fields = PrefixLineTab(fieldType.GetQueryStringFields(s, 0, cfg.MaxQueryFieldDepth, true, cfg.ExcludeFields))
-	tmpl, err := template.New(fieldType.GetName()).Funcs(util.GetTemplateFuncs()).Parse(mutationHeaderTemplate)
+	if data.Selection {
+		fieldType, lookupErr := s.LookupTypeByName(mutation.Type.GetTypeName())
+		if lookupErr != nil {
+			log.Error(lookupErr)
+			return ""
+		}
+
+		data.Fields = PrefixLineTab(fieldType.GetQueryStringFields(s, 0, cfg.MaxQueryFieldDepth, true, cfg.ExcludeFields))
+	}
+
+	tmpl, err := template.New(mutation.Name).Funcs(util.GetTemplateFuncs()).Parse(mutationHeaderTemplate)
 	if err != nil {
 		log.Error(err)
 		return ""
@@ -508,7 +528,12 @@ func (s *Schema) GetQueryStringForMutation(mutation *Field, cfg config.MutationC
 		return ""
 	}
 
-	final := result.String() + mutationFooter
+	footer := mutationFooter
+	if !data.Selection {
+		footer = leafMutationFooter
+	}
+
+	final := result.String() + footer
 
 	return final
 }
@@ -555,21 +580,25 @@ var queryHeaderTemplate = `query{{ if .QueryArgs }}(
 	{{-   range .EndpointArgs}}
 	{{.Key}}: ${{.Key}},
 	{{-   end}}
-){{- end}} {
+){{- end}}{{if .Selection}} {
 {{.Fields}}
-`
+{{end}}`
 
-var mutationHeaderTemplate = `mutation(
+var mutationHeaderTemplate = `mutation{{ if .Args }}(
 	{{- range .Args}}
 	${{.Key}}: {{.Value}},
 	{{- end}}
-) { {{.MutationName}}(
+){{ end }} { {{.MutationName}}{{ if .Args }}(
 	{{- range .Args}}
 	{{.Key}}: ${{.Key}},
 	{{- end}}
-) {
+){{ end }}{{ if .Selection }} {
 {{.Fields}}
-`
+{{ end }}`
 
 var queryFooter = `} } }`
 var mutationFooter = `} }`
+
+// A scalar or enum endpoint has no selection set to close, and follows its name or arguments directly.
+var leafQueryFooter = ` } }`
+var leafMutationFooter = ` }`

@@ -1,6 +1,9 @@
 package codegen
 
 import (
+	"go/format"
+	"go/parser"
+	"go/token"
 	"os"
 	"path/filepath"
 	"strings"
@@ -315,4 +318,403 @@ func TestWriteFile_NamingSkipsOutputThatIsNotGo(t *testing.T) {
 	got, err := os.ReadFile(dest)
 	require.NoError(t, err)
 	assert.Equal(t, "package demo\n\nfunc (a *Org) broken( {\n", string(got))
+}
+
+func TestReplaceTypeStandIns(t *testing.T) {
+	t.Parallel()
+
+	ids := TypeStandIn{Ident: "standInIDs", Type: "[]string", Name: "Result"}
+	flag := TypeStandIn{Ident: "standInFlag", Type: "bool", Name: "Result"}
+
+	t.Run("type positions get the type and every other use gets the name", func(t *testing.T) {
+		t.Parallel()
+
+		src := `package p
+
+func (a *C) Add() (*standInIDs, error) {
+	resp := AddResponse{}
+	return &resp.standInIDs, nil
+}
+
+func (a *C) AddWithContext(ctx context.Context, in standInIDs) (*standInIDs, error) { return nil, nil }
+
+type AddResponse struct {
+	standInIDs standInIDs ` + "`json:\"Add\"`" + `
+}
+`
+		out, err := ReplaceTypeStandIns([]byte(src), []TypeStandIn{ids})
+		require.NoError(t, err)
+
+		assert.Equal(t, `package p
+
+func (a *C) Add() (*[]string, error) {
+	resp := AddResponse{}
+	return &resp.Result, nil
+}
+
+func (a *C) AddWithContext(ctx context.Context, in []string) (*[]string, error) { return nil, nil }
+
+type AddResponse struct {
+	Result []string `+"`json:\"Add\"`"+`
+}
+`, string(out))
+	})
+
+	t.Run("each stand-in is replaced by its own type", func(t *testing.T) {
+		t.Parallel()
+
+		src := `package p
+
+func A() (*standInIDs, error) { return nil, nil }
+func B() (*standInFlag, error) { return nil, nil }
+`
+		out, err := ReplaceTypeStandIns([]byte(src), []TypeStandIn{ids, flag})
+		require.NoError(t, err)
+
+		assert.Contains(t, string(out), "func A() (*[]string, error)")
+		assert.Contains(t, string(out), "func B() (*bool, error)")
+	})
+
+	t.Run("a type that cannot be written as an identifier", func(t *testing.T) {
+		t.Parallel()
+
+		stamp := TypeStandIn{Ident: "standInStamp", Type: "nrtime.EpochSeconds", Name: "Result"}
+
+		out, err := ReplaceTypeStandIns([]byte("package p\n\nfunc A() (*standInStamp, error) { return nil, nil }\n"), []TypeStandIn{stamp})
+		require.NoError(t, err)
+		assert.Contains(t, string(out), "func A() (*nrtime.EpochSeconds, error)")
+	})
+
+	t.Run("names that merely contain the identifier are left alone", func(t *testing.T) {
+		t.Parallel()
+
+		src := "package p\n\nfunc standInIDsLater() (*standInIDsLater, error) { return nil, nil }\n\ntype standInIDsLater struct{}\n"
+
+		out, err := ReplaceTypeStandIns([]byte(src), []TypeStandIn{ids})
+		require.NoError(t, err)
+		assert.Equal(t, src, string(out))
+	})
+
+	t.Run("no stand-ins, or none in the source, leave the source as it is", func(t *testing.T) {
+		t.Parallel()
+
+		src := "package p\n\nfunc A() (*B, error) { return nil, nil }\n"
+
+		out, err := ReplaceTypeStandIns([]byte(src), nil)
+		require.NoError(t, err)
+		assert.Equal(t, src, string(out))
+
+		out, err = ReplaceTypeStandIns([]byte(src), []TypeStandIn{ids})
+		require.NoError(t, err)
+		assert.Equal(t, src, string(out))
+	})
+
+	t.Run("source that does not parse is an error", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := ReplaceTypeStandIns([]byte("package p\n\nfunc broken( {"), []TypeStandIn{ids})
+		require.Error(t, err)
+	})
+}
+
+func TestWriteFile_PutsTheTypesBackWhereATemplatePrintedStandIns(t *testing.T) {
+	t.Parallel()
+
+	tmplDir, tmplName := writeTemplate(t, `package demo
+
+func (a *Demo) Add() (*{{.Name}}, error) {
+	resp := AddResponse{}
+	return &resp.{{.Name}}, nil
+}
+
+type AddResponse struct {
+	{{.Name}} {{.Name}}
+}
+`)
+	out := t.TempDir()
+	dest := filepath.Join(out, "demo_api.go")
+
+	c := CodeGen{
+		TemplateDir:     tmplDir,
+		TemplateName:    tmplName,
+		DestinationDir:  out,
+		DestinationFile: dest,
+		TypeStandIns:    []TypeStandIn{{Ident: "standInIDs", Type: "[]string", Name: "Result"}},
+	}
+	require.NoError(t, c.WriteFile(fakeGenerator{Name: "standInIDs"}))
+
+	got, err := os.ReadFile(dest)
+	require.NoError(t, err)
+
+	assert.Contains(t, string(got), "func (a *Demo) Add() (*[]string, error)")
+	assert.Contains(t, string(got), "return &resp.Result, nil")
+	assert.Contains(t, string(got), "Result []string")
+	assert.NotContains(t, string(got), "standInIDs")
+}
+
+const clientWithContext = `package demo
+
+import "context"
+
+func (a *Demo) GetThings(first *int, filter []string) (*Thing, error) {
+	return a.GetThingsWithContext(context.Background(), first, filter)
+}
+
+func (a *Demo) GetThingsWithContext(ctx context.Context, first *int, filter []string) (*Thing, error) {
+	resp := getThingsResponse{}
+	vars := map[string]interface{}{
+		"first":  first,
+		"filter": filter,
+		"id":     id,
+	}
+
+	if err := a.client.NerdGraphQueryWithContext(ctx, getThingsQuery, vars, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp.Things, nil
+}
+`
+
+func TestOmitUnsetArguments(t *testing.T) {
+	t.Parallel()
+
+	specs := []UnsetArguments{{
+		Funcs:  []string{"GetThings", "GetThingsWithContext"},
+		Params: []UnsetParam{{Param: "first", Key: "first"}, {Param: "filter", Key: "filter"}},
+	}}
+
+	t.Run("checks follow the variables of the function that builds them", func(t *testing.T) {
+		t.Parallel()
+
+		out, unmatched, err := OmitUnsetArguments([]byte(clientWithContext), specs)
+		require.NoError(t, err)
+		assert.Empty(t, unmatched)
+
+		formatted, err := format.Source(out)
+		require.NoError(t, err, "output must be gofmt-able:\n%s", out)
+		assert.Equal(t, string(formatted), string(out), "output is gofmt-clean")
+
+		assert.Contains(t, string(out), "\t\t\"id\":     id,\n\t}\n\n\tif first == nil {\n\t\tdelete(vars, \"first\")\n\t}\n\tif filter == nil {\n\t\tdelete(vars, \"filter\")\n\t}\n\n\tif err := a.client")
+		assert.Equal(t, 1, strings.Count(string(out), "delete(vars"+", \"first\")"), "the plain method has no variables and gets nothing")
+	})
+
+	t.Run("a parameter the literal does not fill gets no check", func(t *testing.T) {
+		t.Parallel()
+
+		out, _, err := OmitUnsetArguments([]byte(clientWithContext), []UnsetArguments{{
+			Funcs:  []string{"GetThingsWithContext"},
+			Params: []UnsetParam{{Param: "cursor", Key: "cursor"}, {Param: "other", Key: "first"}},
+		}})
+		require.NoError(t, err)
+		assert.Equal(t, clientWithContext, string(out))
+	})
+
+	t.Run("a method that is not generated is reported", func(t *testing.T) {
+		t.Parallel()
+
+		out, unmatched, err := OmitUnsetArguments([]byte(clientWithContext), []UnsetArguments{{
+			Funcs:  []string{"GetOther", "GetOtherWithContext"},
+			Params: []UnsetParam{{Param: "first", Key: "first"}},
+		}})
+		require.NoError(t, err)
+		assert.Equal(t, []string{"GetOther"}, unmatched)
+		assert.Equal(t, clientWithContext, string(out))
+	})
+
+	t.Run("a template with one variant is not reported", func(t *testing.T) {
+		t.Parallel()
+
+		src := "package demo\n\nfunc (a *Demo) GetThings(first *int) {\n\tvars := map[string]interface{}{\n\t\t\"first\": first,\n\t}\n\t_ = vars\n}\n"
+
+		out, unmatched, err := OmitUnsetArguments([]byte(src), specs)
+		require.NoError(t, err)
+		assert.Empty(t, unmatched)
+		assert.Contains(t, string(out), "if first == nil {\n\t\tdelete(vars, \"first\")")
+	})
+
+	t.Run("a mutation without arguments or with a stand-in result", func(t *testing.T) {
+		t.Parallel()
+
+		src := `package demo
+
+func (a *Demo) ThingPing() (*bool, error) {
+	resp := ThingPingQueryResponse{}
+	vars := map[string]interface{}{}
+	_ = vars
+
+	return &resp.Result, nil
+}
+
+func (a *Demo) ThingAdd(ids []string, note *string) (*[]string, error) {
+	resp := ThingAddQueryResponse{}
+	vars := map[string]interface{}{
+		"ids":  ids,
+		"note": note,
+	}
+	_ = vars
+
+	return &resp.Result, nil
+}
+`
+
+		out, unmatched, err := OmitUnsetArguments([]byte(src), []UnsetArguments{
+			{Funcs: []string{"ThingAdd", "ThingAddWithContext"}, Params: []UnsetParam{{Param: "ids", Key: "ids"}, {Param: "note", Key: "note"}}},
+			{Funcs: []string{"ThingPing"}, Params: nil},
+		})
+		require.NoError(t, err)
+		assert.Empty(t, unmatched)
+
+		formatted, err := format.Source(out)
+		require.NoError(t, err)
+		assert.Equal(t, string(formatted), string(out))
+		assert.Contains(t, string(out), "if ids == nil {\n\t\tdelete(vars, \"ids\")\n\t}\n\tif note == nil {")
+		assert.Equal(t, 2, strings.Count(string(out), "delete(vars"))
+	})
+
+	t.Run("source that does not parse is an error", func(t *testing.T) {
+		t.Parallel()
+
+		_, _, err := OmitUnsetArguments([]byte("package demo\nfunc ("), specs)
+		require.Error(t, err)
+	})
+}
+
+const narrowedDecoder = `package demo
+
+import (
+	"encoding/json"
+	"fmt"
+)
+
+type Entity struct {
+	ID string ` + "`json:\"id\"`" + `
+}
+
+func (x *Entity) ImplementsEntity() {}
+
+type Listed struct {
+	ID string ` + "`json:\"id\"`" + `
+}
+
+func (x *Listed) ImplementsEntity() {}
+
+type EntityInterface interface {
+	ImplementsEntity()
+}
+
+func UnmarshalEntityInterface(b []byte) (*EntityInterface, error) {
+	var err error
+
+	var rawMessageEntity map[string]*json.RawMessage
+	err = json.Unmarshal(b, &rawMessageEntity)
+	if err != nil {
+		return nil, err
+	}
+
+	var typeName string
+
+	if rawTypeName, ok := rawMessageEntity["__typename"]; ok {
+		err = json.Unmarshal(*rawTypeName, &typeName)
+		if err != nil {
+			return nil, err
+		}
+
+		switch typeName {
+		case "Listed":
+			var interfaceType Listed
+			err = json.Unmarshal(b, &interfaceType)
+			if err != nil {
+				return nil, err
+			}
+
+			var xxx EntityInterface = &interfaceType
+
+			return &xxx, nil
+		}
+	} else {
+		keys := []string{}
+		for k := range rawMessageEntity {
+			keys = append(keys, k)
+		}
+		return nil, fmt.Errorf("interface Entity did not include a __typename field for inspection: %s", keys)
+	}
+
+	return nil, fmt.Errorf("interface Entity was not matched against all PossibleTypes: %s", typeName)
+}
+`
+
+func TestDecodeUnlistedImplementations(t *testing.T) {
+	t.Parallel()
+
+	t.Run("the last return decodes the interface's own struct", func(t *testing.T) {
+		t.Parallel()
+
+		out, err := DecodeUnlistedImplementations([]byte(narrowedDecoder), []string{"Entity"})
+		require.NoError(t, err)
+
+		formatted, err := format.Source(out)
+		require.NoError(t, err, "output must be gofmt-able:\n%s", out)
+		assert.Equal(t, string(formatted), string(out), "output is gofmt-clean")
+
+		got := string(out)
+		assert.NotContains(t, got, "was not matched against all PossibleTypes")
+		assert.Contains(t, got, "did not include a __typename field", "the other branch is not touched")
+		assert.Contains(t, got, "\t}\n\n\t// Not an implementation this package lists: decode the fields they all share.\n\tvar interfaceType Entity\n\terr = json.Unmarshal(b, &interfaceType)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\n\tvar xxx EntityInterface = &interfaceType\n\n\treturn &xxx, nil\n}\n")
+
+		// The switch's own case is as it was.
+		assert.Contains(t, got, "case \"Listed\":\n\t\t\tvar interfaceType Listed")
+
+		// And the result still parses.
+		_, parseErr := parser.ParseFile(token.NewFileSet(), "out.go", out, 0)
+		require.NoError(t, parseErr)
+	})
+
+	t.Run("an interface that is not named is untouched", func(t *testing.T) {
+		t.Parallel()
+
+		out, err := DecodeUnlistedImplementations([]byte(narrowedDecoder), []string{"Other"})
+		require.NoError(t, err)
+		assert.Equal(t, narrowedDecoder, string(out))
+
+		out, err = DecodeUnlistedImplementations([]byte(narrowedDecoder), nil)
+		require.NoError(t, err)
+		assert.Equal(t, narrowedDecoder, string(out))
+	})
+
+	t.Run("without the struct or its Implements method the decoder stays", func(t *testing.T) {
+		t.Parallel()
+
+		noStruct := strings.Replace(narrowedDecoder, "type Entity struct {\n\tID string `json:\"id\"`\n}\n\n", "", 1)
+		require.NotEqual(t, narrowedDecoder, noStruct)
+
+		out, err := DecodeUnlistedImplementations([]byte(noStruct), []string{"Entity"})
+		require.NoError(t, err)
+		assert.Equal(t, noStruct, string(out))
+
+		noMethod := strings.Replace(narrowedDecoder, "func (x *Entity) ImplementsEntity() {}\n", "", 1)
+		require.NotEqual(t, narrowedDecoder, noMethod)
+
+		out, err = DecodeUnlistedImplementations([]byte(noMethod), []string{"Entity"})
+		require.NoError(t, err)
+		assert.Equal(t, noMethod, string(out))
+	})
+
+	t.Run("a decoder that does not end with the template's error stays", func(t *testing.T) {
+		t.Parallel()
+
+		other := strings.Replace(narrowedDecoder, "interface Entity was not matched against all PossibleTypes: %s", "something else: %s", 1)
+		require.NotEqual(t, narrowedDecoder, other)
+
+		out, err := DecodeUnlistedImplementations([]byte(other), []string{"Entity"})
+		require.NoError(t, err)
+		assert.Equal(t, other, string(out))
+	})
+
+	t.Run("source that does not parse is an error", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := DecodeUnlistedImplementations([]byte("package demo\nfunc ("), []string{"Entity"})
+		require.Error(t, err)
+	})
 }

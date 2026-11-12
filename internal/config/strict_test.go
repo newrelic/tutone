@@ -175,6 +175,37 @@ packages:
 		keepExistingNames(pkg))
 }
 
+func TestLoadConfig_IncludeOptionalArgumentsIsAcceptedOnEndpointsAndMutations(t *testing.T) {
+	t.Parallel()
+
+	yml := `
+packages:
+  - name: things
+    mutations:
+      - name: thingUpdate
+        include_optional_arguments: true
+        argument_go_types:
+          version: "*int"
+      - name: thingDelete
+    queries:
+      - path: [actor]
+        endpoints:
+          - name: things
+            include_optional_arguments: true
+            exclude_arguments: [filter]
+          - name: others
+`
+
+	cfg, err := LoadConfig(writeConfig(t, yml))
+	require.NoError(t, err)
+
+	pkg := cfg.Packages[0]
+	assert.True(t, pkg.Mutations[0].IncludeOptionalArguments)
+	assert.False(t, pkg.Mutations[1].IncludeOptionalArguments, "off unless set")
+	assert.True(t, pkg.Queries[0].Endpoints[0].IncludeOptionalArguments)
+	assert.False(t, pkg.Queries[0].Endpoints[1].IncludeOptionalArguments)
+}
+
 func TestLoadConfig_KeepExistingWithoutPreservingWarns(t *testing.T) {
 	// Not parallel: the hook is on the standard logger.
 	hook := logtest.NewGlobal()
@@ -206,6 +237,40 @@ func TestLoadConfig_KeepExistingWithoutPreservingWarns(t *testing.T) {
 	assert.Contains(t, got[0].Message, "keep_existing")
 	assert.Equal(t, "replaced", got[0].Data["package"])
 	assert.Equal(t, []string{"T"}, got[0].Data["entries"])
+}
+
+func TestLoadConfig_KeepRemovedFieldsDefaultsToOff(t *testing.T) {
+	t.Parallel()
+
+	cfg, err := LoadConfig(writeConfig(t, "packages:\n  - name: a\n  - name: b\n    keep_removed_fields: true\n"))
+	require.NoError(t, err)
+
+	assert.False(t, cfg.Packages[0].KeepRemovedFields)
+	assert.True(t, cfg.Packages[1].KeepRemovedFields)
+}
+
+func TestLoadConfig_KeepRemovedFieldsWithoutPreservingWarns(t *testing.T) {
+	// Not parallel: the hook is on the standard logger.
+	hook := logtest.NewGlobal()
+	t.Cleanup(hook.Reset)
+
+	_, err := LoadConfig(writeConfig(t, "packages:\n  - name: kept\n    keep_removed_fields: true\n"))
+	require.NoError(t, err)
+	assert.Empty(t, hook.AllEntries(), "preserving is the default, so keep_removed_fields works")
+
+	_, err = LoadConfig(writeConfig(t, "packages:\n  - name: replaced\n    preserve_hand_written: false\n    keep_removed_fields: true\n"))
+	require.NoError(t, err)
+
+	require.Len(t, hook.AllEntries(), 1)
+	assert.Equal(t, log.WarnLevel, hook.LastEntry().Level)
+	assert.Contains(t, hook.LastEntry().Message, "keep_removed_fields")
+	assert.Equal(t, "replaced", hook.LastEntry().Data["package"])
+
+	hook.Reset()
+
+	_, err = LoadConfig(writeConfig(t, "packages:\n  - name: off\n    preserve_hand_written: false\n"))
+	require.NoError(t, err)
+	assert.Empty(t, hook.AllEntries(), "nothing to warn about when the option is off")
 }
 
 func TestLoadConfig_ExistingStyleConfigStillLoads(t *testing.T) {

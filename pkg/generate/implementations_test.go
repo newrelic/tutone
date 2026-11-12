@@ -222,3 +222,26 @@ func TestExactNameSettings(t *testing.T) {
 		Fields:            []config.FieldConfig{{Name: "b"}},
 	}))
 }
+
+func TestApplyImplementationFilters_OnUnion(t *testing.T) {
+	t.Parallel()
+
+	s := &schema.Schema{Types: []*schema.Type{{
+		Name: "SearchResult", Kind: schema.KindUnion,
+		PossibleTypes: []schema.TypeRef{ref(schema.KindObject, "Template"), ref(schema.KindObject, "Quickstart")},
+	}}}
+	pkg := &config.PackageConfig{Name: "catalog", Types: []config.TypeConfig{
+		{Name: "SearchResult", IncludeImplementations: []string{"Quickstart"}},
+	}}
+
+	restore, err := applyImplementationFilters(s, pkg)
+	require.NoError(t, err)
+
+	union, err := s.LookupTypeByName("SearchResult")
+	require.NoError(t, err)
+	require.Len(t, union.PossibleTypes, 1)
+	assert.Equal(t, "Quickstart", union.PossibleTypes[0].Name)
+
+	restore()
+	assert.Len(t, union.PossibleTypes, 2)
+}

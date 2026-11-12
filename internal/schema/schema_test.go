@@ -55,7 +55,9 @@ func TestSchema_BuildQueryArgsForEndpoint(t *testing.T) {
 		Name        string
 		Fields      []string
 		IncludeArgs []string
-		Results     []QueryArg
+		// IncludeOptional declares every optional argument.
+		IncludeOptional bool
+		Results         []QueryArg
 	}{
 		"accountEntities": {
 			Name:   "Actor",
@@ -124,6 +126,23 @@ func TestSchema_BuildQueryArgsForEndpoint(t *testing.T) {
 			Fields:  []string{"linkedAccounts"},
 			Results: []QueryArg{},
 		},
+		"linkedAccountsIncludeOptional": {
+			Name:            "CloudActorFields",
+			Fields:          []string{"linkedAccounts"},
+			IncludeOptional: true,
+			Results: []QueryArg{
+				{Key: "provider", Value: "String"},
+			},
+		},
+		"accountOutlineIncludeOptional": {
+			Name:            "AccountOutline",
+			Fields:          []string{"reportingEventTypes"},
+			IncludeOptional: true,
+			Results: []QueryArg{
+				{Key: "filter", Value: "[String]"},
+				{Key: "timeWindow", Value: "TimeWindowInput"},
+			},
+		},
 		"linkedAccountsWithInvalidIncludeArgument": {
 			Name:        "CloudActorFields",
 			Fields:      []string{"linkedAccounts"},
@@ -136,7 +155,7 @@ func TestSchema_BuildQueryArgsForEndpoint(t *testing.T) {
 		x, err := s.LookupTypeByName(tc.Name)
 		require.NoError(t, err)
 
-		result := s.BuildQueryArgsForEndpoint(x, tc.Fields, tc.IncludeArgs)
+		result := s.BuildQueryArgsForEndpoint(x, tc.Fields, tc.IncludeArgs, tc.IncludeOptional)
 		assert.Equal(t, tc.Results, result)
 	}
 }

@@ -141,6 +141,8 @@ func (g *Generator) Execute(genConfig *config.GeneratorConfig, pkgConfig *config
 		// Only explicit go_package_name and client_type_name override what the template writes.
 		GoPackageName:   pkgConfig.GoPackageName,
 		ReceiverRenames: clientTypeRenames(pkgConfig),
+		TypeStandIns:    typeStandIns(g.Mutations),
+		OmitUnset:       omitUnset(g.Queries, g.Mutations),
 
 		PreserveHandWritten: pkgConfig.GetPreserveHandWritten(),
 		KeepNames:           g.KeepExisting,
@@ -192,6 +194,57 @@ func clientTypeRenames(pkgConfig *config.PackageConfig) map[string]string {
 	}
 
 	return map[string]string{from: to}
+}
+
+// typeStandIns lists the identifiers the templates print for the return types of the
+// mutations that have a return alias, and the types and field name to put there.
+func typeStandIns(mutations []lang.GoMethod) []codegen.TypeStandIn {
+	var standIns []codegen.TypeStandIn
+
+	for _, m := range mutations {
+		if m.ReturnAlias != "" {
+			standIns = append(standIns, codegen.TypeStandIn{
+				Ident: m.ReturnAlias,
+				Type:  m.ReturnType,
+				Name:  lang.MutationResultField,
+			})
+		}
+	}
+
+	return standIns
+}
+
+// omitUnset lists, for the methods generated with include_optional_arguments, the
+// functions the templates print for them and the parameters that are left out of the
+// request when nil. A query method has the name the config gives it and, for templates
+// that print one, a context variant. A mutation has its name with the first letter
+// capitalized, and the same variant.
+func omitUnset(queries, mutations []lang.GoMethod) []codegen.UnsetArguments {
+	var out []codegen.UnsetArguments
+
+	add := func(plain, withContext string, m lang.GoMethod) {
+		if len(m.UnsetParams) == 0 {
+			return
+		}
+
+		u := codegen.UnsetArguments{Funcs: []string{plain, withContext}}
+		for _, p := range m.UnsetParams {
+			u.Params = append(u.Params, codegen.UnsetParam{Param: p.Param, Key: p.Key})
+		}
+
+		out = append(out, u)
+	}
+
+	for _, m := range queries {
+		add(m.MethodName, m.ContextMethodName, m)
+	}
+
+	for _, m := range mutations {
+		name := lang.UpperFirst(m.Name)
+		add(name, name+"WithContext", m)
+	}
+
+	return out
 }
 
 func fileExists(filePath string) bool {
