@@ -491,7 +491,7 @@ replace (
 	github.com/golang-jwt/jwt/v5 => github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/gorilla/websocket => github.com/gorilla/websocket v1.5.3
 	github.com/hashicorp/go-retryablehttp => github.com/hashicorp/go-retryablehttp v0.7.7
-	github.com/sigstore/cosign/v2 => github.com/sigstore/cosign/v2 v2.6.2
+	github.com/sigstore/cosign/v2 => github.com/sigstore/cosign/v2 v2.6.3
 	github.com/sigstore/rekor => github.com/sigstore/rekor v1.5.4
 	github.com/sigstore/sigstore => github.com/sigstore/sigstore v1.10.4
 	github.com/sigstore/sigstore-go => github.com/sigstore/sigstore-go v1.3.0
