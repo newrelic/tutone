@@ -189,9 +189,9 @@ func TestGenerateGoMethods_IncludeOptionalArgumentsIsPerOperation(t *testing.T) 
 	assert.Equal(t, []UnsetParam{{Param: "cursor", Key: "cursor"}}, byName["Things"].UnsetParams)
 	assert.Contains(t, byName["Things"].QueryString, "$cursor: String", "the optional argument is declared")
 
-	assert.Equal(t, "string", byName["Others"].Signature.Input[0].Type, "an endpoint without the key is generated as before")
-	assert.Empty(t, byName["Others"].UnsetParams)
-	assert.NotContains(t, byName["Others"].QueryString, "$cursor")
+	assert.Equal(t, "string", byName["Others"].Signature.Input[0].Type, "an endpoint without the key takes the argument as before")
+	assert.Equal(t, []UnsetParam{{Param: "cursor", Key: "cursor", Unset: `%s == ""`}}, byName["Others"].UnsetParams, "and sends it only when it has a value")
+	assert.Contains(t, byName["Others"].QueryString, "$cursor: String", "the argument the method takes is declared")
 
 	mutations, err := GenerateGoMethodMutationsForPackage(s, &config.GeneratorConfig{}, pkg)
 	require.NoError(t, err)

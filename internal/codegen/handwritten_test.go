@@ -39,6 +39,12 @@ type (
 func (x *Auth) UnmarshalJSON(b []byte) error { return json.Unmarshal(b, x) }
 func (x Auth) String() string                { return "" }
 func helper()                                {}
+
+var TokenTypes = struct{ A Token }{A: "A"}
+
+const (
+	limit, other = 1, 2
+)
 `,
 	})
 
@@ -47,6 +53,7 @@ func helper()                                {}
 
 	assert.Equal(t, map[string]bool{"Auth": true, "AuthInterface": true, "Token": true}, got.Types)
 	assert.Equal(t, map[string]bool{"Auth.UnmarshalJSON": true, "Auth.String": true}, got.Methods)
+	assert.Equal(t, map[string]bool{"TokenTypes": true, "limit": true, "other": true}, got.Values)
 }
 
 func TestScanHandWritten_LeavesOutGeneratedAndTestFiles(t *testing.T) {

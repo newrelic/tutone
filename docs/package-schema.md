@@ -28,7 +28,7 @@ queries: []object, optional
     endpoints: []object,                            # The endpoints to generate code for.
       - name: string, required                      # Must be endpoints under the associated query path - example: "linkedAccounts" (under cloud query scope)
         max_query_field_depth: int, optional        # Max recursion iterations for inferring required arguments and associated types. Typically is set to 2
-        include_arguments: []string, optional       # Query arguments to include
+        include_arguments: []string, optional       # Optional query arguments that are always sent, even at the zero value of their type. Every argument the method takes is declared in the query whether or not it is listed. See "Optional arguments" below
         exclude_fields: []string, optional          # Fields to leave out of the query
         exclude_arguments: []string, optional       # Optional arguments to leave out of the Go method and the query, e.g. "isCanceled". A name the endpoint does not take, or that the API requires, is an error
         method_name: string, optional               # Complete Go method name, default "Get" + name. Required on each of two endpoints that share a name under different paths, e.g. "GetDestinationsAccount"
@@ -151,18 +151,39 @@ what was kept. A declaration written by hand (another doc form, or none), one ma
 
 ### Optional arguments
 
-By default an optional (nullable) argument of a query endpoint is part of the Go method's parameters but not of
-its GraphQL query, unless `include_arguments` names it, so the method accepts a value it never sends. A mutation
-declares every argument in its query, but an optional one is a plain parameter, so a caller with no value sends
-the type's zero value (`version: 0`).
+Every argument the generated method takes is declared in its GraphQL query and passed on the field it belongs to,
+whether it is a parameter of the endpoint or of a field on the query path (`account(id: $accountID)`), and
+whether it is required or not. A parameter the query leaves undeclared would be accepted by the method and ignored
+by the request.
 
-`include_optional_arguments: true` on an endpoint or a mutation changes that for the operation:
+An optional (nullable) argument is a plain parameter by default, so a caller with no value passes the zero value of
+its type: `""`, `0`, `false`, an empty input object. A query endpoint or path field leaves such an argument out of
+the request (`if version == 0 { delete(vars, "version") }`, `reflect.ValueOf(&filter).Elem().IsZero()` for a type
+that is not a basic one), so the API applies its own default instead of receiving a cursor `""` or a page size `0`.
+An argument that `include_arguments` names is always sent, as it has been, so listing one changes nothing for it. A
+list of non-null items, `[T!]`, has always been sent too. A mutation declares every argument in its query, and an
+optional one is a plain parameter, so a caller with no value sends the type's zero value (`version: 0`).
 
-- An endpoint declares every optional argument in its query (less those in `exclude_arguments`).
-- The method takes each nullable argument as a pointer, `*T`, so `nil` means unset. A list stays `[]T`, which is
-  `nil` when unset. Required arguments, path parameters and an `accountId` argument shared with the path are as
-  they were. A type from `argument_go_types` is used as written and is never made a pointer to a pointer; a
-  `field_type_override` that is a pointer already, such as `*Filter`, stays as it is.
+Arguments that were ignored before take effect now. A caller that already passes a non-zero value for one, such as
+`options` and `query` of `GetEntitySearch`, or the `version` of `GetWorkflow`, now sends it.
+
+**Limit of a plain parameter: a zero value is never sent.** A plain optional parameter cannot say "send `0`,
+`false`, `""` or an empty input object on purpose", because that is what unset looks like. An example is
+`GetManagedAccounts(isCanceled bool)`: `false` is not sent, and the API, for which an omitted `isCanceled` is not
+the same as `false`, answers as it does for no value. The same holds for a `version` of `0`, a page size of `0`, and
+an API default of `true` that a caller wants to turn off. Whoever uses these methods, a Terraform resource included,
+must not rely on an explicit `false` or `0` reaching the API through a plain optional parameter. There are two
+ways to make a zero value reach the API: the operation sets `include_optional_arguments` (below), which makes the
+parameter a pointer and is a breaking signature change for a method that exists, or the argument is listed in
+`include_arguments`, which always sends it, whatever the value, as it did before this change. A zero-value input
+object that `reflect` finds all zero (a struct of `false` booleans only) counts as unset as well.
+
+`include_optional_arguments: true` on an endpoint or a mutation changes the parameters for the operation:
+
+- The method takes each nullable argument, of the endpoint and of the path fields, as a pointer, `*T`, so `nil`
+  means unset. A list stays `[]T`, which is `nil` when unset. Required arguments and an `accountId` argument shared
+  with the path are as they were. A type from `argument_go_types` is used as written and is never made a pointer
+  to a pointer. A `field_type_override` that is a pointer already, such as `*Filter`, stays as it is.
 - The request's variables leave out a parameter that is `nil`: the generated method deletes its key from `vars`
   right after the map is built (`if first == nil { delete(vars, "first") }`), so the API applies its own default
   (55 optional arguments in the schema have one, e.g. `first: 10`) rather than receiving an explicit `null`. The
@@ -172,7 +193,7 @@ the type's zero value (`version: 0`).
   `string`) is always sent.
 
 The key changes the parameter types of a method that exists, which breaks its callers, so set it on the
-operations a package is adding. Operations without it generate as they did.
+operations a package is adding. Operations without it keep their parameter types.
 
 ### Narrowed interfaces
 

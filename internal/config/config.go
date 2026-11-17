@@ -224,10 +224,14 @@ type MutationConfig struct {
 }
 
 type EndpointConfig struct {
-	Name               string   `yaml:"name,omitempty"`
-	MaxQueryFieldDepth int      `yaml:"max_query_field_depth,omitempty"`
-	IncludeArguments   []string `yaml:"include_arguments,omitempty"`
-	ExcludeFields      []string `yaml:"exclude_fields,omitempty"`
+	Name               string `yaml:"name,omitempty"`
+	MaxQueryFieldDepth int    `yaml:"max_query_field_depth,omitempty"`
+	// IncludeArguments names optional arguments that are always sent, even at the zero
+	// value of their type. The query declares every argument the method takes whether
+	// or not it is listed; an optional one that is not listed is left out of the
+	// request when it holds no value.
+	IncludeArguments []string `yaml:"include_arguments,omitempty"`
+	ExcludeFields    []string `yaml:"exclude_fields,omitempty"`
 	// ExcludeArguments lists GraphQL argument names to leave out of the generated
 	// method signature and query string, for optional arguments the caller never
 	// sets (e.g. accountManagement's `isCanceled`). A name that is not an argument
@@ -236,10 +240,9 @@ type EndpointConfig struct {
 	// ArgumentGoTypes maps a GraphQL argument name to the Go type of its parameter,
 	// e.g. {cursor: "*string"}. An unknown name is an error.
 	ArgumentGoTypes map[string]string `yaml:"argument_go_types,omitempty"`
-	// IncludeOptionalArguments declares every optional (nullable) argument of the
-	// endpoint in its query, where otherwise only the required ones and those in
-	// IncludeArguments are, and makes the method take each as a pointer, or as the
-	// slice it is for a list, so a caller can leave it unset. An unset argument is
+	// IncludeOptionalArguments makes the method take each optional (nullable) argument
+	// of the endpoint and of its path fields as a pointer, or as the slice it is for a
+	// list, so a caller can leave it unset or send a zero value on purpose. An unset argument is
 	// left out of the request's variables, so the API applies its own default (e.g.
 	// `first: 10`) instead of receiving null. exclude_arguments still removes an
 	// argument and argument_go_types still sets a parameter's type. It changes the

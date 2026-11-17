@@ -224,20 +224,125 @@ func TestGenerate_IncludeOptionalArguments(t *testing.T) {
 			// Operations without the key are the code they always were.
 			assert.NotContains(t, fns["ItemPing"], "delete(vars")
 			assert.NotContains(t, fns["ItemOld"], "delete(vars")
-			assert.NotContains(t, fns["GetOldItems"], "delete(vars")
 			assert.Contains(t, src, "func (a *Items) GetOldItems(\n\tfirst int,")
+
+			// A query without the key declares its optional argument too, takes it as a
+			// plain value and leaves it out at its zero value.
+			old := fns["GetOldItems"]
+			if dir != "../../templates/nerdgraphclient" {
+				old = fns["GetOldItemsWithContext"]
+			}
+
+			assert.Contains(t, old, "if first == 0 {\n\t\tdelete(vars, \"first\")")
 		})
 	}
 }
 
-func TestGenerate_WithoutIncludeOptionalArgumentsTheOutputIsWhatItAlwaysWas(t *testing.T) {
+func TestGenerate_WithoutIncludeOptionalArgumentsTheSignaturesAreWhatTheyAlwaysWere(t *testing.T) {
 	t.Parallel()
 
 	src, err := runSchema(t, optionalSchema(), optionalPackage(t.TempDir(), false), genConfig())
 	require.NoError(t, err)
 
-	assert.NotContains(t, src, "delete(vars")
+	fns := functions(t, src)
+
+	// The parameters stay plain values, so no caller changes.
 	assert.NotContains(t, src, "*int")
 	assert.Contains(t, src, "first int,\n\tcursor string,\n\tfilter []string,\n\tiD string,\n\tname string,")
-	assert.NotContains(t, src, "$first", "the optional arguments are still not declared")
+
+	// The query declares every argument the method takes, so none is ignored.
+	assert.Contains(t, src, "$first: Int,\n\t$cursor: String,\n\t$filter: [String],\n\t$id: ID,\n\t$name: String!,")
+	assert.Contains(t, src, "items(\n\tfirst: $first,\n\tcursor: $cursor,\n\tfilter: $filter,\n\tid: $id,\n\tname: $name,\n)")
+
+	// An optional argument that holds no value is not sent: "" as a cursor or 0 as a
+	// page size would be a value, not the absence of one. A required one always is.
+	list := fns["GetItemList"]
+	assert.Contains(t, list, "}\n\n\tif first == 0 {\n\t\tdelete(vars, \"first\")\n\t}\n\tif cursor == \"\" {\n\t\tdelete(vars, \"cursor\")\n\t}\n\tif filter == nil {\n\t\tdelete(vars, \"filter\")\n\t}\n\tif iD == \"\" {\n\t\tdelete(vars, \"id\")\n\t}\n\n\tif err := ")
+	assert.NotContains(t, list, "name ==", "a required argument is always sent")
+
+	// A mutation already declares and sends every argument, as it did.
+	for _, name := range []string{"ItemUpdate", "ItemTouch", "ItemPing", "ItemOld"} {
+		assert.NotContains(t, fns[name], "delete(vars", name)
+	}
+}
+
+// argumentSchema has an endpoint two levels down whose containers take arguments, one of
+// them optional.
+func argumentSchema() *schema.Schema {
+	nonNull := func(r schema.TypeRef) schema.TypeRef {
+		return schema.TypeRef{Kind: schema.KindNonNull, OfType: &r}
+	}
+
+	return &schema.Schema{
+		MutationType: &schema.Type{Name: "RootMutationType", Kind: schema.KindObject},
+		Types: []*schema.Type{
+			{Name: "RootQueryType", Kind: schema.KindObject, Fields: []schema.Field{{Name: "actor", Type: obj("Actor")}}},
+			{Name: "Actor", Kind: schema.KindObject, Fields: []schema.Field{
+				{Name: "search", Type: obj("Search"), Args: []schema.Field{
+					{Name: "query", Type: scalar("String")},
+					{Name: "scope", Type: nonNull(scalar("String"))},
+				}},
+			}},
+			{Name: "Search", Kind: schema.KindObject, Fields: []schema.Field{
+				{Name: "counts", Type: listOf(obj("Item")), Args: []schema.Field{
+					{Name: "version", Type: scalar("Int")},
+					{Name: "cursor", Type: scalar("String")},
+					{Name: "facet", Type: nonNull(scalar("String"))},
+				}},
+			}},
+			{Name: "Item", Kind: schema.KindObject, Fields: []schema.Field{{Name: "id", Type: scalar("String")}}},
+			{Name: "Int", Kind: schema.KindScalar},
+			{Name: "String", Kind: schema.KindScalar},
+		},
+	}
+}
+
+func argumentPackage(dir string, endpoint config.EndpointConfig) *config.PackageConfig {
+	endpoint.Name = "counts"
+	endpoint.MaxQueryFieldDepth = 1
+
+	return &config.PackageConfig{
+		Name:       "items",
+		Path:       dir,
+		Generators: []string{"typegen", "nerdgraphclient"},
+		Types:      []config.TypeConfig{{Name: "Item"}},
+		Queries:    []config.Query{{Path: []string{"actor", "search"}, Endpoints: []config.EndpointConfig{endpoint}}},
+	}
+}
+
+func TestGenerate_EveryArgumentTheMethodTakesIsDeclaredAndSent(t *testing.T) {
+	t.Parallel()
+
+	src, err := runSchema(t, argumentSchema(), argumentPackage(t.TempDir(), config.EndpointConfig{}), genConfig())
+	require.NoError(t, err)
+
+	formatted, err := format.Source([]byte(src))
+	require.NoError(t, err)
+	assert.Equal(t, string(formatted), src, "the output is gofmt-clean")
+
+	assert.Contains(t, src, "searchQuery string,\n\tsearchScope string,\n\tversion int,\n\tcursor string,\n\tfacet string,")
+
+	// Declared in the query, with every argument on the field it belongs to.
+	assert.Contains(t, src, "query(\n\t$searchQuery: String,\n\t$searchScope: String!,\n\t$version: Int,\n\t$cursor: String,\n\t$facet: String!,\n)")
+	assert.Contains(t, src, "{ actor { search(query: $searchQuery, scope: $searchScope) { counts(\n\tversion: $version,\n\tcursor: $cursor,\n\tfacet: $facet,\n) {")
+
+	// Sent when it holds a value, left out when it does not. A required one is always sent.
+	get := functions(t, src)["GetCounts"]
+	assert.Contains(t, get, "\"searchQuery\": searchQuery,")
+	assert.Contains(t, get, "}\n\n\tif searchQuery == \"\" {\n\t\tdelete(vars, \"searchQuery\")\n\t}\n\tif version == 0 {\n\t\tdelete(vars, \"version\")\n\t}\n\tif cursor == \"\" {\n\t\tdelete(vars, \"cursor\")\n\t}\n\n")
+	assert.NotContains(t, get, "searchScope ==")
+	assert.NotContains(t, get, "facet ==")
+}
+
+func TestGenerate_IncludeArgumentsStaysAsItWas(t *testing.T) {
+	t.Parallel()
+
+	// An endpoint that names an optional argument in include_arguments has always declared
+	// and sent it; regenerating it must not add a check for it.
+	src, err := runSchema(t, argumentSchema(), argumentPackage(t.TempDir(), config.EndpointConfig{IncludeArguments: []string{"cursor"}}), genConfig())
+	require.NoError(t, err)
+
+	get := functions(t, src)["GetCounts"]
+	assert.NotContains(t, get, "cursor ==")
+	assert.Contains(t, get, "if version == 0 {")
 }

@@ -149,7 +149,7 @@ func (c *CodeGen) applyNaming(rendered []byte) []byte {
 				log.WithFields(log.Fields{
 					"file":   c.DestinationFile,
 					"method": name,
-				}).Warn("include_optional_arguments: found no request variables to leave unset arguments out of; the template may name the method differently, and unset arguments are sent as null")
+				}).Warn("found no request variables to leave unset optional arguments out of; the template may name the method differently, and unset arguments are sent as null or as the zero value")
 			}
 		}
 	}

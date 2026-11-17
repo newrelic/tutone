@@ -127,18 +127,25 @@ type GoMethod struct {
 	ReturnAlias string
 	// ReturnType is the Go type ReturnAlias stands for.
 	ReturnType string
-	// UnsetParams are the parameters of a method generated with
-	// include_optional_arguments whose variable is left out of the request when the
-	// caller passes nil, so the API applies its default.
+	// UnsetParams are the optional parameters whose variable is left out of the request
+	// when the caller leaves it unset, so the API applies its default. A parameter of a
+	// method generated with include_optional_arguments is unset when nil. An optional
+	// argument of a query that the method takes as a plain value is unset at the zero
+	// value of its type: sending "" as a cursor or 0 as a page size is not the same as
+	// sending nothing.
 	UnsetParams []UnsetParam
 }
 
-// UnsetParam is a parameter that may be nil and the key of the request variable it fills.
+// UnsetParam is an optional parameter and the key of the request variable it fills. The
+// variable is left out of the request when the parameter is unset.
 type UnsetParam struct {
 	// Param is the Go name of the parameter as the template prints it.
 	Param string
 	// Key is the name of the GraphQL variable.
 	Key string
+	// Unset is the Go expression that is true when the parameter is unset, with %s
+	// where the parameter goes, e.g. "%s == nil" or "%s == \"\"". Empty means "%s == nil".
+	Unset string
 }
 
 // MutationResultField is the name of the field that holds the result in the response
@@ -206,6 +213,9 @@ func GenerateGoMethodQueriesForPackage(s *schema.Schema, genConfig *config.Gener
 						Exclude:         endpoint.ExcludeArguments,
 						GoTypes:         endpoint.ArgumentGoTypes,
 						IncludeOptional: endpoint.IncludeOptionalArguments,
+						OmitZero:        true,
+						AlwaysSend:      endpoint.IncludeArguments,
+						PathOrder:       pkgQuery.Path,
 					})
 
 					if err := checkUniqueParameters(method); err != nil {
@@ -748,6 +758,9 @@ func GenerateGoTypesForPackage(s *schema.Schema, genConfig *config.GeneratorConf
 
 	omitDeclaredUnmarshalers(structsForGen, handWritten.Methods)
 
+	structsForGen, enumsForGen, scalarsForGen, interfacesForGen = omitHandWrittenTypes(
+		structsForGen, enumsForGen, scalarsForGen, interfacesForGen, handWritten)
+
 	sort.SliceStable(structsForGen, func(i, j int) bool {
 		return structsForGen[i].Name < structsForGen[j].Name
 	})
@@ -870,6 +883,59 @@ func omitDeclaredUnmarshalers(structs []GoStruct, handWritten map[string]bool) {
 			structs[i].SpecialUnmarshal = false
 		}
 	}
+}
+
+// omitHandWrittenTypes drops the types that a hand-written file of the package already
+// declares. Generating one again would declare it twice and the package would not
+// compile. The hand-written declaration is the one the package's own code is written
+// against, and generated code refers to it by the same name. An enum is dropped with its
+// <Name>Types variable, and an interface with its <Name>Interface type.
+func omitHandWrittenTypes(structs []GoStruct, enums []GoEnum, scalars []GoScalar, interfaces []GoInterface,
+	handWritten codegen.HandWritten) ([]GoStruct, []GoEnum, []GoScalar, []GoInterface) {
+	declared := func(kind string, names ...string) bool {
+		for _, name := range names {
+			if handWritten.Types[name] || handWritten.Values[name] {
+				log.WithFields(log.Fields{
+					"kind": kind,
+					"name": name,
+				}).Info("declared by hand in the package, so it is not generated")
+
+				return true
+			}
+		}
+
+		return false
+	}
+
+	keptStructs := make([]GoStruct, 0, len(structs))
+	for _, s := range structs {
+		if !declared("struct", s.Name) {
+			keptStructs = append(keptStructs, s)
+		}
+	}
+
+	keptEnums := make([]GoEnum, 0, len(enums))
+	for _, e := range enums {
+		if !declared("enum", e.Name, e.Name+"Types") {
+			keptEnums = append(keptEnums, e)
+		}
+	}
+
+	keptScalars := make([]GoScalar, 0, len(scalars))
+	for _, s := range scalars {
+		if !declared("scalar", s.Name) {
+			keptScalars = append(keptScalars, s)
+		}
+	}
+
+	keptInterfaces := make([]GoInterface, 0, len(interfaces))
+	for _, i := range interfaces {
+		if !declared("interface", i.Name+"Interface") {
+			keptInterfaces = append(keptInterfaces, i)
+		}
+	}
+
+	return keptStructs, keptEnums, keptScalars, keptInterfaces
 }
 
 // implementUnions makes the generated members of each union implement its Go
@@ -1312,6 +1378,43 @@ type methodArgOptions struct {
 	// IncludeOptional makes the parameter of an optional argument nilable, so a caller
 	// can leave it unset (see config include_optional_arguments).
 	IncludeOptional bool
+	// OmitZero declares an optional argument that is not in AlwaysSend as unset at the
+	// zero value of its Go type. It is for the endpoints of a query, whose optional
+	// arguments are part of the request and which, without include_optional_arguments,
+	// take them as plain values.
+	OmitZero bool
+	// AlwaysSend names the optional arguments that an endpoint has always sent, even at
+	// the zero value (include_arguments), so that regenerating changes nothing for them.
+	AlwaysSend []string
+	// PathOrder is the query path, which gives the order in which the parameters of
+	// the path fields come in the signature.
+	PathOrder []string
+}
+
+// orderedPathNames returns the keys of inputFields in the order of pathOrder, each
+// once. A key that is not in pathOrder follows, in alphabetical order.
+func orderedPathNames(pathOrder []string, inputFields map[string][]schema.Field) []string {
+	names := make([]string, 0, len(inputFields))
+	seen := make(map[string]bool, len(inputFields))
+
+	for _, name := range pathOrder {
+		if _, ok := inputFields[name]; ok && !seen[name] {
+			names = append(names, name)
+			seen[name] = true
+		}
+	}
+
+	var rest []string
+
+	for name := range inputFields {
+		if !seen[name] {
+			rest = append(rest, name)
+		}
+	}
+
+	sort.Strings(rest)
+
+	return append(names, rest...)
 }
 
 var goKeywords = map[string]bool{
@@ -1377,37 +1480,62 @@ func goMethodForField(field schema.Field, pkgConfig *config.PackageConfig, input
 		Description: field.GetDescription(),
 	}
 
-	for pathName, fields := range inputFields {
-		for _, f := range fields {
-			if f.Type.IsNonNull() {
-				typeName, err := f.GetTypeNameWithOverride(pkgConfig)
-				if err != nil {
-					log.Error(err)
-					continue
-				}
+	// plainPathTypes holds the type each path parameter has before it is made optional,
+	// which is what an endpoint argument of the same name is compared with.
+	var plainPathTypes []string
 
-				var prefix string
-				if f.Type.IsList() {
-					prefix = "[]"
-				}
+	// Path fields are read in the order they have in the query path, outermost first,
+	// so the parameters follow the query and do not move between runs.
+	pathNames := orderedPathNames(opts.PathOrder, inputFields)
 
-				inputType := GoMethodInputType{
-					// Flavor the name of the input object with the field from the path
-					// in which we were found.
-					Name: fmt.Sprintf("%s%s", pathName, f.GetName()),
-					Type: fmt.Sprintf("%s%s", prefix, typeName),
-				}
-
-				method.Signature.Input = append(method.Signature.Input, inputType)
-
-				queryVar := QueryVar{
-					Key:   inputType.Name,
-					Value: inputType.Name,
-					Type:  inputType.Type,
-				}
-
-				method.QueryVars = append(method.QueryVars, queryVar)
+	for _, pathName := range pathNames {
+		for _, f := range inputFields[pathName] {
+			typeName, err := f.GetTypeNameWithOverride(pkgConfig)
+			if err != nil {
+				log.Error(err)
+				continue
 			}
+
+			var prefix string
+			if f.Type.IsList() {
+				prefix = "[]"
+			}
+
+			inputType := GoMethodInputType{
+				// Flavor the name of the input object with the field from the path
+				// in which we were found.
+				Name: fmt.Sprintf("%s%s", pathName, f.GetName()),
+				Type: fmt.Sprintf("%s%s", prefix, typeName),
+			}
+
+			plainPathTypes = append(plainPathTypes, inputType.Type)
+
+			// An argument of a path field is declared and sent like one of the
+			// endpoint, so a method that takes it does not ignore it. An optional one
+			// is left out when unset.
+			if !f.Type.IsNonNull() {
+				if opts.IncludeOptional {
+					inputType.Type = optionalGoType(inputType.Type, f.Type.IsList())
+
+					if nilable(inputType.Type) {
+						method.UnsetParams = append(method.UnsetParams, UnsetParam{Param: lowerFirst(inputType.Name), Key: inputType.Name})
+					}
+				} else {
+					method.UnsetParams = append(method.UnsetParams, UnsetParam{
+						Param: lowerFirst(inputType.Name),
+						Key:   inputType.Name,
+						Unset: unsetCondition(inputType.Type),
+					})
+				}
+			}
+
+			method.Signature.Input = append(method.Signature.Input, inputType)
+
+			method.QueryVars = append(method.QueryVars, QueryVar{
+				Key:   inputType.Name,
+				Value: inputType.Name,
+				Type:  inputType.Type,
+			})
 		}
 	}
 
@@ -1468,7 +1596,12 @@ func goMethodForField(field schema.Field, pkgConfig *config.PackageConfig, input
 		// An argument that has the name and type of a parameter that the path
 		// already takes, such as an `accountId` argument below `account(id:)`, is the
 		// same value, so the method takes it once and sends it for both.
-		if shared := sharedPathInput(method.Signature.Input[:pathInputs], inputType); shared != nil {
+		plainInputs := make([]GoMethodInputType, pathInputs)
+		for i, in := range method.Signature.Input[:pathInputs] {
+			plainInputs[i] = GoMethodInputType{Name: in.Name, Type: plainPathTypes[i]}
+		}
+
+		if shared := sharedPathInput(plainInputs, inputType); shared != nil {
 			method.QueryVars = append(method.QueryVars, QueryVar{
 				Key:   methodArg.Name,
 				Value: shared.Name,
@@ -1488,6 +1621,14 @@ func goMethodForField(field schema.Field, pkgConfig *config.PackageConfig, input
 			if nilable(inputType.Type) {
 				method.UnsetParams = append(method.UnsetParams, UnsetParam{Param: lowerFirst(inputType.Name), Key: methodArg.Name})
 			}
+		} else if opts.OmitZero && !methodArg.IsRequired() && !util.StringInStrings(methodArg.Name, opts.AlwaysSend) {
+			// The query declares every argument. Without a value for this one the
+			// request leaves it out, as it did when the query did not declare it.
+			method.UnsetParams = append(method.UnsetParams, UnsetParam{
+				Param: lowerFirst(inputType.Name),
+				Key:   methodArg.Name,
+				Unset: unsetCondition(inputType.Type),
+			})
 		}
 
 		method.Signature.Input = append(method.Signature.Input, inputType)
@@ -1502,6 +1643,37 @@ func goMethodForField(field schema.Field, pkgConfig *config.PackageConfig, input
 	}
 
 	return method
+}
+
+// unsetCondition is the Go expression, with %s where the parameter goes, that is true
+// when a parameter of the Go type holds no value: nil for what can be nil, the zero
+// value of a basic type, and for any other type, such as an enum, an input object or a
+// time, whether reflect finds the value to be its zero value. The reflect check looks
+// at the value the address points to, so it cannot panic on a nil interface, and it
+// treats a struct whose fields all hold their zero values as unset.
+func unsetCondition(goType string) string {
+	switch {
+	case nilable(goType):
+		return "%s == nil"
+	case goType == "string":
+		return `%s == ""`
+	case goType == "bool":
+		return "!%s"
+	case isNumber(goType):
+		return "%s == 0"
+	default:
+		return "reflect.ValueOf(&%s).Elem().IsZero()"
+	}
+}
+
+// isNumber reports whether the Go type is a predeclared integer or float type.
+func isNumber(goType string) bool {
+	switch goType {
+	case "int", "int8", "int16", "int32", "int64", "uint", "uint8", "uint16", "uint32", "uint64", "float32", "float64":
+		return true
+	}
+
+	return false
 }
 
 // optionalGoType is the type of the parameter for a nullable argument whose Go type is

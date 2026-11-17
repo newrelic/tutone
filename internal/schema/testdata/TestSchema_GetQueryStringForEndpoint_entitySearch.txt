@@ -1,4 +1,16 @@
-query { actor { entitySearch {
+query(
+	$options: EntitySearchOptions,
+	$query: String,
+	$queryBuilder: EntitySearchQueryBuilder,
+	$sortBy: [EntitySearchSortCriteria],
+	$sortByWithDirection: [SortCriterionWithDirection],
+) { actor { entitySearch(
+	options: $options,
+	query: $query,
+	queryBuilder: $queryBuilder,
+	sortBy: $sortBy,
+	sortByWithDirection: $sortByWithDirection,
+) {
 	count
 	query
 	results {

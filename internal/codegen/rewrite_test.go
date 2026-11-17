@@ -499,6 +499,19 @@ func TestOmitUnsetArguments(t *testing.T) {
 		assert.Equal(t, 1, strings.Count(string(out), "delete(vars"+", \"first\")"), "the plain method has no variables and gets nothing")
 	})
 
+	t.Run("a parameter is unset by the expression it names", func(t *testing.T) {
+		t.Parallel()
+
+		out, unmatched, err := OmitUnsetArguments([]byte(clientWithContext), []UnsetArguments{{
+			Funcs:  []string{"GetThingsWithContext"},
+			Params: []UnsetParam{{Param: "first", Key: "first", Unset: "%s == 0"}, {Param: "filter", Key: "filter", Unset: "reflect.ValueOf(&%s).Elem().IsZero()"}},
+		}})
+		require.NoError(t, err)
+		assert.Empty(t, unmatched)
+
+		assert.Contains(t, string(out), "\n\tif first == 0 {\n\t\tdelete(vars, \"first\")\n\t}\n\tif reflect.ValueOf(&filter).Elem().IsZero() {\n\t\tdelete(vars, \"filter\")\n\t}\n")
+	})
+
 	t.Run("a parameter the literal does not fill gets no check", func(t *testing.T) {
 		t.Parallel()
 

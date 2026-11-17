@@ -51,13 +51,12 @@ func TestSchema_BuildQueryArgsForEndpoint(t *testing.T) {
 	s, err := Load("../../testdata/schema.json")
 	require.NoError(t, err)
 
+	// Every argument of the endpoint is declared, so that none that the Go method takes
+	// is left out of the request.
 	cases := map[string]struct {
-		Name        string
-		Fields      []string
-		IncludeArgs []string
-		// IncludeOptional declares every optional argument.
-		IncludeOptional bool
-		Results         []QueryArg
+		Name    string
+		Fields  []string
+		Results []QueryArg
 	}{
 		"accountEntities": {
 			Name:   "Actor",
@@ -84,17 +83,12 @@ func TestSchema_BuildQueryArgsForEndpoint(t *testing.T) {
 		"entitySearch": {
 			Name:   "Actor",
 			Fields: []string{"entitySearch"},
-			IncludeArgs: []string{
-				"options",
-				"query",
-				"queryBuilder",
-				"sortBy",
-			},
 			Results: []QueryArg{
 				{Key: "options", Value: "EntitySearchOptions"},
 				{Key: "query", Value: "String"},
 				{Key: "queryBuilder", Value: "EntitySearchQueryBuilder"},
 				{Key: "sortBy", Value: "[EntitySearchSortCriteria]"},
+				{Key: "sortByWithDirection", Value: "[SortCriterionWithDirection]"},
 			},
 		},
 		"entity": {
@@ -105,58 +99,28 @@ func TestSchema_BuildQueryArgsForEndpoint(t *testing.T) {
 			},
 		},
 		"accountOutline": {
-			Name:        "AccountOutline",
-			Fields:      []string{"reportingEventTypes"},
-			IncludeArgs: []string{"filter", "timeWindow"},
+			Name:   "AccountOutline",
+			Fields: []string{"reportingEventTypes"},
 			Results: []QueryArg{
 				{Key: "filter", Value: "[String]"},
 				{Key: "timeWindow", Value: "TimeWindowInput"},
 			},
 		},
 		"linkedAccounts": {
-			Name:        "CloudActorFields",
-			Fields:      []string{"linkedAccounts"},
-			IncludeArgs: []string{"provider"},
+			Name:   "CloudActorFields",
+			Fields: []string{"linkedAccounts"},
 			Results: []QueryArg{
 				{Key: "provider", Value: "String"},
 			},
-		},
-		"linkedAccountsWithoutNullable": {
-			Name:    "CloudActorFields",
-			Fields:  []string{"linkedAccounts"},
-			Results: []QueryArg{},
-		},
-		"linkedAccountsIncludeOptional": {
-			Name:            "CloudActorFields",
-			Fields:          []string{"linkedAccounts"},
-			IncludeOptional: true,
-			Results: []QueryArg{
-				{Key: "provider", Value: "String"},
-			},
-		},
-		"accountOutlineIncludeOptional": {
-			Name:            "AccountOutline",
-			Fields:          []string{"reportingEventTypes"},
-			IncludeOptional: true,
-			Results: []QueryArg{
-				{Key: "filter", Value: "[String]"},
-				{Key: "timeWindow", Value: "TimeWindowInput"},
-			},
-		},
-		"linkedAccountsWithInvalidIncludeArgument": {
-			Name:        "CloudActorFields",
-			Fields:      []string{"linkedAccounts"},
-			IncludeArgs: []string{"this-argument-does-not-exist"},
-			Results:     []QueryArg{},
 		},
 	}
 
-	for _, tc := range cases {
+	for name, tc := range cases {
 		x, err := s.LookupTypeByName(tc.Name)
-		require.NoError(t, err)
+		require.NoError(t, err, name)
 
-		result := s.BuildQueryArgsForEndpoint(x, tc.Fields, tc.IncludeArgs, tc.IncludeOptional)
-		assert.Equal(t, tc.Results, result)
+		result := s.BuildQueryArgsForEndpoint(x, tc.Fields)
+		assert.Equal(t, tc.Results, result, name)
 	}
 }
 

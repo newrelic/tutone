@@ -141,7 +141,7 @@ func ReplaceTypeStandIns(src []byte, standIns []TypeStandIn) ([]byte, error) {
 }
 
 // UnsetArguments lists the parameters of a generated function that are left out of the
-// request when the caller passes nil.
+// request when the caller leaves them unset.
 type UnsetArguments struct {
 	// Funcs are the names of the functions that build the request: the method and, for
 	// a template that has one, its context.Context variant. A name the source does
@@ -151,17 +151,21 @@ type UnsetArguments struct {
 	Params []UnsetParam
 }
 
-// UnsetParam is a parameter that may be nil and the variable it fills.
+// UnsetParam is an optional parameter and the variable it fills.
 type UnsetParam struct {
 	// Param is the name of the parameter in the source.
 	Param string
 	// Key is the key of the variable in the request's variables.
 	Key string
+	// Unset is the Go expression that is true when the parameter is unset, with %s
+	// where the parameter goes. Empty means "%s == nil".
+	Unset string
 }
 
 // OmitUnsetArguments makes a generated method leave a variable out of the request
-// when its parameter is nil. Sending the nil as null would override the default the API
-// has for the argument.
+// when its parameter is unset. Sending a nil as null would override the default the API
+// has for the argument, and a zero value such as an empty cursor or a page size of 0
+// is not the absence of one.
 //
 // For each function that declares `vars := map[string]interface{}{...}`, a check is
 // written right after that statement for every listed parameter the literal fills:
@@ -169,6 +173,8 @@ type UnsetParam struct {
 //	if param == nil {
 //		delete(vars, "key")
 //	}
+//
+// where `param == nil` is the parameter's Unset expression.
 //
 // The names of the functions in specs that none of their Funcs found a `vars` map in
 // are returned as unmatched, so the caller can report that the arguments are still sent.
@@ -220,7 +226,12 @@ func OmitUnsetArguments(src []byte, specs []UnsetArguments) ([]byte, []string, e
 					continue
 				}
 
-				fmt.Fprintf(&checks, "\n\tif %s == nil {\n\t\tdelete(vars, %q)\n\t}", p.Param, p.Key)
+				unset := p.Unset
+				if unset == "" {
+					unset = "%s == nil"
+				}
+
+				fmt.Fprintf(&checks, "\n\tif %s {\n\t\tdelete(vars, %q)\n\t}", fmt.Sprintf(unset, p.Param), p.Key)
 			}
 
 			if checks.Len() > 0 {

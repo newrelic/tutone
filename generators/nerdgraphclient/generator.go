@@ -229,7 +229,7 @@ func omitUnset(queries, mutations []lang.GoMethod) []codegen.UnsetArguments {
 
 		u := codegen.UnsetArguments{Funcs: []string{plain, withContext}}
 		for _, p := range m.UnsetParams {
-			u.Params = append(u.Params, codegen.UnsetParam{Param: p.Param, Key: p.Key})
+			u.Params = append(u.Params, codegen.UnsetParam{Param: p.Param, Key: p.Key, Unset: p.Unset})
 		}
 
 		out = append(out, u)

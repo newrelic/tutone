@@ -292,6 +292,16 @@ func (s *Schema) GetInputFieldsForQueryPath(queryPath []string) map[string][]Fie
 		log.Error(err)
 	}
 
+	// The first element of the path is a field of the root query type, which has no
+	// parent in pathTypes, so its arguments are read from the root.
+	if root, rootErr := s.LookupTypeByName("RootQueryType"); rootErr == nil && len(queryPath) > 0 {
+		for _, f := range root.Fields {
+			if f.Name == queryPath[0] && len(f.Args) > 0 {
+				fields[queryPath[0]] = append(fields[queryPath[0]], f.Args...)
+			}
+		}
+	}
+
 	for i, t := range pathTypes {
 		for _, f := range t.Fields {
 			// before the last element
@@ -326,17 +336,18 @@ func (s *Schema) QueryFieldsForTypeName(name string, maxDepth int, isMutation bo
 // BuildQueryArgsForEndpoint is meant to fill in the data necessary for a query(<args_go_here>)
 // string.  i.e: query($guids: [String]!) { actor ...
 //
-// The required arguments are declared, and the optional ones named in includeArguments.
-// With includeOptional every optional argument is declared.
-func (s *Schema) BuildQueryArgsForEndpoint(t *Type, fields []string, includeArguments []string, includeOptional bool) []QueryArg {
+// Every argument of the endpoint is declared, required or not. The Go method an endpoint
+// generates takes every argument it has (less exclude_arguments), so a variable that the
+// query leaves undeclared is one the method accepts and the request silently ignores. A
+// caller that has no value for an optional argument does not send it: see
+// lang.GoMethod.UnsetParams.
+func (s *Schema) BuildQueryArgsForEndpoint(t *Type, fields []string) []QueryArg {
 	args := []QueryArg{}
 
 	for _, f := range t.Fields {
 		if util.StringInStrings(f.Name, fields) {
 			for _, a := range f.Args {
-				if a.IsRequired() || includeOptional || util.StringInStrings(a.Name, includeArguments) {
-					args = append(args, s.GetQueryArg(a))
-				}
+				args = append(args, s.GetQueryArg(a))
 			}
 		}
 	}
@@ -358,33 +369,36 @@ func (s *Schema) GetQueryStringForEndpoint(typePath []*Type, fieldPath []string,
 	data.TypeName = t.GetName()
 	data.Endpoint = endpoint.Name
 
-	// Format the path arguments for the query.
+	// Format the path arguments for the query. A path field names every one of its
+	// arguments in a single call, e.g. account(id: $accountID), and each is declared
+	// as the Go method takes it: required or not, with the list and non-null wrappers
+	// the schema gives it.
 	inputFields := s.GetInputFieldsForQueryPath(fieldPath)
 	for _, pathName := range fieldPath {
-		// Match the field paths we received with the input fields.
-		if fields, ok := inputFields[pathName]; ok {
-			for _, f := range fields {
-				inputTypeName := fmt.Sprintf("%s%s", pathName, f.GetName())
-
-				fieldSpec := fmt.Sprintf("%s(%s: $%s)", pathName, f.Name, inputTypeName)
-				data.FieldPath = append(data.FieldPath, fieldSpec)
-
-				// TODO implement optional arguments.
-				if f.IsRequired() {
-					data.QueryArgs = append(data.QueryArgs, QueryArg{
-						Key:   inputTypeName,
-						Value: fmt.Sprintf("%s!", f.Type.GetTypeName()),
-					})
-				}
-			}
-		} else {
+		fields, ok := inputFields[pathName]
+		if !ok {
 			data.FieldPath = append(data.FieldPath, pathName)
+			continue
 		}
+
+		calls := make([]string, 0, len(fields))
+
+		for _, f := range fields {
+			inputTypeName := fmt.Sprintf("%s%s", pathName, f.GetName())
+
+			calls = append(calls, fmt.Sprintf("%s: $%s", f.Name, inputTypeName))
+			data.QueryArgs = append(data.QueryArgs, QueryArg{
+				Key:   inputTypeName,
+				Value: s.GetQueryArg(f).Value,
+			})
+		}
+
+		data.FieldPath = append(data.FieldPath, fmt.Sprintf("%s(%s)", pathName, strings.Join(calls, ", ")))
 	}
 
 	// Append to QueryArgs and EndpointArgs only after the parent field
 	// requirements have been added so that they are last.
-	args := s.BuildQueryArgsForEndpoint(t, []string{endpoint.Name}, endpoint.IncludeArguments, endpoint.IncludeOptionalArguments)
+	args := s.BuildQueryArgsForEndpoint(t, []string{endpoint.Name})
 	if len(endpoint.ExcludeArguments) > 0 {
 		kept := args[:0:0]
 

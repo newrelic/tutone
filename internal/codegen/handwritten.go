@@ -17,6 +17,8 @@ type HandWritten struct {
 	// Methods are the methods, keyed "Receiver.Method" with the receiver's type
 	// name and no pointer.
 	Methods map[string]bool
+	// Values are the names of the package-level variables and constants.
+	Values map[string]bool
 }
 
 // ScanHandWritten reads the hand-written Go files in dir. A generator that
@@ -27,7 +29,7 @@ type HandWritten struct {
 // hand-written files. One that does not parse is an error, since what it declares
 // cannot be known.
 func ScanHandWritten(dir string) (HandWritten, error) {
-	found := HandWritten{Types: map[string]bool{}, Methods: map[string]bool{}}
+	found := HandWritten{Types: map[string]bool{}, Methods: map[string]bool{}, Values: map[string]bool{}}
 
 	entries, err := os.ReadDir(dir)
 	if os.IsNotExist(err) {
@@ -83,8 +85,13 @@ func (h HandWritten) scan(path string) error {
 			}
 		case *ast.GenDecl:
 			for _, spec := range v.Specs {
-				if ts, ok := spec.(*ast.TypeSpec); ok {
-					h.Types[ts.Name.Name] = true
+				switch s := spec.(type) {
+				case *ast.TypeSpec:
+					h.Types[s.Name.Name] = true
+				case *ast.ValueSpec:
+					for _, n := range s.Names {
+						h.Values[n.Name] = true
+					}
 				}
 			}
 		}
